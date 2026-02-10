@@ -1,0 +1,11 @@
+relax_transforms:
+  - "LegalizeOps"
+  - "AnnotateTIROpPattern"
+  - "FoldConstant"
+  - "FuseOps"
+  - "FuseTIR"
+  - "DeadCodeElimination"
+
+tir_transforms:
+  - "DefaultGPUSchedule"
+  - "Simplify"

@@ -1,0 +1,20 @@
+save_onnx: true
+save_relax_ir: true
+save_tir_ir: true
+profile_before_optimization: true
+profile_after_relax: true
+profile_after_tir: true
+check_correctness: true
+
+preset: deep
+
+
+transform_mode: llm_transform_graph # "relax_transforms", "llm_transform_ir", "llm_transform_graph"
+
+llm_config:
+  api_key: "EMPTY"
+  base_url: "http://localhost:8052/v1"
+  default_model: "Qwen3-Coder-30B-A3B-Instruct"
+  default_temperature: 0.7
+  default_max_tokens: null
+  timeout: 60.0
