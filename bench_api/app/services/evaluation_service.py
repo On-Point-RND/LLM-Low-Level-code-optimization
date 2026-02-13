@@ -8,6 +8,7 @@ from app.models import EvaluateResponse, PerformanceStats, BaselineStats
 from app.services.mlflow_service import log_evaluation_result, log_error_to_run
 from app.services.baseline_service import get_single_baseline
 from app.config import REFERENCE_DIR, MULTIKERNELBENCH_PATH
+from app.integration import get_reference_path
 
 # Import dataset to get function category
 sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
@@ -86,12 +87,10 @@ def evaluate_function(
                 
                 # Read baseline/reference code
                 try:
-                    if function in dataset:
-                        category = dataset[function]['category']
-                        ref_src_path = os.path.join(str(REFERENCE_DIR), category, f'{function}.py')
-                        if os.path.exists(ref_src_path):
-                            with open(ref_src_path, 'r', encoding='utf-8') as f:
-                                baseline_function_code = f.read()
+                    ref_src_path = get_reference_path(function)
+                    if ref_src_path:
+                        with open(ref_src_path, 'r', encoding='utf-8') as f:
+                            baseline_function_code = f.read()
                 except Exception as e:
                     print(f"[WARNING] Failed to read baseline code for {function}: {e}")
     except Exception as e:

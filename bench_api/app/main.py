@@ -15,6 +15,7 @@ from app.services.baseline_service import get_single_baseline, get_all_baselines
 from app.services.evaluation_service import evaluate_function
 from app.services.help_service import get_help_info
 from app.services.mlflow_service import log_baseline_result
+from app.integration import register_kernelbench_dataset
 
 app = FastAPI(
     title="MultiKernelBench API",
@@ -27,6 +28,9 @@ app = FastAPI(
 async def startup_event():
     import logging
     logger = logging.getLogger(__name__)
+    
+    # Register KernelBench tasks
+    register_kernelbench_dataset()
     
     workspace_tmp = os.getenv("WORKSPACE_TMP", "/workspace/tmp")
     os.makedirs(workspace_tmp, exist_ok=True)

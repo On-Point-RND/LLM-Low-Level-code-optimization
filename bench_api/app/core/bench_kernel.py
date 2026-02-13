@@ -46,6 +46,7 @@ from utils.utils import get_ref_src_path
 from utils.performance import time_execution_event_template
 from dataset import dataset
 from config import num_perf_trials, num_warmup
+from app.integration import get_reference_path
 import utils.performance as performance_module
 
 try:
@@ -230,9 +231,9 @@ def _do_compilation(backend, function_code, function, language):
 
 
 def _do_correctness_check(backend, function, language, batch_size, dim, input_dims):
-    ref_src_path = os.path.join(str(REFERENCE_DIR), dataset[function]['category'], f'{function}.py')
-    if not os.path.exists(ref_src_path):
-        raise FileNotFoundError(f"Reference file not found: {ref_src_path}")
+    ref_src_path = get_reference_path(function)
+    if not ref_src_path:
+        raise FileNotFoundError(f"Reference file not found for function: {function}")
 
     with open(ref_src_path, 'r') as f:
         ref_src = f.read()
@@ -419,9 +420,9 @@ def _prepare_backend_for_baseline(backend, language: str):
 
 
 def _load_reference_code_and_override_dims(function: str, batch_size: Optional[int], dim: Optional[int], input_dims: Optional[Dict[str, Any]]) -> str:
-    ref_src_path = os.path.join(str(REFERENCE_DIR), dataset[function]['category'], f'{function}.py')
-    if not os.path.exists(ref_src_path):
-        error_msg = f"Reference file not found: {ref_src_path} (REFERENCE_DIR={REFERENCE_DIR})"
+    ref_src_path = get_reference_path(function)
+    if not ref_src_path:
+        error_msg = f"Reference file not found for function: {function}"
         print(f"[ERROR] {function}: {error_msg}")
         raise FileNotFoundError(error_msg)
 
@@ -590,9 +591,9 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
     for op in op_tests:
         print(f'[INFO] Computing baseline for {op}')
         try:
-            ref_src_path = os.path.join(str(REFERENCE_DIR), dataset[op]['category'], f'{op}.py')
-            if not os.path.exists(ref_src_path):
-                raise FileNotFoundError(f"Reference file not found: {ref_src_path}")
+            ref_src_path = get_reference_path(op)
+            if not ref_src_path:
+                raise FileNotFoundError(f"Reference file not found for function: {op}")
 
             with open(ref_src_path, 'r') as f:
                 ref_src = f.read()

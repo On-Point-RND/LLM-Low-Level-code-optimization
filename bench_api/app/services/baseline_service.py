@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 
 from app.config import BASELINES_DIR, REFERENCE_DIR, MULTIKERNELBENCH_PATH
 from app.core.bench_kernel import compute_baseline, compute_all_baselines, get_backend
+from app.integration import get_reference_path
 
 # Import dataset to get function category
 sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
@@ -61,12 +62,10 @@ def save_baseline_file(language: str, hardware: str, data: Dict[str, Any], dims_
 def _read_reference_code(function: str) -> Optional[str]:
     """Read reference code for a function."""
     try:
-        if function in dataset:
-            category = dataset[function]['category']
-            ref_src_path = os.path.join(str(REFERENCE_DIR), category, f'{function}.py')
-            if os.path.exists(ref_src_path):
-                with open(ref_src_path, 'r', encoding='utf-8') as f:
-                    return f.read()
+        ref_src_path = get_reference_path(function)
+        if ref_src_path:
+            with open(ref_src_path, 'r', encoding='utf-8') as f:
+                return f.read()
     except Exception as e:
         print(f"[WARNING] Failed to read reference code for {function}: {e}")
     return None

@@ -6,6 +6,9 @@ def run_isolated_evaluation():
     try:
         params = json.loads(sys.stdin.read())
         
+        from app.integration import register_kernelbench_dataset
+        register_kernelbench_dataset()
+        
         from app.core.bench_kernel import evaluate_kernel as evaluate_kernel_impl
         
         result = evaluate_kernel_impl(
