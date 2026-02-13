@@ -1,0 +1,1242 @@
+{
+  "relu": {
+    "mean": 7.34,
+    "std": 0.0232,
+    "min": 7.32,
+    "max": 7.49,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_min_sum_gelu_add": {
+    "mean": 2.85,
+    "std": 0.166,
+    "min": 2.72,
+    "max": 3.22,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_gelu_global_avg_pool": {
+    "mean": 11.5,
+    "std": 0.0242,
+    "min": 11.4,
+    "max": 11.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_scale_batchnorm": {
+    "mean": 0.139,
+    "std": 0.00754,
+    "min": 0.13,
+    "max": 0.187,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_group_norm_hardtanh": {
+    "mean": 8.23,
+    "std": 0.477,
+    "min": 8.08,
+    "max": 9.98,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_add_scale_sigmoid_group_norm": {
+    "mean": 13.3,
+    "std": 0.386,
+    "min": 13.1,
+    "max": 14.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_add_hard_swish": {
+    "mean": 9.26,
+    "std": 0.113,
+    "min": 9.19,
+    "max": 9.65,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_mish_mish": {
+    "mean": 8.36,
+    "std": 0.75,
+    "min": 7.92,
+    "max": 9.74,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_tanh_scaling_bias_add_max": {
+    "mean": 16.9,
+    "std": 0.0334,
+    "min": 16.9,
+    "max": 17.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_group_norm_tanh_hard_swish_residual_add_log_sum_exp": {
+    "mean": 7.18,
+    "std": 0.0272,
+    "min": 7.16,
+    "max": 7.34,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "convtranspose3d_relu_groupnorm": {
+    "mean": 0.503,
+    "std": 0.00356,
+    "min": 0.5,
+    "max": 0.532,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_scale_residual_add_clamp_log_sum_exp_mish": {
+    "mean": 8.48,
+    "std": 0.722,
+    "min": 8.1,
+    "max": 10.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_sigmoid_sum_log_sum_exp": {
+    "mean": 22.6,
+    "std": 1.05,
+    "min": 22.3,
+    "max": 27.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_divide_max_global_avg_pool_bias_add_sum": {
+    "mean": 4.21,
+    "std": 0.272,
+    "min": 4.01,
+    "max": 4.74,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_subtract_tanh_subtract_avg_pool": {
+    "mean": 10.3,
+    "std": 0.373,
+    "min": 10.1,
+    "max": 11.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_min_subtract": {
+    "mean": 4.71,
+    "std": 0.452,
+    "min": 4.39,
+    "max": 5.61,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_scaling_min": {
+    "mean": 13.2,
+    "std": 0.0498,
+    "min": 13.1,
+    "max": 13.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_layer_norm_gelu_scaling": {
+    "mean": 17.6,
+    "std": 0.0219,
+    "min": 17.6,
+    "max": 17.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_swish_sum_group_norm": {
+    "mean": 19.1,
+    "std": 0.556,
+    "min": 18.8,
+    "max": 23.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_scaling_residual_add": {
+    "mean": 30.0,
+    "std": 0.264,
+    "min": 30.0,
+    "max": 32.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_max_pool_softmax_subtract_swish_max": {
+    "mean": 19.1,
+    "std": 0.452,
+    "min": 19.0,
+    "max": 20.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_avg_pool_sigmoid_sum": {
+    "mean": 22.1,
+    "std": 0.0406,
+    "min": 22.1,
+    "max": 22.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_clamp_min_divide": {
+    "mean": 3.23,
+    "std": 0.25,
+    "min": 2.82,
+    "max": 3.76,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_max_pool_sum_scale": {
+    "mean": 16.0,
+    "std": 0.0399,
+    "min": 16.0,
+    "max": 16.2,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_batch_norm_scaling": {
+    "mean": 5.46,
+    "std": 0.331,
+    "min": 5.22,
+    "max": 6.03,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_group_norm_min_clamp_dropout": {
+    "mean": 7.82,
+    "std": 0.0392,
+    "min": 7.79,
+    "max": 8.07,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_mish_add_hardtanh_scaling": {
+    "mean": 19.3,
+    "std": 0.0233,
+    "min": 19.3,
+    "max": 19.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "convtranspose2d_batchnorm_tanh_maxpool_groupnorm": {
+    "mean": 7.84,
+    "std": 0.456,
+    "min": 7.55,
+    "max": 8.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_sigmoid_sum": {
+    "mean": 16.0,
+    "std": 0.0378,
+    "min": 15.9,
+    "max": 16.2,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_softmax_sigmoid": {
+    "mean": 5.31,
+    "std": 0.237,
+    "min": 5.09,
+    "max": 5.63,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_multiply_max_global_avg_pool_clamp": {
+    "mean": 21.4,
+    "std": 0.837,
+    "min": 21.1,
+    "max": 25.5,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "convtranspose2d_softmax_biasadd_scaling_sigmoid": {
+    "mean": 13.7,
+    "std": 0.0332,
+    "min": 13.7,
+    "max": 13.9,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_add_swish_tanh_gelu_hardtanh": {
+    "mean": 8.43,
+    "std": 0.67,
+    "min": 8.11,
+    "max": 9.95,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_log_sum_exp_leaky_relu_leaky_relu_gelu_gelu": {
+    "mean": 8.26,
+    "std": 0.618,
+    "min": 7.98,
+    "max": 9.82,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_relu_hard_swish": {
+    "mean": 5.3,
+    "std": 0.145,
+    "min": 5.19,
+    "max": 5.59,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_softmax_max_pool_max_pool": {
+    "mean": 1.39,
+    "std": 0.0406,
+    "min": 1.36,
+    "max": 1.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_sum_max_avg_pool_log_sum_exp_log_sum_exp": {
+    "mean": 7.96,
+    "std": 0.0173,
+    "min": 7.94,
+    "max": 8.05,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_gelu_softmax": {
+    "mean": 8.18,
+    "std": 0.423,
+    "min": 7.92,
+    "max": 9.73,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_dropout_mean_softmax": {
+    "mean": 4.67,
+    "std": 0.422,
+    "min": 4.37,
+    "max": 5.42,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_log_sum_exp_hard_swish_subtract_clamp_max": {
+    "mean": 23.9,
+    "std": 0.451,
+    "min": 23.8,
+    "max": 28.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_group_norm_scale_max_pool_clamp": {
+    "mean": 4.47,
+    "std": 0.265,
+    "min": 4.23,
+    "max": 4.88,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_relu_leaky_relu_gelu_sigmoid_bias_add": {
+    "mean": 10.7,
+    "std": 0.018,
+    "min": 10.6,
+    "max": 10.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_multiply_leakyrelu": {
+    "mean": 8.14,
+    "std": 0.593,
+    "min": 7.9,
+    "max": 9.72,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_max_pool_hardtanh_mean_tanh": {
+    "mean": 18.3,
+    "std": 0.075,
+    "min": 18.1,
+    "max": 18.5,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_hardswish_relu_softmax_mean": {
+    "mean": 9.79,
+    "std": 0.447,
+    "min": 9.5,
+    "max": 10.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_divide_leaky_relu": {
+    "mean": 3.23,
+    "std": 0.153,
+    "min": 3.13,
+    "max": 3.53,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_max_log_sum_exp_relu": {
+    "mean": 4.21,
+    "std": 0.226,
+    "min": 4.09,
+    "max": 4.78,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_swish_group_norm_hard_swish": {
+    "mean": 25.6,
+    "std": 0.411,
+    "min": 25.5,
+    "max": 27.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_bias_add_hardtanh_mish_group_norm": {
+    "mean": 8.57,
+    "std": 0.709,
+    "min": 8.19,
+    "max": 10.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_group_norm_mean": {
+    "mean": 2.7,
+    "std": 0.0797,
+    "min": 2.44,
+    "max": 2.99,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_group_norm_leaky_relu_sum": {
+    "mean": 8.72,
+    "std": 0.724,
+    "min": 8.35,
+    "max": 10.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_batch_norm_bias_add_divide_swish": {
+    "mean": 8.5,
+    "std": 0.733,
+    "min": 8.11,
+    "max": 9.96,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_subtract_subtract_mish": {
+    "mean": 15.3,
+    "std": 0.512,
+    "min": 15.1,
+    "max": 16.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_subtract_global_avg_pool_log_sum_exp_gelu_residual_add": {
+    "mean": 16.2,
+    "std": 0.736,
+    "min": 15.9,
+    "max": 19.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_scaling_avg_pool_bias_add_scaling": {
+    "mean": 21.8,
+    "std": 0.757,
+    "min": 21.7,
+    "max": 26.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_divide_sum_scaling": {
+    "mean": 8.05,
+    "std": 0.536,
+    "min": 7.85,
+    "max": 9.66,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_subtract_tanh": {
+    "mean": 16.4,
+    "std": 0.0165,
+    "min": 16.3,
+    "max": 16.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_avg_pool_gelu_scale_max": {
+    "mean": 8.08,
+    "std": 0.509,
+    "min": 7.9,
+    "max": 9.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_batch_norm_scaling_softmax": {
+    "mean": 8.25,
+    "std": 0.575,
+    "min": 8.01,
+    "max": 9.93,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_mish_tanh": {
+    "mean": 4.41,
+    "std": 0.268,
+    "min": 4.15,
+    "max": 4.88,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "convtranspose2d_globalavgpool_biasadd_logsumexp_sum_multiply": {
+    "mean": 13.4,
+    "std": 0.0482,
+    "min": 13.3,
+    "max": 13.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_subtract_hard_swish_max_pool_mish": {
+    "mean": 8.58,
+    "std": 0.0389,
+    "min": 8.53,
+    "max": 8.86,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_add_min_gelu_multiply": {
+    "mean": 9.9,
+    "std": 0.022,
+    "min": 9.88,
+    "max": 10.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_bias_add_clamp_scaling_clamp_divide": {
+    "mean": 22.0,
+    "std": 0.0154,
+    "min": 22.0,
+    "max": 22.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_min_add_multiply": {
+    "mean": 8.34,
+    "std": 0.0312,
+    "min": 8.3,
+    "max": 8.58,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_avg_pool_clamp_softmax_multiply": {
+    "mean": 10.3,
+    "std": 0.226,
+    "min": 10.1,
+    "max": 10.9,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_hard_swish_relu": {
+    "mean": 3.27,
+    "std": 0.164,
+    "min": 3.13,
+    "max": 3.75,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_subtract_multiply_relu": {
+    "mean": 8.06,
+    "std": 0.399,
+    "min": 7.95,
+    "max": 9.82,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_leaky_relu_multiply_leaky_relu_max": {
+    "mean": 2.97,
+    "std": 0.156,
+    "min": 2.82,
+    "max": 3.21,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_batch_norm_subtract": {
+    "mean": 4.26,
+    "std": 0.278,
+    "min": 3.95,
+    "max": 4.65,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_batch_norm_avg_pool_avg_pool": {
+    "mean": 36.3,
+    "std": 0.0291,
+    "min": 36.1,
+    "max": 36.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_scaling_tanh_multiply_sigmoid": {
+    "mean": 7.46,
+    "std": 0.491,
+    "min": 7.15,
+    "max": 8.57,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_max_max_sum": {
+    "mean": 7.65,
+    "std": 0.344,
+    "min": 7.51,
+    "max": 8.77,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_leaky_relu_sum_clamp_gelu": {
+    "mean": 17.4,
+    "std": 0.0309,
+    "min": 17.4,
+    "max": 17.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_swish_scaling": {
+    "mean": 16.0,
+    "std": 0.0117,
+    "min": 16.0,
+    "max": 16.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "matmul_divide_gelu": {
+    "mean": 8.07,
+    "std": 0.482,
+    "min": 7.91,
+    "max": 9.73,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_activation_batch_norm": {
+    "mean": 6.16,
+    "std": 0.0358,
+    "min": 6.13,
+    "max": 6.34,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_sum_residual_add_multiply_residual_add": {
+    "mean": 6.42,
+    "std": 0.0465,
+    "min": 6.39,
+    "max": 6.66,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_min_tanh_tanh": {
+    "mean": 13.2,
+    "std": 0.765,
+    "min": 12.9,
+    "max": 15.5,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_gelu_group_norm": {
+    "mean": 22.5,
+    "std": 0.0732,
+    "min": 22.3,
+    "max": 22.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_multiply_leaky_relu_gelu": {
+    "mean": 11.0,
+    "std": 0.295,
+    "min": 10.8,
+    "max": 11.9,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_instance_norm_divide": {
+    "mean": 8.23,
+    "std": 0.216,
+    "min": 8.14,
+    "max": 9.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_scaling_hard_tanh_gelu": {
+    "mean": 16.1,
+    "std": 0.551,
+    "min": 15.8,
+    "max": 18.9,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "bmm_instance_norm_sum_residual_add_multiply": {
+    "mean": 8.44,
+    "std": 0.735,
+    "min": 8.04,
+    "max": 10.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_multiply_instance_norm_clamp_multiply_max": {
+    "mean": 1.65,
+    "std": 0.0229,
+    "min": 1.63,
+    "max": 1.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_sum_layer_norm_avg_pool_gelu": {
+    "mean": 17.0,
+    "std": 0.0274,
+    "min": 17.0,
+    "max": 17.2,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_relu_divide": {
+    "mean": 8.07,
+    "std": 0.49,
+    "min": 7.9,
+    "max": 9.84,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "convtranspose3d_mean_add_softmax_tanh_scaling": {
+    "mean": 15.6,
+    "std": 0.038,
+    "min": 15.5,
+    "max": 15.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_group_norm_min_bias_add": {
+    "mean": 8.51,
+    "std": 0.456,
+    "min": 8.36,
+    "max": 10.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_max_subtract_gelu": {
+    "mean": 8.08,
+    "std": 0.531,
+    "min": 7.81,
+    "max": 9.69,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose3d_scale_batch_norm_global_avg_pool": {
+    "mean": 7.59,
+    "std": 0.518,
+    "min": 7.29,
+    "max": 8.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_group_norm_swish_multiply_swish": {
+    "mean": 8.86,
+    "std": 0.815,
+    "min": 8.32,
+    "max": 10.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_sigmoid_scaling_residual_add": {
+    "mean": 8.24,
+    "std": 0.634,
+    "min": 7.95,
+    "max": 9.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_scale_batch_norm": {
+    "mean": 29.9,
+    "std": 0.0724,
+    "min": 29.9,
+    "max": 30.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv3d_min_softmax": {
+    "mean": 2.06,
+    "std": 0.148,
+    "min": 1.89,
+    "max": 2.32,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_mish_mish": {
+    "mean": 14.6,
+    "std": 0.0611,
+    "min": 14.4,
+    "max": 14.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_swish_divide_clamp_tanh_clamp": {
+    "mean": 8.21,
+    "std": 0.418,
+    "min": 8.09,
+    "max": 9.91,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_batch_norm_gelu_group_norm_mean_relu": {
+    "mean": 30.4,
+    "std": 1.33,
+    "min": 30.1,
+    "max": 37.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gemm_add_relu": {
+    "mean": 8.24,
+    "std": 0.706,
+    "min": 7.85,
+    "max": 9.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv_transpose2d_multiply_global_avg_pool_global_avg_pool_mean": {
+    "mean": 3.52,
+    "std": 0.163,
+    "min": 3.26,
+    "max": 3.79,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "conv2d_relu_bias_add": {
+    "mean": 7.18,
+    "std": 0.0253,
+    "min": 7.11,
+    "max": 7.34,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "elu": {
+    "mean": 7.34,
+    "std": 0.0195,
+    "min": 7.32,
+    "max": 7.52,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "sigmoid": {
+    "mean": 7.28,
+    "std": 0.0211,
+    "min": 7.26,
+    "max": 7.42,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "hardsigmoid": {
+    "mean": 7.34,
+    "std": 0.0177,
+    "min": 7.32,
+    "max": 7.44,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "softplus": {
+    "mean": 7.66,
+    "std": 0.0121,
+    "min": 7.64,
+    "max": 7.71,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "swish": {
+    "mean": 18.1,
+    "std": 0.0373,
+    "min": 18.0,
+    "max": 18.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "leaky_relu": {
+    "mean": 7.36,
+    "std": 0.0125,
+    "min": 7.33,
+    "max": 7.43,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "min_gpt_new_gelu": {
+    "mean": 2.77,
+    "std": 0.0666,
+    "min": 2.74,
+    "max": 3.27,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "hardtanh": {
+    "mean": 7.35,
+    "std": 0.0239,
+    "min": 7.33,
+    "max": 7.5,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "tanh": {
+    "mean": 7.28,
+    "std": 0.0246,
+    "min": 7.27,
+    "max": 7.45,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "softmax": {
+    "mean": 15.2,
+    "std": 0.0138,
+    "min": 15.2,
+    "max": 15.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "softsign": {
+    "mean": 25.5,
+    "std": 0.0319,
+    "min": 25.5,
+    "max": 25.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "selu": {
+    "mean": 7.34,
+    "std": 0.0233,
+    "min": 7.31,
+    "max": 7.48,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "log_softmax": {
+    "mean": 15.1,
+    "std": 0.016,
+    "min": 15.1,
+    "max": 15.2,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gelu": {
+    "mean": 7.37,
+    "std": 0.0128,
+    "min": 7.36,
+    "max": 7.49,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "shufflenet": {
+    "mean": 29.6,
+    "std": 0.535,
+    "min": 29.3,
+    "max": 33.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "mamba_return_y": {
+    "mean": 13.8,
+    "std": 0.276,
+    "min": 13.7,
+    "max": 15.2,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "net_vlad_no_ghost_clusters": {
+    "mean": 3.8,
+    "std": 0.35,
+    "min": 3.46,
+    "max": 4.41,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "min_gpt_causal_attention": {
+    "mean": 29.5,
+    "std": 0.045,
+    "min": 29.4,
+    "max": 29.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "mamba_return_final_state": {
+    "mean": 10.6,
+    "std": 0.431,
+    "min": 10.4,
+    "max": 11.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gru": {
+    "mean": 21.9,
+    "std": 1.61,
+    "min": 20.0,
+    "max": 28.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gru_hidden": {
+    "mean": 22.7,
+    "std": 1.3,
+    "min": 20.4,
+    "max": 24.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "swintransformer_v2": {
+    "mean": 15.5,
+    "std": 0.584,
+    "min": 15.0,
+    "max": 17.9,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "net_vlad_with_ghost_clusters": {
+    "mean": 4.19,
+    "std": 0.409,
+    "min": 3.87,
+    "max": 4.94,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "densenet121_dense_block": {
+    "mean": 13.0,
+    "std": 0.056,
+    "min": 12.9,
+    "max": 13.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "mobilenet_v1": {
+    "mean": 3.06,
+    "std": 0.0608,
+    "min": 2.97,
+    "max": 3.44,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "lstm_bidirectional": {
+    "mean": 44.3,
+    "std": 2.16,
+    "min": 39.0,
+    "max": 47.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "convolutional_vision_transformer": {
+    "mean": 2.68,
+    "std": 0.142,
+    "min": 2.57,
+    "max": 3.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "vgg16": {
+    "mean": 6.35,
+    "std": 0.488,
+    "min": 5.92,
+    "max": 7.12,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "lenet5": {
+    "mean": 1.48,
+    "std": 0.0779,
+    "min": 1.26,
+    "max": 1.61,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "deep_narrow_mlp": {
+    "mean": 5.08,
+    "std": 0.497,
+    "min": 4.74,
+    "max": 6.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "vision_attention": {
+    "mean": 60.1,
+    "std": 0.0298,
+    "min": 60.0,
+    "max": 60.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "lstm": {
+    "mean": 21.1,
+    "std": 1.58,
+    "min": 19.9,
+    "max": 28.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "googlenet_inception_module": {
+    "mean": 16.1,
+    "std": 0.581,
+    "min": 15.9,
+    "max": 18.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "efficientnet_b1": {
+    "mean": 2.66,
+    "std": 0.143,
+    "min": 2.57,
+    "max": 3.62,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "googlenet_inception_v1": {
+    "mean": 3.62,
+    "std": 0.129,
+    "min": 3.41,
+    "max": 4.11,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "vanilla_rnn": {
+    "mean": 20.4,
+    "std": 0.0924,
+    "min": 20.4,
+    "max": 21.3,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "efficientnet_mb_conv": {
+    "mean": 9.48,
+    "std": 0.0274,
+    "min": 9.45,
+    "max": 9.69,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "mini_gpt_block": {
+    "mean": 71.4,
+    "std": 0.0538,
+    "min": 71.3,
+    "max": 71.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "resnet18": {
+    "mean": 2.64,
+    "std": 0.0345,
+    "min": 2.58,
+    "max": 2.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "lstm_hn": {
+    "mean": 22.9,
+    "std": 1.82,
+    "min": 20.8,
+    "max": 29.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "resnet101": {
+    "mean": 13.1,
+    "std": 0.183,
+    "min": 12.6,
+    "max": 13.8,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "unet_softmax": {
+    "mean": 9.16,
+    "std": 0.147,
+    "min": 9.1,
+    "max": 10.1,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "densenet121": {
+    "mean": 10.1,
+    "std": 0.178,
+    "min": 9.79,
+    "max": 10.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "vanilla_rnn_hidden": {
+    "mean": 21.2,
+    "std": 0.301,
+    "min": 20.7,
+    "max": 21.9,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "efficientnet_b2": {
+    "mean": 2.47,
+    "std": 0.0792,
+    "min": 2.36,
+    "max": 2.91,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "vision_transformer": {
+    "mean": 2.74,
+    "std": 0.199,
+    "min": 2.54,
+    "max": 3.43,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "densenet121_transition_layer": {
+    "mean": 15.5,
+    "std": 0.0185,
+    "min": 15.4,
+    "max": 15.6,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "alexnet": {
+    "mean": 51.5,
+    "std": 0.285,
+    "min": 51.1,
+    "max": 52.5,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "gru_birectional": {
+    "mean": 43.2,
+    "std": 2.34,
+    "min": 39.4,
+    "max": 54.2,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "mobilenet_v2": {
+    "mean": 5.74,
+    "std": 0.0816,
+    "min": 5.61,
+    "max": 6.16,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "regnet": {
+    "mean": 4.26,
+    "std": 0.295,
+    "min": 3.97,
+    "max": 4.73,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "squeeze_net_fire_module": {
+    "mean": 22.6,
+    "std": 0.0321,
+    "min": 22.5,
+    "max": 22.7,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "shallow_wide_mlp": {
+    "mean": 33.4,
+    "std": 0.0557,
+    "min": 33.3,
+    "max": 33.5,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  },
+  "mlp": {
+    "mean": 10.8,
+    "std": 0.61,
+    "min": 10.6,
+    "max": 13.0,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB"
+  }
+}

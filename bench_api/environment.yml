@@ -1,0 +1,30 @@
+name: bench_api
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - fastapi>=0.104.0
+    - uvicorn[standard]>=0.24.0
+    - pydantic>=2.0.0
+    - requests>=2.31.0
+    - numpy==1.26.4
+    - openai
+    - packaging
+    - decorator
+    - scipy
+    - psutil
+    - protobuf
+    - tqdm
+    - datasets
+    - transformers
+    - pytest
+    - ninja
+    - einops
+    - pyyaml
+    - setuptools
+

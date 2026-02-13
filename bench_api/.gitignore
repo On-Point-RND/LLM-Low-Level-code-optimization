@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs and Data
+logs/
+*.log
+*.jsonl
+mlruns/
+mlflow.db
+
+# Temporary
+.pip_temp_*/
+tmp/
+temp/
+
+# OS
+.DS_Store
+Thumbs.db
