@@ -41,3 +41,11 @@ ENABLE_TORCH_COMPILE = os.getenv("ENABLE_TORCH_COMPILE", "false").lower() == "tr
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://195.209.214.105:5050")
 MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME", "MultiKernelBench")
 ENABLE_MLFLOW = os.getenv("ENABLE_MLFLOW", "true").lower() == "true"
+
+# Execution Configuration
+NUM_CORRECT_TRIALS = int(os.getenv("NUM_CORRECT_TRIALS", "5"))
+NUM_PERF_TRIALS = int(os.getenv("NUM_PERF_TRIALS", "100"))
+NUM_WARMUP = int(os.getenv("NUM_WARMUP", "3"))
+SEED_NUM = int(os.getenv("SEED_NUM", "1024"))
+ARCH_LIST = os.getenv("ARCH_LIST", "Ada").split(",")
+

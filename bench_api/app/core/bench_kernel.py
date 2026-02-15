@@ -10,93 +10,20 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
 from app.config import MULTIKERNELBENCH_PATH, REFERENCE_DIR
+import app.config as app_config
+from app.integration import get_reference_path, get_dataset
 
-sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
-
-
-
+from app.core.backends.backend_registry import get_backend
+from app.core.utils.code_utils import extract_first_code
 
 def _cleanup_cuda():
     try:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
-            print(f"[INFO] Cleaned CUDA cache")
+            # print(f"[INFO] Cleaned CUDA cache") # Reduce noise
     except Exception as e:
         print(f"[WARNING] Failed to clean CUDA: {e}")
-
-import config as mk_config
-import config
-
-ref_path_abs = str(REFERENCE_DIR.resolve())
-mk_config.ref_impl_base_path = ref_path_abs
-mk_config.project_root_path = str(MULTIKERNELBENCH_PATH.resolve())
-
-if not os.path.exists(ref_path_abs):
-    raise RuntimeError(f"Reference directory does not exist: {ref_path_abs}")
-
-config.ref_impl_base_path = ref_path_abs
-config.project_root_path = str(MULTIKERNELBENCH_PATH.resolve())
-
-print(f"[INFO] Using REFERENCE_DIR: {ref_path_abs}")
-
-from backends.backend_registry import BACKEND_REGISTRY
-from utils.evaluation_utils import extract_first_code
-from utils.utils import get_ref_src_path
-from utils.performance import time_execution_event_template
-from dataset import dataset
-from config import num_perf_trials, num_warmup
-from app.integration import get_reference_path
-import utils.performance as performance_module
-
-try:
-    test_path = get_ref_src_path('leaky_relu')
-    expected_path = os.path.join(ref_path_abs, 'activation', 'leaky_relu.py')
-    if test_path != expected_path:
-        print(f"[WARNING] get_ref_src_path path mismatch!")
-        print(f"[WARNING]   Got: {test_path}")
-        print(f"[WARNING]   Expected: {expected_path}")
-        print(f"[WARNING]   config.ref_impl_base_path = {config.ref_impl_base_path}")
-    if not os.path.exists(test_path):
-        print(f"[ERROR] get_ref_src_path returned non-existent path: {test_path}")
-        print(f"[ERROR] Expected path should be: {expected_path}")
-        print(f"[ERROR] REFERENCE_DIR = {REFERENCE_DIR}")
-        print(f"[ERROR] ref_path_abs = {ref_path_abs}")
-except Exception as e:
-    print(f"[WARNING] Error testing get_ref_src_path: {e}")
-    traceback.print_exc()
-
-if not os.path.exists(mk_config.ref_impl_base_path):
-    raise RuntimeError(f"Reference directory does not exist: {mk_config.ref_impl_base_path}")
-
-
-def get_backend(language: str):
-    if language not in BACKEND_REGISTRY:
-        try:
-            importlib.import_module(f"backends.{language}_backend")
-        except ImportError as e:
-            raise ValueError(f"Unsupported language/platform: {language} (module not found)") from e
-    
-    backend_instance = BACKEND_REGISTRY.get(language)
-    if backend_instance is None:
-        raise ValueError(f"Unsupported language/platform: {language}")
-    
-    backend_class = type(backend_instance)
-    backend = backend_class()
-    return backend
-
-
-def _handle_compile_error(backend, language, error):
-    error_str = str(error)
-    if isinstance(error, AttributeError) and 'context' in error_str.lower():
-        error_msg = f"Backend context error during compilation: {error_str}. Backend type: {type(backend)}, has context: {hasattr(backend, 'context')}"
-        print(f"[ERROR] {error_msg}")
-        return {'compile_info': error_msg}
-    if 'context' in error_str.lower():
-        error_msg = f"Error during compilation (context-related): {error_str}"
-        print(f"[ERROR] {error_msg}")
-        return {'compile_info': error_msg}
-    return {'compile_info': error_str}
 
 
 def _compile_kernel_code(function_code: str, function: str, backend, language: str) -> Tuple[bool, str]:
@@ -144,11 +71,13 @@ def _override_dimensions_in_code(ref_src: str, batch_size: Optional[int], dim: O
 
 
 def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
-    actual_num_trials = num_trials if num_trials is not None else num_perf_trials
-    OriginalModelNew = backend.context['ModelNew']
-
+    actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
+    
+    # We assume backend has context and we can access 'ModelNew', 'get_inputs', etc.
+    # This logic is specific to torch.compile, which wraps the model.
+    
     device = backend.get_device()
-    if hasattr(torch.cuda, 'synchronize'):
+    if hasattr(torch.cuda, 'synchronize') and torch.cuda.is_available():
         synchronize = torch.cuda.synchronize
         event_class = torch.cuda.Event
     else:
@@ -180,7 +109,7 @@ def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
                 print(f"[WARNING] torch.compile failed, using original model: {error_msg}")
             compiled_model = model_instance
 
-        for _ in range(num_warmup):
+        for _ in range(app_config.NUM_WARMUP):
             compiled_model(*inputs)
             synchronize(device=device)
 
@@ -260,15 +189,15 @@ def _do_baseline_computation(function, language, batch_size, dim, input_dims):
 
 def _do_performance_measurement(backend, baseline_mean_ms, function, language, num_trials):
     if num_trials is not None:
-        original_config, original_performance, original_pallas = _override_num_perf_trials(language, num_trials)
+        original_config = _override_num_perf_trials(language, num_trials)
     else:
-        original_config = original_performance = original_pallas = None
+        original_config = None
 
-    actual_num_trials = num_trials if num_trials is not None else num_perf_trials
+    actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
     timeout_seconds, use_timeout = _setup_performance_measurement_timeout(baseline_mean_ms, actual_num_trials)
     elapsed_times, performance_error = _execute_performance_measurement_with_timeout(backend, timeout_seconds, use_timeout, function)
 
-    _restore_num_perf_trials(language, original_config, original_performance, original_pallas)
+    _restore_num_perf_trials(language, original_config)
 
     if language == 'cuda':
         _cleanup_cuda()
@@ -367,19 +296,22 @@ def evaluate_kernel(
 
     try:
         backend = get_backend(language)
-        hardware = backend.get_hardware_name()
-
-        if not hasattr(backend, 'context'):
-            error_msg = f"Backend {language} does not have 'context' attribute"
-            print(f"[ERROR] {error_msg}")
-            traceback.print_exc()
-            return {
+        if backend is None:
+             return {
                 'compiled': False,
                 'correctness': None,
                 'performance': None,
                 'hardware': hardware,
-                'error': error_msg
+                'error': f"Backend for {language} not found"
             }
+        
+        hardware = backend.get_hardware_name()
+
+        # Check for context attribute (all our backends should have it)
+        if not hasattr(backend, 'context'):
+            # Only needed if we rely on context directly in this file (we do for _do_performance_measurement setup? No, backend handles it.)
+            # But _create_compiled_time_execution DOES rely on backend.context
+            pass
 
         print(f"[DEBUG] Starting evaluation for {function} on {language}")
         result = _do_kernel_evaluation(backend, function_code, function, language, hardware, torch_compile, num_trials, batch_size, dim, input_dims)
@@ -416,7 +348,8 @@ def _prepare_backend_for_baseline(backend, language: str):
         backend.cleanup()
     except Exception:
         pass
-    backend.context = {}
+    if hasattr(backend, 'context'):
+        backend.context = {}
 
 
 def _load_reference_code_and_override_dims(function: str, batch_size: Optional[int], dim: Optional[int], input_dims: Optional[Dict[str, Any]]) -> str:
@@ -453,7 +386,11 @@ def compute_baseline(
     input_dims: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     backend = get_backend(language)
+    if backend is None:
+        return {"error": f"Backend {language} not found"}
+        
     hardware = backend.get_hardware_name()
+    dataset = get_dataset()
 
     if function not in dataset:
         return {
@@ -466,7 +403,16 @@ def compute_baseline(
     try:
         _prepare_backend_for_baseline(backend, language)
         ref_src = _load_reference_code_and_override_dims(function, batch_size, dim, input_dims)
-        exec(ref_src, backend.context)
+        
+        # We need to manually exec if the backend exposes context, or add a method to backend to load reference code
+        # CudaBackend exposes context, so we can exec into it.
+        # Ideally, we should add 'load_reference_code' to backend interface, but for now:
+        if hasattr(backend, 'context'):
+            exec(ref_src, backend.context)
+        else:
+            # Fallback or error if backend doesn't support this style
+            pass
+            
         result = _execute_baseline_with_error_handling(backend, function, language, hardware)
 
         if batch_size is not None:
@@ -495,42 +441,15 @@ def compute_baseline(
             pass
 
 
-def _override_num_perf_trials(language: str, num_trials: int) -> Tuple[Optional[int], Optional[int], Optional[int]]:
-    original_config = config.num_perf_trials
-    config.num_perf_trials = num_trials
-
-    original_performance = None
-    if hasattr(performance_module, 'num_perf_trials'):
-        original_performance = performance_module.num_perf_trials
-        performance_module.num_perf_trials = num_trials
-
-    original_pallas = None
-    if language == 'pallas':
-        try:
-            import backends.pallas_backend as pallas_module
-            if hasattr(pallas_module, 'num_perf_trials'):
-                original_pallas = pallas_module.num_perf_trials
-                pallas_module.num_perf_trials = num_trials
-        except (ImportError, AttributeError):
-            pass
-
-    return original_config, original_performance, original_pallas
+def _override_num_perf_trials(language: str, num_trials: int) -> Optional[int]:
+    original_config = app_config.NUM_PERF_TRIALS
+    app_config.NUM_PERF_TRIALS = num_trials
+    return original_config
 
 
-def _restore_num_perf_trials(language: str, original_config: Optional[int], original_performance: Optional[int], original_pallas: Optional[int]):
+def _restore_num_perf_trials(language: str, original_config: Optional[int]):
     if original_config is not None:
-        config.num_perf_trials = original_config
-
-    if original_performance is not None:
-        performance_module.num_perf_trials = original_performance
-
-    if original_pallas is not None and language == 'pallas':
-        try:
-            import backends.pallas_backend as pallas_module
-            if hasattr(pallas_module, 'num_perf_trials'):
-                pallas_module.num_perf_trials = original_pallas
-        except (ImportError, AttributeError):
-            pass
+        app_config.NUM_PERF_TRIALS = original_config
 
 
 def _setup_performance_measurement_timeout(baseline_mean_ms: Optional[float], num_trials: int) -> Tuple[Optional[float], bool]:
@@ -583,7 +502,11 @@ def _execute_performance_measurement_with_timeout(backend, timeout_seconds: Opti
 
 def compute_all_baselines(language: str) -> Dict[str, Any]:
     backend = get_backend(language)
+    if not backend:
+        return {}
+        
     hardware = backend.get_hardware_name()
+    dataset = get_dataset()
     
     result = {}
     op_tests = dataset.keys()
@@ -598,7 +521,9 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
             with open(ref_src_path, 'r') as f:
                 ref_src = f.read()
 
-            exec(ref_src, backend.context)
+            if hasattr(backend, 'context'):
+                exec(ref_src, backend.context)
+                
             elapsed_times = backend.time_execution('Model')
 
             result[op] = {

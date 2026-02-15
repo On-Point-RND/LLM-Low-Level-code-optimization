@@ -8,11 +8,7 @@ from app.models import EvaluateResponse, PerformanceStats, BaselineStats
 from app.services.mlflow_service import log_evaluation_result, log_error_to_run
 from app.services.baseline_service import get_single_baseline
 from app.config import REFERENCE_DIR, MULTIKERNELBENCH_PATH
-from app.integration import get_reference_path
-
-# Import dataset to get function category
-sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
-from dataset import dataset
+from app.integration import get_reference_path, get_dataset
 
 
 def evaluate_function(

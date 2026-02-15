@@ -43,6 +43,24 @@ def register_kernelbench_dataset():
     print(f"[INFO] Registered {count} functions from KernelBench")
 
 
+def get_dataset():
+    """
+    Returns the unified dataset containing both MultiKernelBench and KernelBench tasks.
+    """
+    if str(MULTIKERNELBENCH_PATH) not in sys.path:
+        sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
+    
+    try:
+        from dataset import dataset
+        # Ensure KernelBench is registered
+        if not any(info.get('source') == 'KernelBench' for info in dataset.values()):
+            register_kernelbench_dataset()
+        return dataset
+    except ImportError:
+        print("[WARNING] Could not import dataset from MultiKernelBench")
+        return {}
+
+
 def get_reference_path(function: str) -> Optional[str]:
     """
     Resolves the path to the reference implementation of a function.

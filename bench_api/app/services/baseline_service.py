@@ -162,6 +162,7 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
     
     # Read reference codes for all functions
     function_codes = {}
+    dataset = get_dataset()
     for func_name in dataset.keys():
         code = _read_reference_code(func_name)
         if code:
