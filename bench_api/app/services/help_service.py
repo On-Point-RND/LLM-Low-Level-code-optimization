@@ -2,13 +2,8 @@ import sys
 from pathlib import Path
 from typing import Dict, Any
 
-from app.config import MULTIKERNELBENCH_PATH
-
-# Add MultiKernelBench to Python path
-sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
-
-from dataset import dataset, category2exampleop
-from backends.backend_registry import BACKEND_REGISTRY
+from app.integration import get_dataset
+from app.core.backends.backend_registry import BACKEND_REGISTRY
 
 
 def get_help_info() -> Dict[str, Any]:
@@ -30,13 +25,14 @@ def get_help_info() -> Dict[str, Any]:
             else:
                 # Try to import
                 import importlib
-                importlib.import_module(f"backends.{lang}_backend")
+                importlib.import_module(f"app.core.backends.{lang}_backend")
                 if lang in BACKEND_REGISTRY:
                     available_languages.append(lang)
         except ImportError:
             pass
     
     # Get functions and categories from dataset
+    dataset = get_dataset()
     functions = {}
     categories = set()
     

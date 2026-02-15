@@ -1,6 +1,7 @@
 import subprocess
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -31,7 +32,7 @@ def evaluate_kernel_isolated(
 
     try:
         result = subprocess.run(
-            ['python3', str(ISOLATED_SCRIPT)],
+            [sys.executable, str(ISOLATED_SCRIPT)],
             input=json.dumps(params),
             capture_output=True,
             text=True,
