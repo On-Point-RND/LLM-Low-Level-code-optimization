@@ -11,6 +11,24 @@ class CudaBackend(Backend):
     def __init__(self):
         self.context = {}
         self.device = self.get_device()
+        
+        # Load config
+        self.arch_list = ARCH_LIST
+        if torch.cuda.is_available():
+            if not self.arch_list:
+                try:
+                    # Auto-detect architecture: (8, 9) -> "8.9"
+                    capability = torch.cuda.get_device_capability(self.device)
+                    arch = f"{capability[0]}.{capability[1]}"
+                    self.arch_list = [arch]
+                    print(f"[INFO] Auto-detected CUDA architecture: {arch}")
+                except Exception as e:
+                    print(f"[WARNING] Failed to detect CUDA architecture: {e}")
+                    self.arch_list = ["8.0"] # Fallback to Ampere
+            else:
+                 print(f"[INFO] Using configured CUDA architecture: {self.arch_list}")
+        else:
+             print("[WARNING] CUDA is not available. CudaBackend functionality will be limited.")
 
     def get_device(self):
         if torch.cuda.is_available():
@@ -24,7 +42,9 @@ class CudaBackend(Backend):
 
     def compile(self, generated_code, op):
         os.environ["TORCH_USE_CUDA_DSA"] = "1"
-        os.environ["TORCH_CUDA_ARCH_LIST"] = ";".join(ARCH_LIST)
+        if self.arch_list:
+            os.environ["TORCH_CUDA_ARCH_LIST"] = ";".join(self.arch_list)
+        
         try:
             # We must compile/exec in the same context
             # We don't actually 'compile' Python code to binary here, we just exec it to load the function definitions

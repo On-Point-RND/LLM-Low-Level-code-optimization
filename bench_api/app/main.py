@@ -50,6 +50,20 @@ async def startup_event():
     logger.info(f"FastAPI application startup complete")
     logger.info(f"TMPDIR set to: {os.getenv('TMPDIR')}")
     logger.info(f"CUDA_CACHE_PATH set to: {os.getenv('CUDA_CACHE_PATH')}")
+    
+    # Check CUDA backend availability
+    try:
+        import torch
+        if torch.cuda.is_available():
+            logger.info("CUDA detected. Initializing CudaBackend...")
+            from app.core.backends.cuda_backend import CudaBackend
+            # Initialize to trigger architecture detection
+            _ = CudaBackend()
+            logger.info("CudaBackend initialized successfully.")
+        else:
+            logger.warning("CUDA not detected. CUDA-based benchmarks will fail.")
+    except Exception as e:
+        logger.error(f"Failed to initialize CUDA backend: {e}")
 
 
 @app.on_event("shutdown")

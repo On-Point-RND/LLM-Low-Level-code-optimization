@@ -47,5 +47,8 @@ NUM_CORRECT_TRIALS = int(os.getenv("NUM_CORRECT_TRIALS", "5"))
 NUM_PERF_TRIALS = int(os.getenv("NUM_PERF_TRIALS", "100"))
 NUM_WARMUP = int(os.getenv("NUM_WARMUP", "3"))
 SEED_NUM = int(os.getenv("SEED_NUM", "1024"))
-ARCH_LIST = os.getenv("ARCH_LIST", "Ada").split(",")
+ARCH_LIST = os.getenv("ARCH_LIST", None)
+if ARCH_LIST:
+    ARCH_LIST = ARCH_LIST.split(",")
+
 
