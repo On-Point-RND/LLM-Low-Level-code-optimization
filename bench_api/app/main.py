@@ -16,6 +16,7 @@ from app.services.evaluation_service import evaluate_function
 from app.services.help_service import get_help_info
 from app.services.mlflow_service import log_baseline_result
 from app.integration import register_kernelbench_dataset
+from app.core.backends.backend_registry import get_backend
 
 app = FastAPI(
     title="MultiKernelBench API",
@@ -92,6 +93,14 @@ async def get_baseline(request: BaselineRequest):
     - Otherwise, returns baseline for the specific function
     """
     try:
+        # Check backend availability
+        backend = get_backend(request.language)
+        if backend and not backend.is_available():
+            raise HTTPException(
+                status_code=503, 
+                detail=f"Backend '{request.language}' is not available on this server hardware."
+            )
+
         if request.function == "all":
             result = get_all_baselines(request.language)
             return AllBaselinesResponse(
@@ -161,6 +170,14 @@ async def evaluate(request: EvaluateRequest):
     - Returns run_name if provided for tracking
     """
     try:
+        # Check backend availability
+        backend = get_backend(request.language)
+        if backend and not backend.is_available():
+            raise HTTPException(
+                status_code=503, 
+                detail=f"Backend '{request.language}' is not available on this server hardware."
+            )
+
         # Determine source of code
         if request.function_code:
             function_code = request.function_code

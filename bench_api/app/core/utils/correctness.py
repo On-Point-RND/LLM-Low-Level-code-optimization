@@ -42,17 +42,17 @@ def execute_template(synchronize, device, context):
                 synchronize(device=device) # ensure all GPU operations are completed before checking results
                 feedback = None
                 if ref_output.shape != new_output.shape:
-                    feedback = f"[FAIL] Output shape mismatch: Expected {ref_output.shape}, got {new_output.shape}"
+                    feedback = f"Output shape mismatch: Expected {ref_output.shape}, got {new_output.shape}"
                 elif not torch.allclose(ref_output, new_output, atol=1e-04, rtol=1e-04):
-                    feedback = f"[FAIL] Output mismatch"
+                    feedback = f"Output mismatch"
                 if feedback is not None:
                     correctness = False
                     correctness_information = feedback
                     break
     except Exception as e:
-        print('[FAIL] runtime error when evaluating correctness')
+        error_msg = f"{type(e).__name__}: {str(e)}"
         correctness = False
-        correctness_information = f"[FAIL] {str(e)}"
+        correctness_information = error_msg
         return correctness, correctness_information
 
     return correctness, correctness_information

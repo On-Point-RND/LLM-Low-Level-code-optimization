@@ -216,8 +216,9 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
     try:
         compiled, compile_info = _do_compilation(backend, function_code, function, language)
     except Exception as e:
-        result['compile_info'] = str(e)
-        result['error'] = str(e)
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        result['compile_info'] = error_msg
+        result['error'] = error_msg
         return result
 
     if not compiled:
@@ -230,9 +231,10 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
     try:
         correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
     except Exception as e:
+        error_msg = f"{type(e).__name__}: {str(e)}"
         result['correctness'] = False
-        result['correctness_info'] = str(e)
-        result['error'] = str(e)
+        result['correctness_info'] = error_msg
+        result['error'] = error_msg
         return result
 
     result['correctness'] = correctness
@@ -318,14 +320,15 @@ def evaluate_kernel(
         return result
 
     except Exception as e:
-        print(f"[ERROR] Evaluation failed: {e}")
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"[ERROR] Evaluation failed: {error_msg}")
         traceback.print_exc()
         return {
             'compiled': False,
             'correctness': None,
             'performance': None,
             'hardware': hardware,
-            'error': str(e)
+            'error': error_msg
         }
 
     finally:

@@ -39,9 +39,6 @@ def evaluate_kernel_isolated(
             cwd=str(ISOLATED_SCRIPT.parent.parent)
         )
 
-        print(result.returncode)
-
-
         stdout_text = result.stdout.strip() if result.stdout else ""
         stderr_text = result.stderr.strip() if result.stderr else ""
         

@@ -15,5 +15,9 @@ class Backend:
         # Support both modelNew and baseline eval
         raise NotImplementedError
 
+    def is_available(self) -> bool:
+        """Returns True if the backend is available on the current hardware."""
+        return True
+
     def cleanup(self):
         pass

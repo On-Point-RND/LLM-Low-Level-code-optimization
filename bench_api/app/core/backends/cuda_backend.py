@@ -40,6 +40,9 @@ class CudaBackend(Backend):
             return torch.cuda.get_device_name(device=self.device)
         return "CPU"
 
+    def is_available(self) -> bool:
+        return torch.cuda.is_available()
+
     def compile(self, generated_code, op):
         os.environ["TORCH_USE_CUDA_DSA"] = "1"
         if self.arch_list:
@@ -52,7 +55,7 @@ class CudaBackend(Backend):
             exec(compiled_code, self.context)
             return True, None
         except Exception as e:
-            return False, str(e)
+            return False, f"{type(e).__name__}: {str(e)}"
 
     def correctness_execution(self, ref_src):
         synchronize = torch.cuda.synchronize if torch.cuda.is_available() else lambda device=None: None
