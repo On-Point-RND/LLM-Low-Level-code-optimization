@@ -59,6 +59,10 @@ def evaluate_function(
         logger.info(f"[DEBUG-SPEEDUP] Performance stats loaded: mean={performance.mean}")
     else:
         logger.info(f"[DEBUG-SPEEDUP] No performance stats found in result. Keys: {list(result.keys())}")
+        if result.get('performance_error'):
+            logger.error(f"[DEBUG-SPEEDUP] Performance Error: {result['performance_error']}")
+        if result.get('error'):
+            logger.error(f"[DEBUG-SPEEDUP] General Error: {result['error']}")
     
     # Get baseline and calculate speedup
     baseline = None
