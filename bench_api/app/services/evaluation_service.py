@@ -1,9 +1,12 @@
 from typing import Dict, Any, Optional
 import os
 import sys
+import logging
 from pathlib import Path
 
 from app.core.bench_kernel_isolated import evaluate_kernel_isolated
+
+logger = logging.getLogger(__name__)
 from app.models import EvaluateResponse, PerformanceStats, BaselineStats
 from app.services.mlflow_service import log_evaluation_result, log_error_to_run
 from app.services.baseline_service import get_single_baseline
@@ -53,12 +56,16 @@ def evaluate_function(
     performance = None
     if result.get('performance'):
         performance = PerformanceStats(**result['performance'])
+        logger.info(f"[DEBUG-SPEEDUP] Performance stats loaded: mean={performance.mean}")
+    else:
+        logger.info(f"[DEBUG-SPEEDUP] No performance stats found in result. Keys: {list(result.keys())}")
     
     # Get baseline and calculate speedup
     baseline = None
     speedup = None
     baseline_function_code = None
     try:
+        logger.info(f"[DEBUG-SPEEDUP] Fetching baseline for function='{function}' language='{language}' hardware='{result.get('hardware')}'")
         baseline_result = get_single_baseline(
             language, 
             function,
@@ -66,6 +73,19 @@ def evaluate_function(
             dim=dim,
             input_dims=input_dims
         )
+        
+        if baseline_result:
+            logger.info(f"[DEBUG-SPEEDUP] Baseline result retrieved. Keys: {list(baseline_result.keys())}")
+            if 'baseline' in baseline_result:
+                baseline_data = baseline_result['baseline']
+                logger.info(f"[DEBUG-SPEEDUP] Baseline data type: {type(baseline_data)}")
+                if isinstance(baseline_data, dict):
+                    logger.info(f"[DEBUG-SPEEDUP] Baseline data keys: {list(baseline_data.keys())}")
+                    if 'mean' in baseline_data:
+                        logger.info(f"[DEBUG-SPEEDUP] Baseline mean found: {baseline_data['mean']}")
+                else:
+                    logger.info(f"[DEBUG-SPEEDUP] Baseline data is not a dict: {baseline_data}")
+
         if baseline_result and 'baseline' in baseline_result:
             baseline_data = baseline_result['baseline']
             if isinstance(baseline_data, dict) and 'mean' in baseline_data:
@@ -80,6 +100,9 @@ def evaluate_function(
                 # Calculate even if correctness is False, as long as performance is available
                 if performance and performance.mean > 0:
                     speedup = baseline.mean / performance.mean
+                    logger.info(f"[DEBUG-SPEEDUP] Calculated speedup: {speedup} (baseline={baseline.mean} / perf={performance.mean})")
+                else:
+                    logger.info(f"[DEBUG-SPEEDUP] Cannot calculate speedup. Performance mean: {performance.mean if performance else 'None'}")
                 
                 # Read baseline/reference code
                 try:
@@ -88,10 +111,15 @@ def evaluate_function(
                         with open(ref_src_path, 'r', encoding='utf-8') as f:
                             baseline_function_code = f.read()
                 except Exception as e:
-                    print(f"[WARNING] Failed to read baseline code for {function}: {e}")
+                    logger.warning(f"Failed to read baseline code for {function}: {e}")
+            else:
+                logger.info(f"[DEBUG-SPEEDUP] Baseline data missing 'mean' or not a dict.")
+        else:
+            logger.info(f"[DEBUG-SPEEDUP] No baseline result or 'baseline' key missing.")
+
     except Exception as e:
         # If baseline can't be retrieved, just continue without it
-        print(f"[WARNING] Failed to get baseline for {function} on {language}: {e}")
+        logger.warning(f"Failed to get baseline for {function} on {language}: {e}", exc_info=True)
     
     # Log to MLflow if enabled (if experiment_name or run_name provided)
     if experiment_name or run_name:
