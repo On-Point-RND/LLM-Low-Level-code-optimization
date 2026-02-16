@@ -50,7 +50,40 @@ def execute_template(synchronize, device, context):
                     correctness_information = feedback
                     break
     except Exception as e:
-        error_msg = f"{type(e).__name__}: {str(e)}"
+        import traceback
+        import sys
+        import os
+
+        # Determine the root 'app' directory dynamically to filter internal frames
+        # current file is app/core/utils/correctness.py
+        # up 3 levels gives .../app
+        try:
+            current_file = os.path.abspath(__file__)
+            app_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file))))
+        except Exception:
+            app_root = "/app" # Fallback if __file__ is weird
+        
+        _, _, exc_traceback = sys.exc_info()
+        full_tb = traceback.extract_tb(exc_traceback)
+        
+        filtered_tb = []
+        for frame in full_tb:
+            # frame.filename is usually absolute
+            filename = os.path.abspath(frame.filename)
+            
+            # Keep dynamic code (user kernels)
+            if "<" in filename and ">" in filename: 
+                 filtered_tb.append(frame)
+            # Filter out internal service code
+            elif not filename.startswith(app_root):
+                 filtered_tb.append(frame)
+        
+        if not filtered_tb:
+            filtered_tb = full_tb[-2:]
+            
+        formatted_tb = "".join(traceback.format_list(filtered_tb))
+        error_msg = f"{type(e).__name__}: {str(e)}\n\nTraceback (most recent call last):\n{formatted_tb}"
+        
         correctness = False
         correctness_information = error_msg
         return correctness, correctness_information

@@ -213,42 +213,48 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         'hardware': hardware
     }
 
+    # TODO: Disable TORCH_USE_CUDA_DSA for benchmarking phase
+    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
     try:
-        compiled, compile_info = _do_compilation(backend, function_code, function, language)
-    except Exception as e:
-        error_msg = f"{type(e).__name__}: {str(e)}"
-        result['compile_info'] = error_msg
-        result['error'] = error_msg
-        return result
-
-    if not compiled:
-        result['compile_info'] = compile_info
-        result['error'] = compile_info
-        return result
-
-    result['compiled'] = True
-
-    try:
-        correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
-    except Exception as e:
-        error_msg = f"{type(e).__name__}: {str(e)}"
-        result['correctness'] = False
-        result['correctness_info'] = error_msg
-        result['error'] = error_msg
-        return result
-
-    result['correctness'] = correctness
-
-    if not correctness:
-        result['correctness_info'] = correctness_info
-        result['error'] = correctness_info or "Correctness check failed"
-        if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
-            try:
-                backend.cleanup()
-                backend.context = {}
-            except Exception:
-                pass
+        try:
+            compiled, compile_info = _do_compilation(backend, function_code, function, language)
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            result['compile_info'] = error_msg
+            result['error'] = error_msg
             return result
+
+        if not compiled:
+            result['compile_info'] = compile_info
+            result['error'] = compile_info
+            return result
+
+        result['compiled'] = True
+
+        try:
+            correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            result['correctness'] = False
+            result['correctness_info'] = error_msg
+            result['error'] = error_msg
+            return result
+
+        result['correctness'] = correctness
+
+        if not correctness:
+            result['correctness_info'] = correctness_info
+            result['error'] = correctness_info or "Correctness check failed"
+            if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
+                try:
+                    backend.cleanup()
+                    backend.context = {}
+                except Exception:
+                    pass
+                return result
+    finally:
+        if "CUDA_LAUNCH_BLOCKING" in os.environ:
+            del os.environ["CUDA_LAUNCH_BLOCKING"]
 
     if torch_compile:
         _setup_torch_compile(backend, num_trials=num_trials)

@@ -44,14 +44,28 @@ class CudaBackend(Backend):
         return torch.cuda.is_available()
 
     def compile(self, generated_code, op):
+        import hashlib
+        import linecache
+        
         os.environ["TORCH_USE_CUDA_DSA"] = "1"
         if self.arch_list:
             os.environ["TORCH_CUDA_ARCH_LIST"] = ";".join(self.arch_list)
         
         try:
-            # We must compile/exec in the same context
-            # We don't actually 'compile' Python code to binary here, we just exec it to load the function definitions
-            compiled_code = compile(generated_code, "<string>", "exec")
+            # Generate a unique fake filename for the code
+            # This allows traceback to show source lines without writing to disk
+            fake_fname = f"<cuda_code_{hashlib.md5(generated_code.encode()).hexdigest()[:8]}>"
+            
+            # Register the source code in linecache
+            linecache.cache[fake_fname] = (
+                len(generated_code),
+                None,
+                generated_code.splitlines(True),
+                fake_fname,
+            )
+            
+            # Compile with the fake filename
+            compiled_code = compile(generated_code, fake_fname, "exec")
             exec(compiled_code, self.context)
             return True, None
         except Exception as e:
