@@ -145,10 +145,21 @@ def evaluate_function(
     perf_str = f"{performance.mean:.3g}ms" if performance else "N/A"
     speedup_str = f"{speedup:.2f}x" if speedup is not None else "N/A"
     timing_str = f"Timing: (comp: {timing.compilation:.2f}s, corr: {timing.correctness:.2f}s, perf: {timing.performance:.2f}s)" if timing else ""
+    
+    error_snippet = ""
+    if not result['compiled']:
+        err = result.get('compile_info') or result.get('error') or ""
+        first_line = err.strip().split('\n')[0] if err else "Unknown compile error"
+        error_snippet = f", CompileError: {first_line}"
+    elif result.get('correctness') is False:
+        err = result.get('correctness_info') or result.get('error') or ""
+        first_line = err.strip().split('\n')[0] if err else "Unknown correctness error"
+        error_snippet = f", CorrectnessError: {first_line}"
+
     logger.info(
         f"[EVAL] Function: {function}, Language: {language}, "
         f"Compiled: {result['compiled']}, Correctness: {result.get('correctness')}, "
-        f"Performance: {perf_str}, Speedup: {speedup_str} {timing_str}"
+        f"Performance: {perf_str}, Speedup: {speedup_str} {timing_str}{error_snippet}"
     )
     
     return EvaluateResponse(
