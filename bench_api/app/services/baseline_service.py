@@ -112,6 +112,11 @@ def get_single_baseline(
             cached_dim = baseline.get('dim', dim)
             cached_input_dims = baseline.get('input_dims', input_dims)
             
+            logger.info(
+                f"[BASELINE] Function: {function}, Language: {language}, "
+                f"Performance: {baseline['mean']:.3g}ms, Cached: True"
+            )
+            
             return {
                 'baseline': baseline,
                 'hardware': hardware,
@@ -144,7 +149,7 @@ def get_single_baseline(
     baseline_data[cache_key] = baseline
     save_baseline_file(language, hardware, baseline_data, dims_key)
     
-    return {
+    result = {
         'baseline': baseline,
         'hardware': hardware,
         'compute_capability': compute_capability,
@@ -154,6 +159,13 @@ def get_single_baseline(
         'dim': dim,
         'input_dims': input_dims
     }
+
+    logger.info(
+        f"[BASELINE] Function: {function}, Language: {language}, "
+        f"Performance: {baseline['mean']:.3g}ms, Cached: False"
+    )
+    
+    return result
 
 
 def get_all_baselines(language: str) -> Dict[str, Any]:

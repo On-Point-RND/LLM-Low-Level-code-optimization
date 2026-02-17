@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 import base64
 import os
+import logging
 
 from app.models import (
     BaselineRequest,
@@ -18,6 +19,8 @@ from app.services.mlflow_service import log_baseline_result
 from app.integration import register_kernelbench_dataset
 from app.core.backends.backend_registry import get_backend
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title="MultiKernelBench API",
     description="API for evaluating kernel performance using MultiKernelBench",
@@ -27,9 +30,6 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup_event():
-    import logging
-    logger = logging.getLogger(__name__)
-    
     # Register KernelBench tasks
     register_kernelbench_dataset()
     
@@ -92,6 +92,7 @@ async def get_baseline(request: BaselineRequest):
     - If function is "all", returns all baselines for the language
     - Otherwise, returns baseline for the specific function
     """
+    logger.info(f"Received baseline request: function={request.function}, language={request.language}")
     try:
         # Check backend availability
         backend = get_backend(request.language)
@@ -169,6 +170,7 @@ async def evaluate(request: EvaluateRequest):
     - Optionally applies torch.compile if torch_compile=True
     - Returns run_name if provided for tracking
     """
+    logger.info(f"Received evaluation request: function={request.function}, language={request.language}")
     try:
         # Check backend availability
         backend = get_backend(request.language)

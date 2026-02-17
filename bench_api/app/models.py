@@ -72,6 +72,13 @@ class PerformanceStats(BaseModel):
     num_trials: int
 
 
+class EvaluationTiming(BaseModel):
+    compilation: Optional[float] = Field(None, description="Time spent on compilation in seconds")
+    correctness: Optional[float] = Field(None, description="Time spent on correctness check in seconds")
+    performance: Optional[float] = Field(None, description="Time spent on performance measurement in seconds")
+    total: Optional[float] = Field(None, description="Total evaluation time in seconds (excluding baseline)")
+
+
 class EvaluateResponse(BaseModel):
     function: str
     language: str
@@ -80,6 +87,7 @@ class EvaluateResponse(BaseModel):
     compiled: bool
     correctness: Optional[bool] = None
     performance: Optional[PerformanceStats] = None
+    timing: Optional[EvaluationTiming] = None
     compile_info: Optional[str] = None
     correctness_info: Optional[str] = None
     run_name: Optional[str] = Field(None, description="MLflow run name")

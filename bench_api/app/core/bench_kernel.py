@@ -199,7 +199,13 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         'correctness': None,
         'performance': None,
         'hardware': hardware,
-        'compute_capability': compute_capability
+        'compute_capability': compute_capability,
+        'timing': {
+            'compilation': 0.0,
+            'correctness': 0.0,
+            'performance': 0.0,
+            'total': 0.0
+        }
     }
 
     # Calculate baseline first because it cleans up the backend context
@@ -218,29 +224,37 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         }
 
     os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+    eval_start_time = time.time()
     try:
         try:
+            comp_start = time.time()
             compiled, compile_info = _do_compilation(backend, function_code, function, language)
+            result['timing']['compilation'] = time.time() - comp_start
         except Exception as e:
             error_msg = f"{type(e).__name__}: {str(e)}"
             result['compile_info'] = error_msg
             result['error'] = error_msg
+            result['timing']['total'] = time.time() - eval_start_time
             return result
 
         if not compiled:
             result['compile_info'] = compile_info
             result['error'] = compile_info
+            result['timing']['total'] = time.time() - eval_start_time
             return result
 
         result['compiled'] = True
 
         try:
+            corr_start = time.time()
             correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
+            result['timing']['correctness'] = time.time() - corr_start
         except Exception as e:
             error_msg = f"{type(e).__name__}: {str(e)}"
             result['correctness'] = False
             result['correctness_info'] = error_msg
             result['error'] = error_msg
+            result['timing']['total'] = time.time() - eval_start_time
             return result
 
         result['correctness'] = correctness
@@ -254,6 +268,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
                     backend.context = {}
                 except Exception:
                     pass
+                result['timing']['total'] = time.time() - eval_start_time
                 return result
     finally:
         if "CUDA_LAUNCH_BLOCKING" in os.environ:
@@ -263,10 +278,15 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         _setup_torch_compile(backend, num_trials=num_trials)
 
     try:
+        perf_start = time.time()
         elapsed_times, performance_error = _do_performance_measurement(backend, baseline_mean_ms, function, language, num_trials)
+        result['timing']['performance'] = time.time() - perf_start
     except Exception as e:
         elapsed_times = None
         performance_error = str(e)
+        result['timing']['performance'] = time.time() - perf_start
+
+    result['timing']['total'] = time.time() - eval_start_time
 
     if performance_error:
         result['performance'] = None

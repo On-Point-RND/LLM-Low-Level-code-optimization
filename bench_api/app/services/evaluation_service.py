@@ -7,7 +7,7 @@ from pathlib import Path
 from app.core.bench_kernel_isolated import evaluate_kernel_isolated
 
 logger = logging.getLogger(__name__)
-from app.models import EvaluateResponse, PerformanceStats, BaselineStats
+from app.models import EvaluateResponse, PerformanceStats, BaselineStats, EvaluationTiming
 from app.services.mlflow_service import log_evaluation_result, log_error_to_run
 from app.services.baseline_service import get_single_baseline
 from app.config import REFERENCE_DIR, MULTIKERNELBENCH_PATH
@@ -65,6 +65,10 @@ def evaluate_function(
             logger.debug(f"Performance Error: {result['performance_error']}")
         if result.get('error'):
             logger.debug(f"General Error: {result['error']}")
+    
+    timing = None
+    if result.get('timing'):
+        timing = EvaluationTiming(**result['timing'])
     
     # Get baseline and calculate speedup
     baseline = None
@@ -138,6 +142,15 @@ def evaluate_function(
             if error_text:
                 log_error_to_run(mlflow_run_id, error_text)
     
+    perf_str = f"{performance.mean:.3g}ms" if performance else "N/A"
+    speedup_str = f"{speedup:.2f}x" if speedup is not None else "N/A"
+    timing_str = f"Timing: (comp: {timing.compilation:.2f}s, corr: {timing.correctness:.2f}s, perf: {timing.performance:.2f}s)" if timing else ""
+    logger.info(
+        f"[EVAL] Function: {function}, Language: {language}, "
+        f"Compiled: {result['compiled']}, Correctness: {result.get('correctness')}, "
+        f"Performance: {perf_str}, Speedup: {speedup_str} {timing_str}"
+    )
+    
     return EvaluateResponse(
         function=function,
         language=language,
@@ -145,6 +158,7 @@ def evaluate_function(
         compiled=result['compiled'],
         correctness=result.get('correctness'),
         performance=performance,
+        timing=timing,
         compile_info=result.get('compile_info'),
         correctness_info=result.get('correctness_info'),
         run_name=run_name,
