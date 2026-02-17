@@ -24,6 +24,7 @@ class SingleBaselineResponse(BaseModel):
     function: str
     language: str
     hardware: str
+    compute_capability: Optional[str] = Field(None, description="The compute capability of the hardware (e.g., '8.0' for CUDA)")
     baseline: BaselineStats
     cached: bool
     function_code: Optional[str] = Field(None, description="The reference/baseline kernel code")
@@ -36,6 +37,7 @@ class AllBaselinesResponse(BaseModel):
     function: str = "all"
     language: str
     hardware: str
+    compute_capability: Optional[str] = Field(None, description="The compute capability of the hardware (e.g., '8.0' for CUDA)")
     baselines: Dict[str, BaselineStats]
     cached: bool
     function_codes: Optional[Dict[str, str]] = Field(None, description="Reference/baseline kernel codes for each function")
@@ -74,6 +76,7 @@ class EvaluateResponse(BaseModel):
     function: str
     language: str
     hardware: str
+    compute_capability: Optional[str] = Field(None, description="The compute capability of the hardware (e.g., '8.0' for CUDA)")
     compiled: bool
     correctness: Optional[bool] = None
     performance: Optional[PerformanceStats] = None
