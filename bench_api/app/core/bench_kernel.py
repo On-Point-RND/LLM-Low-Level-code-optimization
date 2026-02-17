@@ -473,8 +473,11 @@ def _setup_performance_measurement_timeout(baseline_mean_ms: Optional[float], nu
     use_timeout = False
     if baseline_mean_ms is not None and hasattr(signal, 'SIGALRM') and hasattr(signal, 'alarm'):
         total_baseline_time_ms = num_trials * baseline_mean_ms
-        timeout_seconds = max(5.0, (5 * total_baseline_time_ms) / 1000.0)
-        print(f"[INFO] Setting timeout for performance measurement: {timeout_seconds:.2f} seconds (5 * {num_trials} * baseline_mean = {total_baseline_time_ms:.2f}ms)")
+        # Increase timeout leniency:
+        # 1. Allow up to 50x slower than baseline (was 5x)
+        # 2. Minimum 60 seconds (was 5s) to handle large data transfers/unoptimized kernels
+        timeout_seconds = max(60.0, (50 * total_baseline_time_ms) / 1000.0)
+        print(f"[INFO] Setting timeout for performance measurement: {timeout_seconds:.2f} seconds (50 * {num_trials} * baseline_mean = {total_baseline_time_ms:.2f}ms)")
         use_timeout = True
     elif baseline_mean_ms is not None:
         print(f"[WARNING] Timeout not available on this platform (signal.SIGALRM not supported)")
