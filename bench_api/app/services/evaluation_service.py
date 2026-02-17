@@ -52,6 +52,10 @@ def evaluate_function(
         input_dims=input_dims
     )
     
+    # If baseline computation failed inside the kernel evaluation, raise an error to return HTTP 500
+    if result.get('error') and "Baseline computation failed" in str(result['error']):
+        raise RuntimeError(result['error'])
+    
     # Convert to response model
     performance = None
     if result.get('performance'):

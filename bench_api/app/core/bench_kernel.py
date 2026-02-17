@@ -213,6 +213,20 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         'hardware': hardware
     }
 
+    # Calculate baseline first because it cleans up the backend context
+    baseline_mean_ms = None
+    try:
+        baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims)
+    except Exception as e:
+        print(f"[ERROR] Baseline computation failed: {e}")
+        return {
+            'compiled': False,
+            'correctness': None,
+            'performance': None,
+            'hardware': hardware,
+            'error': f"Baseline computation failed: {str(e)}"
+        }
+
     # TODO: Disable TORCH_USE_CUDA_DSA for benchmarking phase
     os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
     try:
@@ -258,13 +272,6 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
 
     if torch_compile:
         _setup_torch_compile(backend, num_trials=num_trials)
-
-    try:
-        baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims)
-    except Exception as e:
-        baseline_mean_ms = None
-        if 'error' not in result:
-            result['error'] = str(e)
 
     try:
         elapsed_times, performance_error = _do_performance_measurement(backend, baseline_mean_ms, function, language, num_trials)
