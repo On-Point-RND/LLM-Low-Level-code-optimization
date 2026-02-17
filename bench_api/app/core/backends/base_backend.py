@@ -5,6 +5,10 @@ class Backend:
     def get_hardware_name(self):
         raise NotImplementedError
 
+    def get_compute_capability(self):
+        """Returns the compute capability of the device as a tuple (major, minor), or None if not applicable."""
+        return None
+
     def compile(self, generated_code, op):
         raise NotImplementedError
 

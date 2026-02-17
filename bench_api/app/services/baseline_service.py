@@ -87,6 +87,8 @@ def get_single_baseline(
     """
     backend = get_backend(language)
     hardware = backend.get_hardware_name()
+    capability = backend.get_compute_capability()
+    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     
     # Read reference code
     function_code = _read_reference_code(function)
@@ -113,6 +115,7 @@ def get_single_baseline(
             return {
                 'baseline': baseline,
                 'hardware': hardware,
+                'compute_capability': compute_capability,
                 'cached': True,
                 'function_code': function_code,
                 'batch_size': cached_batch_size,
@@ -144,6 +147,7 @@ def get_single_baseline(
     return {
         'baseline': baseline,
         'hardware': hardware,
+        'compute_capability': compute_capability,
         'cached': False,
         'function_code': function_code,
         'batch_size': batch_size,
@@ -159,13 +163,15 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
     """
     backend = get_backend(language)
     hardware = backend.get_hardware_name()
+    capability = backend.get_compute_capability()
+    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     
     # Try to load from file
     baseline_data = load_baseline_file(language, hardware)
     
     # Read reference codes for all functions
     function_codes = {}
-    dataset = get_dataset()
+    from dataset import dataset
     for func_name in dataset.keys():
         code = _read_reference_code(func_name)
         if code:
@@ -180,6 +186,7 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
             return {
                 'baselines': valid_baselines,
                 'hardware': hardware,
+                'compute_capability': compute_capability,
                 'cached': True,
                 'function_codes': function_codes if function_codes else None
             }
@@ -197,6 +204,7 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
     return {
         'baselines': valid_baselines,
         'hardware': hardware,
+        'compute_capability': compute_capability,
         'cached': False,
         'function_codes': function_codes if function_codes else None
     }

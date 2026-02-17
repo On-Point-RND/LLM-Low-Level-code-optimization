@@ -21,10 +21,11 @@ class CudaBackend(Backend):
             if not self.arch_list:
                 try:
                     # Auto-detect architecture: (8, 9) -> "8.9"
-                    capability = torch.cuda.get_device_capability(self.device)
-                    arch = f"{capability[0]}.{capability[1]}"
-                    self.arch_list = [arch]
-                    logger.info(f"Auto-detected CUDA architecture: {arch}")
+                    capability = self.get_compute_capability()
+                    if capability:
+                        arch = f"{capability[0]}.{capability[1]}"
+                        self.arch_list = [arch]
+                        logger.info(f"Auto-detected CUDA architecture: {arch}")
                 except Exception as e:
                     logger.warning(f"Failed to detect CUDA architecture: {e}")
                     self.arch_list = ["8.0"] # Fallback to Ampere
@@ -42,6 +43,11 @@ class CudaBackend(Backend):
         if torch.cuda.is_available():
             return torch.cuda.get_device_name(device=self.device)
         return "CPU"
+
+    def get_compute_capability(self):
+        if torch.cuda.is_available():
+            return torch.cuda.get_device_capability(self.device)
+        return None
 
     def is_available(self) -> bool:
         return torch.cuda.is_available()

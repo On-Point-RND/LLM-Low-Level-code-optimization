@@ -192,11 +192,14 @@ def _do_performance_measurement(backend, baseline_mean_ms, function, language, n
 
 
 def _do_kernel_evaluation(backend, function_code, function, language, hardware, torch_compile, num_trials, batch_size, dim, input_dims) -> Dict[str, Any]:
+    capability = backend.get_compute_capability()
+    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     result = {
         'compiled': False,
         'correctness': None,
         'performance': None,
-        'hardware': hardware
+        'hardware': hardware,
+        'compute_capability': compute_capability
     }
 
     # Calculate baseline first because it cleans up the backend context
@@ -210,6 +213,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
             'correctness': None,
             'performance': None,
             'hardware': hardware,
+            'compute_capability': compute_capability,
             'error': f"Baseline computation failed: {str(e)}"
         }
 
@@ -293,6 +297,7 @@ def evaluate_kernel(
 ) -> Dict[str, Any]:
     backend = None
     hardware = "unknown"
+    compute_capability = None
 
     try:
         backend = get_backend(language)
@@ -302,10 +307,13 @@ def evaluate_kernel(
                 'correctness': None,
                 'performance': None,
                 'hardware': hardware,
+                'compute_capability': compute_capability,
                 'error': f"Backend for {language} not found"
             }
         
         hardware = backend.get_hardware_name()
+        capability = backend.get_compute_capability()
+        compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
 
         logger.debug(f"Starting evaluation for {function} on {language}")
         result = _do_kernel_evaluation(backend, function_code, function, language, hardware, torch_compile, num_trials, batch_size, dim, input_dims)
@@ -319,6 +327,7 @@ def evaluate_kernel(
             'correctness': None,
             'performance': None,
             'hardware': hardware,
+            'compute_capability': compute_capability,
             'error': error_msg
         }
 
@@ -384,6 +393,8 @@ def compute_baseline(
         return {"error": f"Backend {language} not found"}
         
     hardware = backend.get_hardware_name()
+    capability = backend.get_compute_capability()
+    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     dataset = get_dataset()
 
     if function not in dataset:
@@ -391,7 +402,8 @@ def compute_baseline(
             "not_supported": True,
             "error": f"Function '{function}' not found in dataset",
             "error_type": "KeyError",
-            "device": hardware
+            "device": hardware,
+            "compute_capability": compute_capability
         }
 
     try:
@@ -405,6 +417,7 @@ def compute_baseline(
             exec(ref_src, backend.context)
             
         result = _execute_baseline_with_error_handling(backend, function, language, hardware)
+        result['compute_capability'] = compute_capability
 
         if batch_size is not None:
             result['batch_size'] = batch_size
@@ -421,7 +434,8 @@ def compute_baseline(
             "not_supported": True,
             "error": str(e),
             "error_type": type(e).__name__,
-            "device": hardware
+            "device": hardware,
+            "compute_capability": compute_capability
         }
 
     finally:
@@ -495,6 +509,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
         return {}
         
     hardware = backend.get_hardware_name()
+    capability = backend.get_compute_capability()
+    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     dataset = get_dataset()
     
     result = {}
@@ -521,7 +537,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
                 "min": float(f"{np.min(elapsed_times):.3g}"),
                 "max": float(f"{np.max(elapsed_times):.3g}"),
                 "num_trials": len(elapsed_times),
-                'device': hardware
+                'device': hardware,
+                'compute_capability': compute_capability
             }
 
         except Exception as e:
@@ -530,7 +547,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
                 "not_supported": True,
                 "error": str(e),
                 "error_type": type(e).__name__,
-                "device": hardware
+                "device": hardware,
+                "compute_capability": compute_capability
             }
 
         if language == 'cuda':
