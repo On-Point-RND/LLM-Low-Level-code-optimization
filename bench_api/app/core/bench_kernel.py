@@ -6,6 +6,7 @@ import numpy as np
 import time
 import traceback
 import signal
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
@@ -16,14 +17,15 @@ from app.integration import get_reference_path, get_dataset
 from app.core.backends.backend_registry import get_backend
 from app.core.utils.code_utils import extract_first_code
 
+logger = logging.getLogger(__name__)
+
 def _cleanup_cuda():
     try:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
-            # print(f"[INFO] Cleaned CUDA cache") # Reduce noise
     except Exception as e:
-        print(f"[WARNING] Failed to clean CUDA: {e}")
+        logger.warning(f"Failed to clean CUDA: {e}")
 
 
 def _compile_kernel_code(function_code: str, function: str, backend, language: str) -> Tuple[bool, str]:
@@ -31,14 +33,11 @@ def _compile_kernel_code(function_code: str, function: str, backend, language: s
     if generated_code is None:
         generated_code = function_code
 
-    print(f"[DEBUG] Attempting to compile code for {function}")
     compiled, compile_info = backend.compile(generated_code, function)
-    print(f"[DEBUG] Compilation result for {function}: compiled={compiled}")
 
     if not compiled:
         if compile_info:
-            print(f"[DEBUG] Compilation failed for {function}:")
-            print(compile_info)
+            logger.debug(f"Compilation failed for {function}: {compile_info}")
         return False, compile_info or "Compilation failed"
 
     return True, ""
@@ -65,7 +64,6 @@ def _override_dimensions_in_code(ref_src: str, batch_size: Optional[int], dim: O
 
         override_code = '\n'.join(dimension_overrides) + '\n'
         ref_src = '\n'.join(lines[:insert_pos]) + '\n' + override_code + '\n'.join(lines[insert_pos:])
-        print(f"[INFO] Overriding dimensions for evaluation {function}: {', '.join(dimension_overrides)}")
 
     return ref_src
 
@@ -73,27 +71,20 @@ def _override_dimensions_in_code(ref_src: str, batch_size: Optional[int], dim: O
 def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
     actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
     
-    # We assume backend has context and we can access 'ModelNew', 'get_inputs', etc.
-    # This logic is specific to torch.compile, which wraps the model.
-    
     device = backend.get_device()
     if hasattr(torch.cuda, 'synchronize') and torch.cuda.is_available():
         synchronize = torch.cuda.synchronize
         event_class = torch.cuda.Event
     else:
-        def synchronize(device=None):
-            pass
+        def synchronize(device=None): pass
         event_class = None
 
     get_inputs = backend.context['get_inputs']
     get_init_inputs = backend.context['get_init_inputs']
     ModelNew = backend.context['ModelNew']
 
-    init_inputs = get_init_inputs()
-    init_inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in init_inputs]
-
-    inputs = get_inputs()
-    inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in inputs]
+    init_inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in get_init_inputs()]
+    inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in get_inputs()]
 
     with torch.no_grad():
         model_instance = ModelNew(*init_inputs).to(device)
@@ -102,18 +93,14 @@ def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
             compiled_model = torch.compile(model_instance)
         except Exception as compile_error:
             error_msg = str(compile_error)
-            if 'pytree' in error_msg.lower() or 'register_pytree_node' in error_msg:
-                print(f"[WARNING] torch.compile failed due to PyTorch compatibility issue (PyTorch {torch.__version__}): {error_msg}")
-                print(f"[INFO] This may be a compatibility issue. Try using torch_compile=false or check PyTorch installation. Continuing with original model (no compilation).")
-            else:
-                print(f"[WARNING] torch.compile failed, using original model: {error_msg}")
+            logger.warning(f"torch.compile failed, using original model: {error_msg}")
             compiled_model = model_instance
 
-        for _ in range(app_config.NUM_WARMUP):
-            compiled_model(*inputs)
-            synchronize(device=device)
-
         def compiled_time_execution(eval_target='ModelNew'):
+            for _ in range(app_config.NUM_WARMUP):
+                compiled_model(*inputs)
+                synchronize(device=device)
+
             elapsed_times = []
             if event_class:
                 for _ in range(actual_num_trials):
@@ -123,8 +110,7 @@ def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
                     compiled_model(*inputs)
                     end_event.record()
                     synchronize(device=device)
-                    elapsed_time_ms = start_event.elapsed_time(end_event)
-                    elapsed_times.append(elapsed_time_ms)
+                    elapsed_times.append(start_event.elapsed_time(end_event))
             else:
                 for _ in range(actual_num_trials):
                     synchronize(device=device)
@@ -140,7 +126,7 @@ def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
 
 def _setup_torch_compile(backend, num_trials: Optional[int] = None):
     if not hasattr(torch, 'compile'):
-        print(f"[WARNING] torch.compile is not available in PyTorch {torch.__version__}. torch.compile requires PyTorch 2.0+. Continuing without compilation.")
+        logger.warning(f"torch.compile is not available in PyTorch {torch.__version__}. torch.compile requires PyTorch 2.0+. Continuing without compilation.")
         return False
 
     if 'ModelNew' not in backend.context:
@@ -218,7 +204,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
     try:
         baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims)
     except Exception as e:
-        print(f"[ERROR] Baseline computation failed: {e}")
+        logger.error(f"Baseline computation failed: {e}")
         return {
             'compiled': False,
             'correctness': None,
@@ -227,7 +213,6 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
             'error': f"Baseline computation failed: {str(e)}"
         }
 
-    # TODO: Disable TORCH_USE_CUDA_DSA for benchmarking phase
     os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
     try:
         try:
@@ -322,20 +307,13 @@ def evaluate_kernel(
         
         hardware = backend.get_hardware_name()
 
-        # Check for context attribute (all our backends should have it)
-        if not hasattr(backend, 'context'):
-            # Only needed if we rely on context directly in this file (we do for _do_performance_measurement setup? No, backend handles it.)
-            # But _create_compiled_time_execution DOES rely on backend.context
-            pass
-
-        print(f"[DEBUG] Starting evaluation for {function} on {language}")
+        logger.debug(f"Starting evaluation for {function} on {language}")
         result = _do_kernel_evaluation(backend, function_code, function, language, hardware, torch_compile, num_trials, batch_size, dim, input_dims)
         return result
 
     except Exception as e:
         error_msg = f"{type(e).__name__}: {str(e)}"
-        print(f"[ERROR] Evaluation failed: {error_msg}")
-        traceback.print_exc()
+        logger.error(f"Evaluation failed: {error_msg}", exc_info=True)
         return {
             'compiled': False,
             'correctness': None,
@@ -372,7 +350,7 @@ def _load_reference_code_and_override_dims(function: str, batch_size: Optional[i
     ref_src_path = get_reference_path(function)
     if not ref_src_path:
         error_msg = f"Reference file not found for function: {function}"
-        print(f"[ERROR] {function}: {error_msg}")
+        logger.error(f"{function}: {error_msg}")
         raise FileNotFoundError(error_msg)
 
     with open(ref_src_path, 'r') as f:
@@ -425,9 +403,6 @@ def compute_baseline(
         # Ideally, we should add 'load_reference_code' to backend interface, but for now:
         if hasattr(backend, 'context'):
             exec(ref_src, backend.context)
-        else:
-            # Fallback or error if backend doesn't support this style
-            pass
             
         result = _execute_baseline_with_error_handling(backend, function, language, hardware)
 
@@ -441,8 +416,7 @@ def compute_baseline(
         return result
 
     except Exception as e:
-        print(f"[ERROR] Baseline computation failed: {e}")
-        traceback.print_exc()
+        logger.error(f"Baseline computation failed: {e}", exc_info=True)
         return {
             "not_supported": True,
             "error": str(e),
@@ -471,16 +445,10 @@ def _restore_num_perf_trials(language: str, original_config: Optional[int]):
 def _setup_performance_measurement_timeout(baseline_mean_ms: Optional[float], num_trials: int) -> Tuple[Optional[float], bool]:
     timeout_seconds = None
     use_timeout = False
-    if baseline_mean_ms is not None and hasattr(signal, 'SIGALRM') and hasattr(signal, 'alarm'):
-        total_baseline_time_ms = num_trials * baseline_mean_ms
-        # Increase timeout leniency:
-        # 1. Allow up to 50x slower than baseline (was 5x)
-        # 2. Minimum 60 seconds (was 5s) to handle large data transfers/unoptimized kernels
-        timeout_seconds = max(60.0, (50 * total_baseline_time_ms) / 1000.0)
-        print(f"[INFO] Setting timeout for performance measurement: {timeout_seconds:.2f} seconds (50 * {num_trials} * baseline_mean = {total_baseline_time_ms:.2f}ms)")
+    if baseline_mean_ms is not None:
+        total_baseline_time_ms = (num_trials + app_config.NUM_WARMUP) * baseline_mean_ms
+        timeout_seconds = max(5.0, (2.0 * total_baseline_time_ms) / 1000.0)
         use_timeout = True
-    elif baseline_mean_ms is not None:
-        print(f"[WARNING] Timeout not available on this platform (signal.SIGALRM not supported)")
 
     return timeout_seconds, use_timeout
 
@@ -499,17 +467,19 @@ def _execute_performance_measurement_with_timeout(backend, timeout_seconds: Opti
         elapsed_times = backend.time_execution()
 
         if elapsed_times is None:
-            print(f"[WARNING] Performance measurement returned None")
+            logger.warning(f"Performance measurement returned None")
             return None, None
         if not isinstance(elapsed_times, (list, tuple, np.ndarray)):
-            print(f"[WARNING] Performance measurement returned unexpected type")
+            logger.warning(f"Performance measurement returned unexpected type")
             return None, None
 
         return elapsed_times, None
 
-    except (TimeoutError, Exception) as e:
-        print(f"[ERROR] Performance measurement failed: {e}")
-        traceback.print_exc()
+    except TimeoutError as e:
+        logger.error(f"Performance measurement timed out: {e}")
+        return None, str(e)
+    except Exception as e:
+        logger.error(f"Performance measurement failed: {e}", exc_info=True)
         return None, str(e)
 
     finally:
@@ -531,7 +501,7 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
     op_tests = dataset.keys()
     
     for op in op_tests:
-        print(f'[INFO] Computing baseline for {op}')
+        logger.info(f'Computing baseline for {op}')
         try:
             ref_src_path = get_reference_path(op)
             if not ref_src_path:
@@ -555,7 +525,7 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
             }
 
         except Exception as e:
-            print(f"[ERROR] {op}: {e}")
+            logger.error(f"{op}: {e}")
             result[op] = {
                 "not_supported": True,
                 "error": str(e),

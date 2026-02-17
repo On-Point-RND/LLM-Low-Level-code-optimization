@@ -1,12 +1,15 @@
 import json
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 
 from app.config import BASELINES_DIR, REFERENCE_DIR, MULTIKERNELBENCH_PATH
 from app.core.bench_kernel import compute_baseline, compute_all_baselines, get_backend
 from app.integration import get_reference_path
+
+logger = logging.getLogger(__name__)
 
 # Import dataset to get function category
 sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
@@ -47,7 +50,7 @@ def load_baseline_file(language: str, hardware: str, dims_key: Optional[str] = N
             with open(baseline_path, 'r') as f:
                 return json.load(f)
         except Exception as e:
-            print(f"[WARNING] Failed to load baseline file {baseline_path}: {e}")
+            logger.warning(f"Failed to load baseline file {baseline_path}: {e}")
     return None
 
 
@@ -67,7 +70,7 @@ def _read_reference_code(function: str) -> Optional[str]:
             with open(ref_src_path, 'r', encoding='utf-8') as f:
                 return f.read()
     except Exception as e:
-        print(f"[WARNING] Failed to read reference code for {function}: {e}")
+        logger.warning(f"Failed to read reference code for {function}: {e}")
     return None
 
 

@@ -60,20 +60,17 @@ def evaluate_function(
     performance = None
     if result.get('performance'):
         performance = PerformanceStats(**result['performance'])
-        logger.info(f"[DEBUG-SPEEDUP] Performance stats loaded: mean={performance.mean}")
     else:
-        logger.info(f"[DEBUG-SPEEDUP] No performance stats found in result. Keys: {list(result.keys())}")
         if result.get('performance_error'):
-            logger.error(f"[DEBUG-SPEEDUP] Performance Error: {result['performance_error']}")
+            logger.debug(f"Performance Error: {result['performance_error']}")
         if result.get('error'):
-            logger.error(f"[DEBUG-SPEEDUP] General Error: {result['error']}")
+            logger.debug(f"General Error: {result['error']}")
     
     # Get baseline and calculate speedup
     baseline = None
     speedup = None
     baseline_function_code = None
     try:
-        logger.info(f"[DEBUG-SPEEDUP] Fetching baseline for function='{function}' language='{language}' hardware='{result.get('hardware')}'")
         baseline_result = get_single_baseline(
             language, 
             function,
@@ -81,18 +78,6 @@ def evaluate_function(
             dim=dim,
             input_dims=input_dims
         )
-        
-        if baseline_result:
-            logger.info(f"[DEBUG-SPEEDUP] Baseline result retrieved. Keys: {list(baseline_result.keys())}")
-            if 'baseline' in baseline_result:
-                baseline_data = baseline_result['baseline']
-                logger.info(f"[DEBUG-SPEEDUP] Baseline data type: {type(baseline_data)}")
-                if isinstance(baseline_data, dict):
-                    logger.info(f"[DEBUG-SPEEDUP] Baseline data keys: {list(baseline_data.keys())}")
-                    if 'mean' in baseline_data:
-                        logger.info(f"[DEBUG-SPEEDUP] Baseline mean found: {baseline_data['mean']}")
-                else:
-                    logger.info(f"[DEBUG-SPEEDUP] Baseline data is not a dict: {baseline_data}")
 
         if baseline_result and 'baseline' in baseline_result:
             baseline_data = baseline_result['baseline']
@@ -108,9 +93,6 @@ def evaluate_function(
                 # Calculate even if correctness is False, as long as performance is available
                 if performance and performance.mean > 0:
                     speedup = baseline.mean / performance.mean
-                    logger.info(f"[DEBUG-SPEEDUP] Calculated speedup: {speedup} (baseline={baseline.mean} / perf={performance.mean})")
-                else:
-                    logger.info(f"[DEBUG-SPEEDUP] Cannot calculate speedup. Performance mean: {performance.mean if performance else 'None'}")
                 
                 # Read baseline/reference code
                 try:
@@ -120,10 +102,6 @@ def evaluate_function(
                             baseline_function_code = f.read()
                 except Exception as e:
                     logger.warning(f"Failed to read baseline code for {function}: {e}")
-            else:
-                logger.info(f"[DEBUG-SPEEDUP] Baseline data missing 'mean' or not a dict.")
-        else:
-            logger.info(f"[DEBUG-SPEEDUP] No baseline result or 'baseline' key missing.")
 
     except Exception as e:
         # If baseline can't be retrieved, just continue without it

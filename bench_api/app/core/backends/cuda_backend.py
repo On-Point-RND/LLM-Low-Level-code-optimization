@@ -1,10 +1,13 @@
 import torch
 import os
+import logging
 from app.core.backends.base_backend import Backend
 from app.core.backends.backend_registry import register_backend
 from app.core.utils.correctness import execute_template
 from app.core.utils.performance import time_execution_event_template
 from app.config import ARCH_LIST
+
+logger = logging.getLogger(__name__)
 
 @register_backend('cuda')
 class CudaBackend(Backend):
@@ -21,14 +24,14 @@ class CudaBackend(Backend):
                     capability = torch.cuda.get_device_capability(self.device)
                     arch = f"{capability[0]}.{capability[1]}"
                     self.arch_list = [arch]
-                    print(f"[INFO] Auto-detected CUDA architecture: {arch}")
+                    logger.info(f"Auto-detected CUDA architecture: {arch}")
                 except Exception as e:
-                    print(f"[WARNING] Failed to detect CUDA architecture: {e}")
+                    logger.warning(f"Failed to detect CUDA architecture: {e}")
                     self.arch_list = ["8.0"] # Fallback to Ampere
             else:
-                 print(f"[INFO] Using configured CUDA architecture: {self.arch_list}")
+                 logger.info(f"Using configured CUDA architecture: {self.arch_list}")
         else:
-             print("[WARNING] CUDA is not available. CudaBackend functionality will be limited.")
+             logger.warning("CUDA is not available. CudaBackend functionality will be limited.")
 
     def get_device(self):
         if torch.cuda.is_available():
@@ -84,15 +87,6 @@ class CudaBackend(Backend):
         synchronize = torch.cuda.synchronize if torch.cuda.is_available() else lambda device=None: None
         event_class = torch.cuda.Event if torch.cuda.is_available() else None
         
-        if event_class is None:
-             # Fallback for CPU timing if needed, though this backend is 'cuda'
-             import time
-             # Quick fallback implementation if running on CPU for some reason
-             def cpu_time_execution(context, device, synchronize, event_class, eval_target):
-                # Similar logic but using time.time()
-                # Omitted for brevity unless needed, assuming CUDA is available for 'cuda' backend
-                pass
-             
         return time_execution_event_template(self.context, self.device, synchronize, event_class, eval_target)
 
     def cleanup(self):
