@@ -73,6 +73,15 @@ def evaluate_function(
     if result.get('timing'):
         timing = EvaluationTiming(**result['timing'])
     
+    # Ensure compile_info or correctness_info are not None if they failed
+    compile_info = result.get('compile_info')
+    if result.get('compiled') is False and compile_info is None:
+        compile_info = result.get('error') or "Compilation failed"
+    
+    correctness_info = result.get('correctness_info')
+    if result.get('compiled') is True and result.get('correctness') is False and correctness_info is None:
+        correctness_info = result.get('error') or "Correctness check failed"
+
     # Get baseline and calculate speedup
     baseline = None
     speedup = None
@@ -135,8 +144,8 @@ def evaluate_function(
             correctness=result.get('correctness'),
             performance=result.get('performance'),
             torch_compile=torch_compile,
-            compile_info=result.get('compile_info'),
-            correctness_info=result.get('correctness_info'),
+            compile_info=compile_info,
+            correctness_info=correctness_info,
             speedup=speedup,
             baseline=baseline_dict
         )
@@ -151,11 +160,11 @@ def evaluate_function(
     
     error_snippet = ""
     if not result['compiled']:
-        err = result.get('compile_info') or result.get('error') or ""
+        err = compile_info or ""
         first_line = err.strip().split('\n')[0] if err else "Unknown compile error"
         error_snippet = f", CompileError: {first_line}"
     elif result.get('correctness') is False:
-        err = result.get('correctness_info') or result.get('error') or ""
+        err = correctness_info or ""
         first_line = err.strip().split('\n')[0] if err else "Unknown correctness error"
         error_snippet = f", CorrectnessError: {first_line}"
 
@@ -173,8 +182,8 @@ def evaluate_function(
         correctness=result.get('correctness'),
         performance=performance,
         timing=timing,
-        compile_info=result.get('compile_info'),
-        correctness_info=result.get('correctness_info'),
+        compile_info=compile_info,
+        correctness_info=correctness_info,
         run_name=run_name,
         baseline=baseline,
         speedup=speedup,

@@ -75,6 +75,7 @@ def evaluate_kernel_isolated(
             'correctness': None,
             'performance': None,
             'hardware': 'unknown',
+            'compile_info': f"Subprocess failed (returncode={result.returncode}): {error_msg[:1000]}",
             'error': f"Failed to find JSON in subprocess output (returncode={result.returncode}): {error_msg[:1000]}"
         }
 
@@ -84,6 +85,7 @@ def evaluate_kernel_isolated(
             'correctness': None,
             'performance': None,
             'hardware': 'unknown',
+            'compile_info': f"Evaluation timed out after {timeout} seconds",
             'error': f"Evaluation timed out after {timeout} seconds"
         }
     except Exception as e:
@@ -92,5 +94,6 @@ def evaluate_kernel_isolated(
             'correctness': None,
             'performance': None,
             'hardware': 'unknown',
+            'compile_info': f"Subprocess execution failed: {str(e)}",
             'error': f"Subprocess execution failed: {str(e)}"
         }
