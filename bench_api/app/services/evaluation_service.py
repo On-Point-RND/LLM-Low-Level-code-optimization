@@ -53,8 +53,11 @@ def evaluate_function(
     )
     
     # If baseline computation failed inside the kernel evaluation, raise an error to return HTTP 500
-    if result.get('error') and "Baseline computation failed" in str(result['error']):
-        raise RuntimeError(result['error'])
+    if result.get('error'):
+        if "Baseline computation failed" in str(result['error']):
+             raise RuntimeError(result['error'])
+        if result.get('stage') in ['initialization', 'baseline']:
+             raise RuntimeError(f"System error during {result['stage']}: {result['error']}")
     
     # Convert to response model
     performance = None

@@ -1,8 +1,43 @@
 import sys
 import json
 import traceback
+import faulthandler
+import signal
+import os
+
+def signal_handler(signum, frame):
+    from app.core.bench_kernel import get_current_eval_stage, EvalStage
+    
+    stage = get_current_eval_stage()
+    sig_name = signal.Signals(signum).name
+    error_msg = f"Process received signal {signum} ({sig_name}) during {stage} stage"
+    
+    result = {
+        'compiled': stage not in [EvalStage.INITIALIZATION, EvalStage.BASELINE, EvalStage.COMPILATION],
+        'correctness': False if stage == EvalStage.CORRECTNESS else None,
+        'performance': None,
+        'hardware': 'unknown',
+        'stage': stage,
+        'error': error_msg
+    }
+    
+    if stage == EvalStage.COMPILATION:
+        result['compile_info'] = error_msg
+    elif stage == EvalStage.CORRECTNESS:
+        result['correctness_info'] = error_msg
+    elif stage == EvalStage.PERFORMANCE:
+        result['performance_error'] = error_msg
+        
+    sys.stderr.write(json.dumps(result) + '\n')
+    sys.stderr.flush()
+    os._exit(signum)
 
 def run_isolated_evaluation():
+    faulthandler.enable()
+    
+    for sig in [signal.SIGSEGV, signal.SIGFPE, signal.SIGABRT, signal.SIGBUS]:
+        signal.signal(sig, signal_handler)
+        
     try:
         params = json.loads(sys.stdin.read())
         

@@ -19,6 +19,18 @@ from app.core.utils.code_utils import extract_first_code
 
 logger = logging.getLogger(__name__)
 
+class EvalStage:
+    INITIALIZATION = "initialization"
+    BASELINE = "baseline"
+    COMPILATION = "compilation"
+    CORRECTNESS = "correctness"
+    PERFORMANCE = "performance"
+
+_current_eval_stage = EvalStage.INITIALIZATION
+
+def get_current_eval_stage():
+    return _current_eval_stage
+
 def _cleanup_cuda():
     try:
         if torch.cuda.is_available():
@@ -210,7 +222,9 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
 
     # Calculate baseline first because it cleans up the backend context
     baseline_mean_ms = None
+    global _current_eval_stage
     try:
+        _current_eval_stage = EvalStage.BASELINE
         baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims)
     except Exception as e:
         logger.error(f"Baseline computation failed: {e}")
@@ -220,13 +234,16 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
             'performance': None,
             'hardware': hardware,
             'compute_capability': compute_capability,
+            'stage': _current_eval_stage,
             'error': f"Baseline computation failed: {str(e)}"
         }
 
     os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
     eval_start_time = time.time()
+    
     try:
         try:
+            _current_eval_stage = EvalStage.COMPILATION
             comp_start = time.time()
             compiled, compile_info = _do_compilation(backend, function_code, function, language)
             result['timing']['compilation'] = time.time() - comp_start
@@ -234,18 +251,21 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
             error_msg = f"{type(e).__name__}: {str(e)}"
             result['compile_info'] = error_msg
             result['error'] = error_msg
+            result['stage'] = _current_eval_stage
             result['timing']['total'] = time.time() - eval_start_time
             return result
 
         if not compiled:
             result['compile_info'] = compile_info
             result['error'] = compile_info
+            result['stage'] = _current_eval_stage
             result['timing']['total'] = time.time() - eval_start_time
             return result
 
         result['compiled'] = True
 
         try:
+            _current_eval_stage = EvalStage.CORRECTNESS
             corr_start = time.time()
             correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
             result['timing']['correctness'] = time.time() - corr_start
@@ -254,6 +274,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
             result['correctness'] = False
             result['correctness_info'] = error_msg
             result['error'] = error_msg
+            result['stage'] = _current_eval_stage
             result['timing']['total'] = time.time() - eval_start_time
             return result
 
@@ -262,6 +283,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         if not correctness:
             result['correctness_info'] = correctness_info
             result['error'] = correctness_info or "Correctness check failed"
+            result['stage'] = _current_eval_stage
             if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
                 try:
                     backend.cleanup()
@@ -278,6 +300,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         _setup_torch_compile(backend, num_trials=num_trials)
 
     try:
+        _current_eval_stage = EvalStage.PERFORMANCE
         perf_start = time.time()
         elapsed_times, performance_error = _do_performance_measurement(backend, baseline_mean_ms, function, language, num_trials)
         result['timing']['performance'] = time.time() - perf_start
@@ -287,6 +310,7 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
         result['timing']['performance'] = time.time() - perf_start
 
     result['timing']['total'] = time.time() - eval_start_time
+    result['stage'] = _current_eval_stage
 
     if performance_error:
         result['performance'] = None
@@ -348,6 +372,7 @@ def evaluate_kernel(
             'performance': None,
             'hardware': hardware,
             'compute_capability': compute_capability,
+            'stage': _current_eval_stage,
             'error': error_msg
         }
 
