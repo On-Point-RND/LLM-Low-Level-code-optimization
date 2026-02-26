@@ -6,7 +6,7 @@ from datetime import datetime
 BASE_DIR = Path(__file__).parent.parent
 MULTIKERNELBENCH_PATH = Path(os.getenv("MULTIKERNELBENCH_PATH", str(BASE_DIR / "MultiKernelBench")))
 KERNELBENCH_PATH = Path(os.getenv("KERNELBENCH_PATH", str(BASE_DIR / "KernelBench/KernelBench")))
-BASELINES_DIR = Path(os.getenv("BASELINES_DIR", str(MULTIKERNELBENCH_PATH / "baselines")))
+BASELINES_DIR = Path(os.getenv("BASELINES_DIR", str(BASE_DIR / "baselines")))
 REFERENCE_DIR = Path(os.getenv("REFERENCE_DIR", str(MULTIKERNELBENCH_PATH / "reference")))
 
 DEFAULT_HARDWARE = os.getenv("DEFAULT_HARDWARE", None)  
