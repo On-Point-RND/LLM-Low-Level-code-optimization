@@ -53,6 +53,7 @@ def run_isolated_evaluation():
             function=params['function'],
             language=params['language'],
             torch_compile=params.get('torch_compile', False),
+            torch_compile_baseline=params.get('torch_compile_baseline', False),
             num_trials=params.get('num_trials'),
             batch_size=params.get('batch_size'),
             dim=params.get('dim'),

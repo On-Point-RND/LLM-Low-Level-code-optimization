@@ -19,6 +19,7 @@ def evaluate_function(
     function: str,
     language: str,
     torch_compile: bool = False,
+    torch_compile_baseline: bool = False,
     experiment_name: Optional[str] = None,
     run_name: Optional[str] = None,
     num_trials: Optional[int] = None,
@@ -33,7 +34,8 @@ def evaluate_function(
         function_code: The kernel code to evaluate
         function: Function name from dataset
         language: Language/backend name
-        torch_compile: Whether to use torch.compile
+        torch_compile: Whether to use torch.compile for the kernel
+        torch_compile_baseline: Whether to use torch.compile for the baseline
         experiment_name: Optional MLflow experiment name (folder name)
         run_name: Optional MLflow run name (specific run name)
         num_trials: Optional number of performance measurement trials (default: 100)
@@ -46,6 +48,7 @@ def evaluate_function(
         function=function,
         language=language,
         torch_compile=torch_compile,
+        torch_compile_baseline=torch_compile_baseline,
         num_trials=num_trials,
         batch_size=batch_size,
         dim=dim,
@@ -92,7 +95,8 @@ def evaluate_function(
             function,
             batch_size=batch_size,
             dim=dim,
-            input_dims=input_dims
+            input_dims=input_dims,
+            torch_compile=torch_compile_baseline
         )
 
         if baseline_result and 'baseline' in baseline_result:
@@ -144,6 +148,7 @@ def evaluate_function(
             correctness=result.get('correctness'),
             performance=result.get('performance'),
             torch_compile=torch_compile,
+            torch_compile_baseline=torch_compile_baseline,
             compile_info=compile_info,
             correctness_info=correctness_info,
             speedup=speedup,

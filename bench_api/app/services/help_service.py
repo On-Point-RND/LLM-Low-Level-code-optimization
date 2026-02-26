@@ -51,13 +51,15 @@ def get_help_info() -> Dict[str, Any]:
             "description": "Get baseline performance for a function or all functions for a language",
             "parameters": {
                 "language": "Language/backend (cuda, triton, ascendc, sycl, pallas, tilelang_ascend)",
-                "function": "Function name from dataset or 'all' to get all baselines"
+                "function": "Function name from dataset or 'all' to get all baselines",
+                "torch_compile": "Whether to use torch.compile for baseline (bool, default: false)"
             }
         },
         "POST /evaluate": {
             "description": "Evaluate kernel code performance",
             "parameters": {
-                "torch_compile": "Whether to use torch.compile (bool, default: false)",
+                "torch_compile": "Whether to use torch.compile for the submitted kernel (bool, default: false)",
+                "torch_compile_baseline": "Whether to use torch.compile for the baseline model (bool, default: false)",
                 "language": "Language/backend",
                 "function": "Function name from dataset",
                 "function_code": "Kernel code content (string, optional)",

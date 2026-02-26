@@ -80,7 +80,7 @@ def _override_dimensions_in_code(ref_src: str, batch_size: Optional[int], dim: O
     return ref_src
 
 
-def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
+def _create_compiled_time_execution(backend, num_trials: Optional[int] = None, eval_target: str = 'ModelNew'):
     actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
 
     device = backend.get_device()
@@ -93,22 +93,23 @@ def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
 
     get_inputs = backend.context['get_inputs']
     get_init_inputs = backend.context['get_init_inputs']
-    ModelNew = backend.context['ModelNew']
+    ModelClass = backend.context[eval_target]
 
     init_inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in get_init_inputs()]
     inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in get_inputs()]
 
     with torch.no_grad():
-        model_instance = ModelNew(*init_inputs).to(device)
+        model_instance = ModelClass(*init_inputs).to(device)
 
         try:
             compiled_model = torch.compile(model_instance)
         except Exception as compile_error:
             error_msg = str(compile_error)
-            logger.warning(f"torch.compile failed, using original model: {error_msg}")
+            logger.warning(f"torch.compile for {eval_target} failed, using original model: {error_msg}")
             compiled_model = model_instance
 
-        def compiled_time_execution(eval_target='ModelNew'):
+        def compiled_time_execution(target=eval_target):
+            # We ignore target argument because it's baked into the closure
             for _ in range(app_config.NUM_WARMUP):
                 compiled_model(*inputs)
                 synchronize(device=device)
@@ -136,15 +137,15 @@ def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
     return compiled_time_execution
 
 
-def _setup_torch_compile(backend, num_trials: Optional[int] = None):
+def _setup_torch_compile(backend, num_trials: Optional[int] = None, eval_target: str = 'ModelNew'):
     if not hasattr(torch, 'compile'):
         logger.warning(f"torch.compile is not available in PyTorch {torch.__version__}. torch.compile requires PyTorch 2.0+. Continuing without compilation.")
         return False
 
-    if 'ModelNew' not in backend.context:
+    if eval_target not in backend.context:
         return False
 
-    compiled_time_execution = _create_compiled_time_execution(backend, num_trials)
+    compiled_time_execution = _create_compiled_time_execution(backend, num_trials, eval_target=eval_target)
     backend.time_execution = compiled_time_execution
     return True
 
@@ -174,8 +175,8 @@ def _do_correctness_check(backend, function, language, batch_size, dim, input_di
     return correctness, correctness_info
 
 
-def _do_baseline_computation(function, language, batch_size, dim, input_dims):
-    baseline_result = compute_baseline(function, language, batch_size, dim, input_dims)
+def _do_baseline_computation(function, language, batch_size, dim, input_dims, torch_compile=False):
+    baseline_result = compute_baseline(function, language, batch_size, dim, input_dims, torch_compile=torch_compile)
 
     if language == 'cuda':
         _cleanup_cuda()
@@ -209,14 +210,14 @@ def _make_timing(comp=0.0, corr=0.0, perf=0.0, total=0.0):
 
 def _do_validation(
     backend, function_code, function, language, hardware, compute_capability,
-    batch_size, dim, input_dims,
+    batch_size, dim, input_dims, torch_compile_baseline=False,
 ) -> Dict[str, Any]:
     global _current_eval_stage
     base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None}
 
     _current_eval_stage = EvalStage.BASELINE
     try:
-        baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims)
+        baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims, torch_compile=torch_compile_baseline)
     except Exception as e:
         return {**base, 'compiled': False, 'correctness': None,
                 'stage': EvalStage.BASELINE, 'error': f"Baseline computation failed: {str(e)}"}
@@ -269,7 +270,7 @@ def _do_validation(
 
 def _do_benchmark(
     backend, function_code, function, language, hardware, compute_capability,
-    batch_size, dim, input_dims, torch_compile, num_trials, baseline_mean_ms,
+    batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, baseline_mean_ms,
 ) -> Dict[str, Any]:
     global _current_eval_stage
     # exec() is still needed to load the cached .so into this subprocess's context
@@ -284,6 +285,8 @@ def _do_benchmark(
                 ref_src = f.read()
             ref_src = _override_dimensions_in_code(ref_src, batch_size, dim, input_dims, function)
             exec(ref_src, backend.context)
+            if torch_compile_baseline:
+                _setup_torch_compile(backend, num_trials=num_trials, eval_target='Model')
     except Exception as e:
         logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
 
@@ -291,7 +294,7 @@ def _do_benchmark(
     t0 = time.time()
 
     if torch_compile:
-        _setup_torch_compile(backend, num_trials=num_trials)
+        _setup_torch_compile(backend, num_trials=num_trials, eval_target='ModelNew')
 
     _current_eval_stage = EvalStage.PERFORMANCE
     t = time.time()
@@ -327,7 +330,7 @@ def _do_benchmark(
 
 
 def _do_kernel_evaluation(
-    backend, function_code, function, language, hardware, torch_compile, num_trials,
+    backend, function_code, function, language, hardware, torch_compile, torch_compile_baseline, num_trials,
     batch_size, dim, input_dims,
     mode: str = 'validation',
     baseline_mean_ms: Optional[float] = None,
@@ -337,11 +340,11 @@ def _do_kernel_evaluation(
     if mode == 'benchmark':
         return _do_benchmark(
             backend, function_code, function, language, hardware, compute_capability,
-            batch_size, dim, input_dims, torch_compile, num_trials, baseline_mean_ms,
+            batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, baseline_mean_ms,
         )
     return _do_validation(
         backend, function_code, function, language, hardware, compute_capability,
-        batch_size, dim, input_dims,
+        batch_size, dim, input_dims, torch_compile_baseline=torch_compile_baseline,
     )
 
 
@@ -350,6 +353,7 @@ def evaluate_kernel(
     function: str,
     language: str,
     torch_compile: bool = False,
+    torch_compile_baseline: bool = False,
     num_trials: Optional[int] = None,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
@@ -379,7 +383,7 @@ def evaluate_kernel(
 
         logger.debug(f"Starting evaluation for {function} on {language} (mode={mode})")
         return _do_kernel_evaluation(
-            backend, function_code, function, language, hardware, torch_compile, num_trials,
+            backend, function_code, function, language, hardware, torch_compile, torch_compile_baseline, num_trials,
             batch_size, dim, input_dims, mode=mode, baseline_mean_ms=baseline_mean_ms,
         )
 
@@ -451,7 +455,8 @@ def compute_baseline(
     language: str,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
-    input_dims: Optional[Dict[str, Any]] = None
+    input_dims: Optional[Dict[str, Any]] = None,
+    torch_compile: bool = False
 ) -> Dict[str, Any]:
     backend = get_backend(language)
     if backend is None:
@@ -480,9 +485,12 @@ def compute_baseline(
         # Ideally, we should add 'load_reference_code' to backend interface, but for now:
         if hasattr(backend, 'context'):
             exec(ref_src, backend.context)
+            if torch_compile:
+                _setup_torch_compile(backend, eval_target='Model')
 
         result = _execute_baseline_with_error_handling(backend, function, language, hardware)
         result['compute_capability'] = compute_capability
+        result['torch_compile'] = torch_compile
 
         if batch_size is not None:
             result['batch_size'] = batch_size
@@ -568,7 +576,7 @@ def _execute_performance_measurement_with_timeout(backend, timeout_seconds: Opti
                 signal.signal(signal.SIGALRM, old_handler)
 
 
-def compute_all_baselines(language: str) -> Dict[str, Any]:
+def compute_all_baselines(language: str, torch_compile: bool = False) -> Dict[str, Any]:
     backend = get_backend(language)
     if not backend:
         return {}
@@ -593,6 +601,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
 
             if hasattr(backend, 'context'):
                 exec(ref_src, backend.context)
+                if torch_compile:
+                    _setup_torch_compile(backend, eval_target='Model')
 
             elapsed_times = backend.time_execution('Model')
 
@@ -603,7 +613,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
                 "max": float(f"{np.max(elapsed_times):.3g}"),
                 "num_trials": len(elapsed_times),
                 'device': hardware,
-                'compute_capability': compute_capability
+                'compute_capability': compute_capability,
+                'torch_compile': torch_compile
             }
 
         except Exception as e:

@@ -103,13 +103,14 @@ async def get_baseline(request: BaselineRequest):
             )
 
         if request.function == "all":
-            result = get_all_baselines(request.language)
+            result = get_all_baselines(request.language, torch_compile=request.torch_compile)
             return AllBaselinesResponse(
                 function="all",
                 language=request.language,
                 hardware=result['hardware'],
                 baselines=result['baselines'],
                 cached=result['cached'],
+                torch_compile=result['torch_compile'],
                 function_codes=result.get('function_codes')
             )
         else:
@@ -118,7 +119,8 @@ async def get_baseline(request: BaselineRequest):
                 request.function,
                 batch_size=request.batch_size,
                 dim=request.dim,
-                input_dims=request.input_dims
+                input_dims=request.input_dims,
+                torch_compile=request.torch_compile
             )
             
             if request.experiment_name or request.run_name:
@@ -129,6 +131,7 @@ async def get_baseline(request: BaselineRequest):
                     language=request.language,
                     hardware=result['hardware'],
                     baseline=result['baseline'],
+                    torch_compile=result['torch_compile'],
                     function_code=result.get('function_code'),
                     batch_size=result.get('batch_size'),
                     dim=result.get('dim'),
@@ -141,6 +144,7 @@ async def get_baseline(request: BaselineRequest):
                 hardware=result['hardware'],
                 baseline=result['baseline'],
                 cached=result['cached'],
+                torch_compile=result['torch_compile'],
                 function_code=result.get('function_code'),
                 batch_size=result.get('batch_size'),
                 dim=result.get('dim'),
@@ -205,6 +209,7 @@ async def evaluate(request: EvaluateRequest):
             function=request.function,
             language=request.language,
             torch_compile=request.torch_compile if request.torch_compile is not None else False,
+            torch_compile_baseline=request.torch_compile_baseline if request.torch_compile_baseline is not None else False,
             experiment_name=request.experiment_name,
             run_name=request.run_name,
             num_trials=request.num_trials,
