@@ -188,6 +188,7 @@ def evaluate_function(
         baseline=baseline,
         speedup=speedup,
         function_code=function_code,
-        baseline_function_code=baseline_function_code
+        baseline_function_code=baseline_function_code,
+        performance_error=result.get('performance_error')
     )
 
