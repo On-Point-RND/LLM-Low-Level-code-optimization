@@ -82,7 +82,7 @@ def _override_dimensions_in_code(ref_src: str, batch_size: Optional[int], dim: O
 
 def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
     actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
-    
+
     device = backend.get_device()
     if hasattr(torch.cuda, 'synchronize') and torch.cuda.is_available():
         synchronize = torch.cuda.synchronize
@@ -203,121 +203,104 @@ def _do_performance_measurement(backend, baseline_mean_ms, function, language, n
     return elapsed_times, performance_error
 
 
-def _do_kernel_evaluation(backend, function_code, function, language, hardware, torch_compile, num_trials, batch_size, dim, input_dims) -> Dict[str, Any]:
-    capability = backend.get_compute_capability()
-    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
-    result = {
-        'compiled': False,
-        'correctness': None,
-        'performance': None,
-        'hardware': hardware,
-        'compute_capability': compute_capability,
-        'timing': {
-            'compilation': 0.0,
-            'correctness': 0.0,
-            'performance': 0.0,
-            'total': 0.0
-        }
-    }
+def _make_timing(comp=0.0, corr=0.0, perf=0.0, total=0.0):
+    return {'compilation': comp, 'correctness': corr, 'performance': perf, 'total': total}
 
-    # Calculate baseline first because it cleans up the backend context
-    baseline_mean_ms = None
+
+def _do_validation(
+    backend, function_code, function, language, hardware, compute_capability,
+    batch_size, dim, input_dims,
+) -> Dict[str, Any]:
     global _current_eval_stage
+    base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None}
+
+    _current_eval_stage = EvalStage.BASELINE
     try:
-        _current_eval_stage = EvalStage.BASELINE
         baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims)
     except Exception as e:
-        logger.error(f"Baseline computation failed: {e}")
-        return {
-            'compiled': False,
-            'correctness': None,
-            'performance': None,
-            'hardware': hardware,
-            'compute_capability': compute_capability,
-            'stage': _current_eval_stage,
-            'error': f"Baseline computation failed: {str(e)}"
-        }
+        return {**base, 'compiled': False, 'correctness': None,
+                'stage': EvalStage.BASELINE, 'error': f"Baseline computation failed: {str(e)}"}
 
-    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-    eval_start_time = time.time()
-    
+    t0 = time.time()
+
+    _current_eval_stage = EvalStage.COMPILATION
+    t = time.time()
     try:
-        try:
-            _current_eval_stage = EvalStage.COMPILATION
-            comp_start = time.time()
-            compiled, compile_info = _do_compilation(backend, function_code, function, language)
-            result['timing']['compilation'] = time.time() - comp_start
-        except Exception as e:
-            error_msg = f"{type(e).__name__}: {str(e)}"
-            result['compile_info'] = error_msg
-            result['error'] = error_msg
-            result['stage'] = _current_eval_stage
-            result['timing']['total'] = time.time() - eval_start_time
-            return result
+        compiled, compile_info = _do_compilation(backend, function_code, function, language)
+    except Exception as e:
+        msg = f"{type(e).__name__}: {str(e)}"
+        return {**base, 'compiled': False, 'correctness': None, 'compile_info': msg, 'error': msg,
+                'stage': EvalStage.COMPILATION, 'timing': _make_timing(comp=time.time()-t, total=time.time()-t0)}
+    comp_time = time.time() - t
 
-        if not compiled:
-            result['compile_info'] = compile_info
-            result['error'] = compile_info
-            result['stage'] = _current_eval_stage
-            result['timing']['total'] = time.time() - eval_start_time
-            return result
+    if not compiled:
+        return {**base, 'compiled': False, 'correctness': None,
+                'compile_info': compile_info, 'error': compile_info,
+                'stage': EvalStage.COMPILATION, 'timing': _make_timing(comp=comp_time, total=time.time()-t0)}
 
-        result['compiled'] = True
+    _current_eval_stage = EvalStage.CORRECTNESS
+    t = time.time()
+    try:
+        correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
+    except Exception as e:
+        msg = f"{type(e).__name__}: {str(e)}"
+        return {**base, 'compiled': True, 'correctness': False, 'correctness_info': msg, 'error': msg,
+                'stage': EvalStage.CORRECTNESS,
+                'timing': _make_timing(comp=comp_time, corr=time.time()-t, total=time.time()-t0)}
+    corr_time = time.time() - t
 
-        try:
-            _current_eval_stage = EvalStage.CORRECTNESS
-            corr_start = time.time()
-            correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
-            result['timing']['correctness'] = time.time() - corr_start
-        except Exception as e:
-            error_msg = f"{type(e).__name__}: {str(e)}"
-            result['correctness'] = False
-            result['correctness_info'] = error_msg
-            result['error'] = error_msg
-            result['stage'] = _current_eval_stage
-            result['timing']['total'] = time.time() - eval_start_time
-            return result
+    result = {
+        **base, 'compiled': True, 'correctness': correctness,
+        'stage': EvalStage.CORRECTNESS,
+        'timing': _make_timing(comp=comp_time, corr=corr_time, total=time.time()-t0),
+        'baseline_mean_ms': baseline_mean_ms,
+    }
+    if not correctness:
+        result['correctness_info'] = correctness_info
+        result['error'] = correctness_info or "Correctness check failed"
+        if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
+            try:
+                backend.cleanup()
+                backend.context = {}
+            except Exception:
+                pass
+    return result
 
-        result['correctness'] = correctness
 
-        if not correctness:
-            result['correctness_info'] = correctness_info
-            result['error'] = correctness_info or "Correctness check failed"
-            result['stage'] = _current_eval_stage
-            if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
-                try:
-                    backend.cleanup()
-                    backend.context = {}
-                except Exception:
-                    pass
-                result['timing']['total'] = time.time() - eval_start_time
-                return result
-    finally:
-        if "CUDA_LAUNCH_BLOCKING" in os.environ:
-            del os.environ["CUDA_LAUNCH_BLOCKING"]
+def _do_benchmark(
+    backend, function_code, function, language, hardware, compute_capability,
+    batch_size, dim, input_dims, torch_compile, num_trials, baseline_mean_ms,
+) -> Dict[str, Any]:
+    global _current_eval_stage
+    # exec() is still needed to load the cached .so into this subprocess's context
+    _current_eval_stage = EvalStage.COMPILATION
+    _do_compilation(backend, function_code, function, language)
+    t0 = time.time()
 
     if torch_compile:
         _setup_torch_compile(backend, num_trials=num_trials)
 
+    _current_eval_stage = EvalStage.PERFORMANCE
+    t = time.time()
     try:
-        _current_eval_stage = EvalStage.PERFORMANCE
-        perf_start = time.time()
-        elapsed_times, performance_error = _do_performance_measurement(backend, baseline_mean_ms, function, language, num_trials)
-        result['timing']['performance'] = time.time() - perf_start
+        elapsed_times, performance_error = _do_performance_measurement(
+            backend, baseline_mean_ms, function, language, num_trials
+        )
     except Exception as e:
-        elapsed_times = None
-        performance_error = str(e)
-        result['timing']['performance'] = time.time() - perf_start
+        elapsed_times, performance_error = None, str(e)
+    perf_time = time.time() - t
 
-    result['timing']['total'] = time.time() - eval_start_time
-    result['stage'] = _current_eval_stage
-
+    result = {
+        'hardware': hardware, 'compute_capability': compute_capability,
+        'compiled': True, 'correctness': None,
+        'stage': EvalStage.PERFORMANCE,
+        'timing': _make_timing(perf=perf_time, total=time.time()-t0),
+    }
     if performance_error:
         result['performance'] = None
         result['performance_error'] = performance_error
-        if 'error' not in result:
-            result['error'] = performance_error
-    elif elapsed_times and len(elapsed_times) > 0:
+        result['error'] = performance_error
+    elif elapsed_times:
         result['performance'] = {
             "mean": float(f"{np.mean(elapsed_times):.3g}"),
             "std": float(f"{np.std(elapsed_times):.3g}"),
@@ -325,8 +308,28 @@ def _do_kernel_evaluation(backend, function_code, function, language, hardware, 
             "max": float(f"{np.max(elapsed_times):.3g}"),
             "num_trials": len(elapsed_times),
         }
-
+    else:
+        result['performance'] = None
     return result
+
+
+def _do_kernel_evaluation(
+    backend, function_code, function, language, hardware, torch_compile, num_trials,
+    batch_size, dim, input_dims,
+    mode: str = 'validation',
+    baseline_mean_ms: Optional[float] = None,
+) -> Dict[str, Any]:
+    capability = backend.get_compute_capability()
+    compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
+    if mode == 'benchmark':
+        return _do_benchmark(
+            backend, function_code, function, language, hardware, compute_capability,
+            batch_size, dim, input_dims, torch_compile, num_trials, baseline_mean_ms,
+        )
+    return _do_validation(
+        backend, function_code, function, language, hardware, compute_capability,
+        batch_size, dim, input_dims,
+    )
 
 
 def evaluate_kernel(
@@ -337,7 +340,9 @@ def evaluate_kernel(
     num_trials: Optional[int] = None,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
-    input_dims: Optional[Dict[str, Any]] = None
+    input_dims: Optional[Dict[str, Any]] = None,
+    mode: str = 'validation',
+    baseline_mean_ms: Optional[float] = None,
 ) -> Dict[str, Any]:
     backend = None
     hardware = "unknown"
@@ -354,14 +359,16 @@ def evaluate_kernel(
                 'compute_capability': compute_capability,
                 'error': f"Backend for {language} not found"
             }
-        
+
         hardware = backend.get_hardware_name()
         capability = backend.get_compute_capability()
         compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
 
-        logger.debug(f"Starting evaluation for {function} on {language}")
-        result = _do_kernel_evaluation(backend, function_code, function, language, hardware, torch_compile, num_trials, batch_size, dim, input_dims)
-        return result
+        logger.debug(f"Starting evaluation for {function} on {language} (mode={mode})")
+        return _do_kernel_evaluation(
+            backend, function_code, function, language, hardware, torch_compile, num_trials,
+            batch_size, dim, input_dims, mode=mode, baseline_mean_ms=baseline_mean_ms,
+        )
 
     except Exception as e:
         error_msg = f"{type(e).__name__}: {str(e)}"
@@ -436,7 +443,7 @@ def compute_baseline(
     backend = get_backend(language)
     if backend is None:
         return {"error": f"Backend {language} not found"}
-        
+
     hardware = backend.get_hardware_name()
     capability = backend.get_compute_capability()
     compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
@@ -454,13 +461,13 @@ def compute_baseline(
     try:
         _prepare_backend_for_baseline(backend, language)
         ref_src = _load_reference_code_and_override_dims(function, batch_size, dim, input_dims)
-        
+
         # We need to manually exec if the backend exposes context, or add a method to backend to load reference code
         # CudaBackend exposes context, so we can exec into it.
         # Ideally, we should add 'load_reference_code' to backend interface, but for now:
         if hasattr(backend, 'context'):
             exec(ref_src, backend.context)
-            
+
         result = _execute_baseline_with_error_handling(backend, function, language, hardware)
         result['compute_capability'] = compute_capability
 
@@ -552,15 +559,15 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
     backend = get_backend(language)
     if not backend:
         return {}
-        
+
     hardware = backend.get_hardware_name()
     capability = backend.get_compute_capability()
     compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     dataset = get_dataset()
-    
+
     result = {}
     op_tests = dataset.keys()
-    
+
     for op in op_tests:
         logger.info(f'Computing baseline for {op}')
         try:
@@ -573,7 +580,7 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
 
             if hasattr(backend, 'context'):
                 exec(ref_src, backend.context)
-                
+
             elapsed_times = backend.time_execution('Model')
 
             result[op] = {

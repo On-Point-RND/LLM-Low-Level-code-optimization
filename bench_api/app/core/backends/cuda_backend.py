@@ -4,6 +4,7 @@ import logging
 from app.core.backends.base_backend import Backend
 from app.core.backends.backend_registry import register_backend
 from app.core.utils.correctness import execute_template
+from app.core.utils.build_log import compact_build_log
 from app.core.utils.performance import time_execution_event_template
 from app.config import ARCH_LIST
 
@@ -78,7 +79,8 @@ class CudaBackend(Backend):
             exec(compiled_code, self.context)
             return True, None
         except Exception as e:
-            return False, f"{type(e).__name__}: {str(e)}"
+            raw = f"{type(e).__name__}: {str(e)}"
+            return False, compact_build_log(raw)
 
     def correctness_execution(self, ref_src):
         synchronize = torch.cuda.synchronize if torch.cuda.is_available() else lambda device=None: None

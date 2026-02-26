@@ -1,7 +1,6 @@
 import sys
 import json
 import traceback
-import faulthandler
 import signal
 import os
 
@@ -33,19 +32,22 @@ def signal_handler(signum, frame):
     os._exit(signum)
 
 def run_isolated_evaluation():
-    faulthandler.enable()
-    
     for sig in [signal.SIGSEGV, signal.SIGFPE, signal.SIGABRT, signal.SIGBUS]:
         signal.signal(sig, signal_handler)
-        
+
     try:
         params = json.loads(sys.stdin.read())
-        
+
+        mode = params.get('mode', 'validation')
+
+        if mode != 'benchmark':
+            os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+
         from app.integration import register_kernelbench_dataset
         register_kernelbench_dataset()
-        
+
         from app.core.bench_kernel import evaluate_kernel as evaluate_kernel_impl
-        
+
         result = evaluate_kernel_impl(
             function_code=params['function_code'],
             function=params['function'],
@@ -54,7 +56,9 @@ def run_isolated_evaluation():
             num_trials=params.get('num_trials'),
             batch_size=params.get('batch_size'),
             dim=params.get('dim'),
-            input_dims=params.get('input_dims')
+            input_dims=params.get('input_dims'),
+            mode=mode,
+            baseline_mean_ms=params.get('baseline_mean_ms'),
         )
         
         sys.stderr.write(json.dumps(result) + '\n')
