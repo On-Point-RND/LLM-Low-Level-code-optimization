@@ -274,6 +274,19 @@ def _do_benchmark(
     global _current_eval_stage
     # exec() is still needed to load the cached .so into this subprocess's context
     _current_eval_stage = EvalStage.COMPILATION
+
+    # Exec reference code first so get_inputs/get_init_inputs are in context.
+    # (The validation subprocess gets these via _do_correctness_check; benchmark must do it explicitly.)
+    try:
+        ref_src_path = get_reference_path(function)
+        if ref_src_path and hasattr(backend, 'context'):
+            with open(ref_src_path, 'r') as f:
+                ref_src = f.read()
+            ref_src = _override_dimensions_in_code(ref_src, batch_size, dim, input_dims, function)
+            exec(ref_src, backend.context)
+    except Exception as e:
+        logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
+
     _do_compilation(backend, function_code, function, language)
     t0 = time.time()
 
