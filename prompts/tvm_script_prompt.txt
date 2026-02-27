@@ -364,6 +364,12 @@ Below is a comprehensive description of the TVMScript syntax and structure for R
 
 5. Common patterns and conventions
 
+5.0. CRITICAL: No metadata — constants and weights only as in input
+  - NEVER use "metadata" in TVMScript. There is no such symbol in TVM Relax; it causes "Undefined variable: metadata" and parse failure.
+  - Do NOT write metadata["relax.expr.Constant"][0], metadata["..."], or any metadata[...] — this is invalid.
+  - Weights and constants must appear exactly as in the input code: as function parameters (e.g. input_0, input_1, w, weight) or as R.const(...). Use only variable names that already exist in the input script.
+  - If the input uses a parameter for a weight (e.g. input_1 for a conv kernel), keep that parameter name. Do not replace it with metadata.
+
 5.1. Variable naming
   - Global variables (Var): gv, gv1, gv2, ... (for function-level results)
   - Local variables in dataflow (DataflowVar): lv0, lv1, lv2, ... (for intermediate results)

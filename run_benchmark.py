@@ -1,42 +1,73 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
 from pathlib import Path
+
+script_dir = Path(__file__).parent.absolute()
+tvm_python_dir = script_dir / "tvm" / "python"
+if str(tvm_python_dir) not in sys.path:
+    sys.path.insert(0, str(tvm_python_dir))
+
 from core.pipeline import process_baseline
 
-def find_baseline_files(dataset_root):
+def find_baseline_files(kernelbench_root):
     baseline_files = []
-    dataset_path = Path(dataset_root)
-    
-    for py_file in dataset_path.rglob("*.py"):
+    root = Path(kernelbench_root)
+    for py_file in root.rglob("*.py"):
         if py_file.name == "__init__.py":
             continue
         if ".ipynb_checkpoints" in str(py_file):
             continue
         baseline_files.append(py_file)
-    
     return sorted(baseline_files)
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gpu", type=int, default=0, help="CUDA device index (default: 0)")
+    args = parser.parse_args()
+
     script_dir = Path(__file__).parent.absolute()
-    dataset_root = script_dir / "dataset"
+    kernelbench_root = script_dir / "KernelBench"
     res_root = script_dir / "res"
-    config_path = dataset_root / "config.yaml"
+    config_path = script_dir / "config.yaml"
+
+    # Глобальный лог всего вывода (stdout/stderr) в один файл
+    os.makedirs(res_root, exist_ok=True)
+    output_log_path = res_root / "output.log"
+
+    class _Tee:
+        def __init__(self, *streams):
+            self._streams = streams
+
+        def write(self, data: str) -> None:
+            for s in self._streams:
+                s.write(data)
+                s.flush()
+
+        def flush(self) -> None:
+            for s in self._streams:
+                s.flush()
+
+    log_file = open(output_log_path, "a", encoding="utf-8")
+    sys.stdout = _Tee(sys.stdout, log_file)
+    sys.stderr = _Tee(sys.stderr, log_file)
     
     if not config_path.exists():
         print(f"Error: config.yaml not found at {config_path}")
         sys.exit(1)
     
-    baseline_files = find_baseline_files(dataset_root)
+    baseline_files = find_baseline_files(kernelbench_root)
     
     if not baseline_files:
-        print("No baseline files found in dataset/")
+        print("No baseline files found in KernelBench/")
         sys.exit(1)
     
     print("=" * 70)
     print("TVM Compiler Benchmark")
     print("=" * 70)
     print(f"Found {len(baseline_files)} baseline file(s)")
+    print(f"GPU: {args.gpu}")
     print(f"Config: {config_path}")
     print(f"Results directory: {res_root}")
     print("=" * 70)
@@ -46,36 +77,32 @@ def main():
     start_time = __import__('time').time()
     
     for i, baseline_file in enumerate(baseline_files, 1):
-        model_path_rel = baseline_file.relative_to(dataset_root)
+        model_path_rel = baseline_file.relative_to(kernelbench_root)
         print("=" * 70)
         print(f"[{i}/{len(baseline_files)}] Processing: {model_path_rel}")
         print("=" * 70)
         
-        try:
-            metrics = process_baseline(
-                str(baseline_file),
-                str(config_path),
-                str(dataset_root),
-                str(res_root)
-            )
-            results.append(metrics)
-            print()
-            print("  Summary:")
-            print(f"    Model: {metrics.get('name', 'unknown')}")
-            if "latency" in metrics:
-                if "after_tir" in metrics["latency"]:
-                    print(f"    Latency (after TIR): {metrics['latency']['after_tir']['mean_ms']:.3f} ms")
-                elif "after_relax" in metrics["latency"]:
-                    print(f"    Latency (after Relax): {metrics['latency']['after_relax']['mean_ms']:.3f} ms")
-            if "correctness" in metrics:
-                status = "✓ PASS" if metrics["correctness"]["is_correct"] else "✗ FAIL"
-                print(f"    Correctness: {status}")
-            print(f"    Results saved to: {res_root / model_path_rel}")
-        except Exception as e:
-            print()
-            print(f"  ✗ ERROR: {e}")
-            import traceback
-            traceback.print_exc()
+        
+        metrics = process_baseline(
+            str(baseline_file),
+            str(config_path),
+            str(kernelbench_root),
+            str(res_root),
+            gpu_id=args.gpu,
+        )
+        results.append(metrics)
+        print()
+        print("  Summary:")
+        print(f"    Model: {metrics.get('name', 'unknown')}")
+        if "latency" in metrics:
+            if "after_tir" in metrics["latency"]:
+                print(f"    Latency (after TIR): {metrics['latency']['after_tir']['mean_ms']:.3f} ms")
+            elif "after_relax" in metrics["latency"]:
+                print(f"    Latency (after Relax): {metrics['latency']['after_relax']['mean_ms']:.3f} ms")
+        if "correctness" in metrics:
+            status = "✓ PASS" if metrics["correctness"]["is_correct"] else "✗ FAIL"
+            print(f"    Correctness: {status}")
+        print(f"    Results saved to: {res_root / model_path_rel}")
         
         print()
     

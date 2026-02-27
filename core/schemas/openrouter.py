@@ -16,6 +16,10 @@ class OpenRouterRequest(BaseModel):
     stop: Optional[List[str]] = Field(default=None, description="Стоп-последовательности")
     stream: bool = Field(default=False, description="Потоковая генерация")
     metadata: Optional[Dict[str, Any]] = Field(default=None, description="Метаданные запроса")
+    # Strict structured output (OpenRouter `response_format`)
+    response_format: Optional[Dict[str, Any]] = Field(
+        default=None, description="Формат структурированного ответа (json_schema и т.п.)"
+    )
 
 class OpenRouterChoice(BaseModel):
     index: int = Field(..., description="Индекс варианта ответа")

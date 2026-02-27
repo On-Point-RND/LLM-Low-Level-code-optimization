@@ -15,6 +15,7 @@ def pytorch_to_onnx(model, example_inputs, onnx_path, input_names=None, output_n
         if output_names is None:
             output_names = ["output"]
         
+        # do_constant_folding=False — иначе broadcast/expand могут экспортироваться некорректно (HingeLoss и др.)
         torch.onnx.export(
             model,
             example_inputs if isinstance(example_inputs, tuple) else tuple(example_inputs),
@@ -22,7 +23,7 @@ def pytorch_to_onnx(model, example_inputs, onnx_path, input_names=None, output_n
             input_names=input_names,
             output_names=output_names,
             opset_version=14,
-            do_constant_folding=True,
+            do_constant_folding=False,
             dynamic_axes=None
         )
     return onnx_path
