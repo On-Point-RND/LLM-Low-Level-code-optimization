@@ -25,6 +25,7 @@ def find_baseline_files(kernelbench_root):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", type=int, default=0, help="CUDA device index (default: 0)")
+    parser.add_argument("--skip-errors", action="store_true", help="Skip failed tasks instead of crashing")
     args = parser.parse_args()
 
     script_dir = Path(__file__).parent.absolute()
@@ -73,23 +74,48 @@ def main():
     print("=" * 70)
     print()
     
+    import json
+    import traceback
+
     results = []
+    error_list = []
     start_time = __import__('time').time()
     
     for i, baseline_file in enumerate(baseline_files, 1):
         model_path_rel = baseline_file.relative_to(kernelbench_root)
+        task_name = str(model_path_rel).replace(".py", "")
+        metrics_path = res_root / task_name / "metrics.json"
+
         print("=" * 70)
         print(f"[{i}/{len(baseline_files)}] Processing: {model_path_rel}")
         print("=" * 70)
-        
-        
-        metrics = process_baseline(
-            str(baseline_file),
-            str(config_path),
-            str(kernelbench_root),
-            str(res_root),
-            gpu_id=args.gpu,
-        )
+
+        if metrics_path.exists():
+            with open(metrics_path) as _f:
+                metrics = json.load(_f)
+            results.append(metrics)
+            print("  [SKIP] Already processed, metrics.json exists")
+            print()
+            continue
+
+        try:
+            metrics = process_baseline(
+                str(baseline_file),
+                str(config_path),
+                str(kernelbench_root),
+                str(res_root),
+                gpu_id=args.gpu,
+            )
+        except Exception as e:
+            tb = traceback.format_exc()
+            print(f"  [ERROR] {e.__class__.__name__}: {e}")
+            print(tb)
+            error_list.append({"task": str(model_path_rel), "error": str(e), "traceback": tb})
+            print()
+            if args.skip_errors:
+                continue
+            raise
+
         results.append(metrics)
         print()
         print("  Summary:")
@@ -103,7 +129,6 @@ def main():
             status = "✓ PASS" if metrics["correctness"]["is_correct"] else "✗ FAIL"
             print(f"    Correctness: {status}")
         print(f"    Results saved to: {res_root / model_path_rel}")
-        
         print()
     
     elapsed_time = __import__('time').time() - start_time
@@ -111,15 +136,25 @@ def main():
     print("Benchmark Complete")
     print("=" * 70)
     print(f"Processed: {len(results)}/{len(baseline_files)} baselines successfully")
+    if error_list:
+        print(f"Errors: {len(error_list)}")
+        for err in error_list:
+            print(f"  - {err['task']}: {err['error']}")
     print(f"Total time: {elapsed_time:.2f} seconds")
     print(f"Average time per model: {elapsed_time/len(baseline_files):.2f} seconds")
     print()
     
     summary_file = res_root / "summary.json"
-    import json
     with open(summary_file, "w") as f:
         json.dump(results, f, indent=2)
     print(f"Summary saved to: {summary_file}")
+
+    if error_list:
+        errors_file = res_root / "errors.json"
+        with open(errors_file, "w") as f:
+            json.dump(error_list, f, indent=2)
+        print(f"Errors saved to: {errors_file}")
+
     print("=" * 70)
 
 if __name__ == "__main__":

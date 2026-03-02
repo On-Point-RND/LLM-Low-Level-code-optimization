@@ -9,9 +9,10 @@ import tvm
 from tvm import relax, dlight as dl
 from tvm.ir.transform import PassContext
 from tvm.meta_schedule import relax_integration as ms_relax
+from tvm.meta_schedule.builder import LocalBuilder
 from tvm.meta_schedule.database import MemoryDatabase
 from tvm.relax.transform import MetaScheduleApplyDatabase
-from .converter import pytorch_to_onnx, onnx_to_relax, apply_relax_transforms
+from .converter import pytorch_to_onnx, pytorch_to_relax, onnx_to_relax, apply_relax_transforms
 from .profiler import profile_tir, profile_executable
 from .validator import validate_correctness, validate_correctness_executable
 from .llm_transform_ir import llm_transform_ir
@@ -49,10 +50,12 @@ def _get_llm_config(config, mode_name):
     return OpenRouterConfig(**llm_dict)
 
 
-def _tune_database(mod, work_dir, max_trials):
+def _tune_database(mod, work_dir, max_trials, builder_workers):
+    builder = LocalBuilder() if builder_workers == -1 else LocalBuilder(max_workers=builder_workers)
     return ms_relax.tune_relax(
         mod=mod, params={}, target=TARGET,
         work_dir=work_dir, max_trials_global=max_trials,
+        builder=builder,
     )
 
 
@@ -155,12 +158,20 @@ def _run_llm_ir(mod, config):
 def _run_metaschedule(mod, work_dir, config):
     os.makedirs(work_dir, exist_ok=True)
     max_trials = config.get("meta_schedule_max_trials_global", 256)
-    database = _tune_database(mod, work_dir, max_trials)
+    builder_workers = config.get("meta_schedule_builder_workers", -1)
     target_obj = tvm.target.Target(TARGET)
-    with target_obj, database, PassContext(opt_level=3):
-        tuned_mod = MetaScheduleApplyDatabase(enable_warning=False)(mod)
+    database = None
+    try:
+        database = _tune_database(mod, work_dir, max_trials, builder_workers)
+    except ValueError as e:
+        if "No tasks to tune" not in str(e):
+            raise
+        print("      No tunable tasks found, building without MetaSchedule tuning...")
+    if database is not None:
+        with target_obj, database, PassContext(opt_level=3):
+            mod = MetaScheduleApplyDatabase(enable_warning=False)(mod)
     # Не запускать DLight после MetaSchedule — он падает на tuned reduction TIR
-    return _build_executable(tuned_mod, target_obj)
+    return _build_executable(mod, target_obj)
 
 
 def process_baseline(baseline_path, config_path, kernelbench_root, res_root, gpu_id=0):
@@ -192,22 +203,41 @@ def process_baseline(baseline_path, config_path, kernelbench_root, res_root, gpu
     }
 
     print("  [3/10] Converting PyTorch to ONNX...")
+    onnx_export_error = None
+    onnx_path = None
     if config.get("save_onnx", False):
         onnx_dir = os.path.join(res_dir, "onnx")
         os.makedirs(onnx_dir, exist_ok=True)
         onnx_path = os.path.join(onnx_dir, "model.onnx")
-        pytorch_to_onnx(torch_model, inputs_torch, onnx_path)
-        print(f"      Saved ONNX to: {onnx_path}")
+        try:
+            pytorch_to_onnx(torch_model, inputs_torch, onnx_path)
+            print(f"      Saved ONNX to: {onnx_path}")
+        except Exception as e:
+            onnx_export_error = e
     else:
         with tempfile.NamedTemporaryFile(suffix=".onnx", delete=False) as tmp:
             onnx_path = tmp.name
-        pytorch_to_onnx(torch_model, inputs_torch, onnx_path)
-        print("      ONNX created (temporary)")
+        try:
+            pytorch_to_onnx(torch_model, inputs_torch, onnx_path)
+            print("      ONNX created (temporary)")
+        except Exception as e:
+            onnx_export_error = e
+            os.unlink(onnx_path)
+            onnx_path = None
 
     print("  [4/10] Converting ONNX to Relax IR...")
-    mod = onnx_to_relax(onnx_path, keep_params_in_input=False)
-    if not config.get("save_onnx", False):
-        os.unlink(onnx_path)
+    if onnx_export_error is not None:
+        print(f"      ONNX export failed ({onnx_export_error.__class__.__name__}), falling back to torch.fx...")
+        mod = pytorch_to_relax(torch_model, inputs_torch)
+    else:
+        try:
+            mod = onnx_to_relax(onnx_path, keep_params_in_input=False)
+        except Exception as e:
+            print(f"      ONNX→Relax failed ({e.__class__.__name__}), falling back to torch.fx...")
+            mod = pytorch_to_relax(torch_model, inputs_torch)
+        finally:
+            if not config.get("save_onnx", False) and onnx_path and os.path.exists(onnx_path):
+                os.unlink(onnx_path)
 
     transform_relax_mode = config.get("transform_relax_mode", "relax_transforms")
     transform_tir_mode = config.get("transform_tir_mode", "tir_transforms")

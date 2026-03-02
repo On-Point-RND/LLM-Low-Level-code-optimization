@@ -1,10 +1,12 @@
 import os
 import numpy as np
 import torch
+import torch.fx
 import onnx
 import tvm
 from tvm import relax
 from tvm.relax.frontend.onnx import from_onnx
+from tvm.relax.frontend.torch import from_fx
 import torch.onnx
 
 def pytorch_to_onnx(model, example_inputs, onnx_path, input_names=None, output_names=None):
@@ -14,7 +16,7 @@ def pytorch_to_onnx(model, example_inputs, onnx_path, input_names=None, output_n
             input_names = [f"input_{i}" for i in range(len(example_inputs))]
         if output_names is None:
             output_names = ["output"]
-        
+
         # do_constant_folding=False — иначе broadcast/expand могут экспортироваться некорректно (HingeLoss и др.)
         torch.onnx.export(
             model,
@@ -27,6 +29,18 @@ def pytorch_to_onnx(model, example_inputs, onnx_path, input_names=None, output_n
             dynamic_axes=None
         )
     return onnx_path
+
+def pytorch_to_relax(model, example_inputs):
+    """Direct PyTorch → Relax conversion via torch.fx, bypassing ONNX."""
+    model.eval()
+    with torch.no_grad():
+        fx_module = torch.fx.symbolic_trace(model)
+    input_info = [
+        (tuple(x.shape), str(x.dtype).replace("torch.", ""))
+        for x in example_inputs
+        if isinstance(x, torch.Tensor)
+    ]
+    return from_fx(fx_module, input_info, keep_params_as_input=False)
 
 def onnx_to_relax(onnx_path, shape_dict=None, dtype_dict="float32", keep_params_in_input=False):
     onnx_model = onnx.load(onnx_path)

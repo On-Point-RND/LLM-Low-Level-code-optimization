@@ -1,0 +1,43 @@
+save_onnx: true
+save_relax_ir: true
+save_relax_json: false  
+save_tir_ir: true
+save_tir_json: false     
+profile_before_optimization: true
+profile_after_relax: true
+profile_after_tir: true
+
+skip_prof_report: true
+
+
+profile:
+  warmup_iters: 3
+  number: 10
+  repeat: 5
+  verbose: true
+check_correctness: true
+
+transform_relax_mode: relax_transforms
+
+transform_tir_mode: meta_schedule
+
+meta_schedule_max_trials_global: 256
+
+meta_schedule_builder_workers: -1
+
+llm_config:
+  api_key: "EMPTY"
+  base_url: "http://localhost:8052/v1"
+  default_model: "Qwen3-Coder-30B-A3B-Instruct"
+  default_temperature: 0.7
+  default_max_tokens: null
+  timeout: 600.0
+
+relax_transforms:
+  - "LegalizeOps"           # перевести ops во внутренние примитивы TVM
+  - "FoldConstant"          # свернуть константы
+  - "CanonicalizeBindings"  # упростить биндинги
+  - "Normalize"             # нормализация выражений
+  - "FuseOps"               # слить блоки ops
+  - "FuseTIR"               # вынести слитые ops в TIR
+  - "DeadCodeElimination"   # выкинуть мёртвый код
