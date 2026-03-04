@@ -3,6 +3,8 @@ import torch
 import tvm
 from tvm import relax
 
+from .build_utils import build_relax_cuda
+
 
 def _compute_torch_output(torch_model, inputs_torch):
     torch_model.eval()
@@ -44,11 +46,46 @@ def validate_correctness(
     rel_tolerance=1e-4,
 ):
     y_torch_np = _compute_torch_output(torch_model, inputs_torch)
-    target = tvm.target.Target("cuda")
-    ex = relax.build(tvm_mod, target)
+    ex = build_relax_cuda(tvm_mod, target="cuda")
     vm = relax.VirtualMachine(ex, dev)
     y_tvm = vm[func_name](*inputs_tvm)
     y_tvm_np = y_tvm.numpy()
+    return _compare_outputs(y_torch_np, y_tvm_np, abs_tolerance, rel_tolerance)
+
+
+def validate_correctness_safe(
+    torch_model,
+    tvm_mod,
+    inputs_torch,
+    inputs_tvm,
+    dev,
+    func_name="main",
+    abs_tolerance=1e-3,
+    rel_tolerance=1e-4,
+):
+    """
+    Like validate_correctness but catches build/VM errors. Returns
+    {is_correct: False, build_error: str} on build/VM failure instead of raising.
+    """
+    y_torch_np = _compute_torch_output(torch_model, inputs_torch)
+    try:
+        ex = build_relax_cuda(tvm_mod, target="cuda")
+        vm = relax.VirtualMachine(ex, dev)
+        y_tvm = vm[func_name](*inputs_tvm)
+        y_tvm_np = y_tvm.numpy()
+    except Exception as e:
+        return {
+            "is_correct": False,
+            "max_abs_diff": None,
+            "mean_abs_diff": None,
+            "mean_rel_diff": None,
+            "max_rel_diff": None,
+            "abs_tolerance": abs_tolerance,
+            "rel_tolerance": rel_tolerance,
+            "tvm_shape": None,
+            "torch_shape": list(y_torch_np.shape),
+            "build_error": str(e),
+        }
     return _compare_outputs(y_torch_np, y_tvm_np, abs_tolerance, rel_tolerance)
 
 

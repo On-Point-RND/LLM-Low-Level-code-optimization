@@ -11,6 +11,7 @@ class OpenRouterRequest(BaseModel):
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Температура генерации")
     max_tokens: Optional[int] = Field(default=None, gt=0, description="Максимальное количество токенов в ответе")
     top_p: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Top-p sampling")
+    top_k: Optional[int] = Field(default=None, gt=0, description="Top-k sampling (vLLM etc.)")
     frequency_penalty: Optional[float] = Field(default=None, ge=-2.0, le=2.0, description="Штраф за частоту")
     presence_penalty: Optional[float] = Field(default=None, ge=-2.0, le=2.0, description="Штраф за присутствие")
     stop: Optional[List[str]] = Field(default=None, description="Стоп-последовательности")
@@ -39,11 +40,13 @@ class OpenRouterResponse(BaseModel):
     created: int = Field(..., description="Время создания ответа (Unix timestamp)")
 
 class OpenRouterConfig(BaseModel):
-    api_key: str = Field(..., description="API ключ OpenRouter")
+    api_key: str = Field(..., description="API ключ")
     base_url: str = Field(default="https://openrouter.ai/api/v1", description="Base URL API")
-    default_model: str = Field(default="openai/gpt-4o-mini", description="Модель по умолчанию")
-    default_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
-    default_max_tokens: Optional[int] = Field(default=None, gt=0)
+    model: str = Field(default="openai/gpt-4o-mini", description="ID модели")
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    max_tokens: Optional[int] = Field(default=None, gt=0)
+    top_p: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    top_k: Optional[int] = Field(default=None, gt=0)
     timeout: float = Field(default=60.0, gt=0, description="Таймаут запроса в секундах")
 
 class LLMTransformRequest(BaseModel):

@@ -11,27 +11,53 @@ skip_prof_report: true
 
 
 profile:
-  warmup_iters: 3
-  number: 10
-  repeat: 5
+  warmup_iters: 2
+  number: 3
+  repeat: 3
+  baseline_multiplier: 5  # abort full profiling if quick run > n * baseline_mean_ms
   verbose: true
+
 check_correctness: true
 
-transform_relax_mode: relax_transforms
-
-transform_tir_mode: meta_schedule
+transform_tir_mode: llm_transform_tir
 
 meta_schedule_max_trials_global: 256
 
 meta_schedule_builder_workers: -1
 
-llm_config:
-  api_key: "EMPTY"
-  base_url: "http://localhost:8052/v1"
-  default_model: "Qwen3-Coder-30B-A3B-Instruct"
-  default_temperature: 0.7
-  default_max_tokens: null
-  timeout: 600.0
+# Number of iterative LLM TIR optimization steps (used when transform_tir_mode: llm_transform_tir)
+llm_tir_max_steps: 5
+
+agents:
+  tir_code:
+    api_key: "EMPTY"
+    base_url: "http://localhost:8052/v1"
+    model: "Qwen3-Coder-Next"
+    temperature: 0.1
+    max_tokens: null
+    top_p: null
+    top_k: null
+    timeout: 1000.0
+
+  tir_analysis:
+    api_key: "EMPTY"
+    base_url: "http://localhost:8052/v1"
+    model: "Qwen3-Coder-Next"
+    temperature: 0.3
+    max_tokens: null
+    top_p: null
+    top_k: null
+    timeout: 1000.0
+
+  tir_summary:
+    api_key: "EMPTY"
+    base_url: "http://localhost:8052/v1"
+    model: "Qwen3-Coder-Next"
+    temperature: 0.2
+    max_tokens: null
+    top_p: null
+    top_k: null
+    timeout: 1000.0
 
 relax_transforms:
   - "LegalizeOps"           # перевести ops во внутренние примитивы TVM

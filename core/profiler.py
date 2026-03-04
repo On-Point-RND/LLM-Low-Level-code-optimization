@@ -2,6 +2,8 @@ import numpy as np
 import tvm
 from tvm import relax
 
+from .build_utils import build_relax_cuda
+
 
 def _stats_from_results(results_ms):
     return {
@@ -24,10 +26,20 @@ def _run_benchmark(vm, func_name, inputs_tvm, dev, warmup_iters, number, repeat)
     return np.array(prof.results) * 1e3
 
 
-def profile_tir(mod, inputs_tvm, dev, target="cuda", func_name="main", warmup_iters=10, number=50, repeat=20):
-    target_obj = tvm.target.Target(target)
-    ex = relax.build(mod, target_obj)
+def profile_tir(mod, inputs_tvm, dev, target="cuda", func_name="main", warmup_iters=3, number=10, repeat=5, baseline_mean_ms=None, baseline_multiplier=5):
+    ex = build_relax_cuda(mod, target=target)
     vm = relax.VirtualMachine(ex, dev, profile=False)
+    if baseline_mean_ms is not None and baseline_multiplier is not None:
+        quick_results = _run_benchmark(vm, func_name, inputs_tvm, dev, warmup_iters=1, number=2, repeat=2)
+        quick_mean = float(np.mean(quick_results))
+        threshold = baseline_multiplier * baseline_mean_ms
+        if quick_mean > threshold:
+            print(f"      Profiling aborted: inference very slow vs baseline ({quick_mean:.1f} ms > {baseline_multiplier}×{baseline_mean_ms:.1f} ms)")
+            out = _stats_from_results(quick_results)
+            vm_profile = relax.VirtualMachine(ex, dev, profile=True)
+            out["profiler_report"] = vm_profile.profile(func_name, *inputs_tvm)
+            out["aborted_reason"] = "very slow vs baseline"
+            return out
     results_ms = _run_benchmark(vm, func_name, inputs_tvm, dev, warmup_iters, number, repeat)
     out = _stats_from_results(results_ms)
     vm_profile = relax.VirtualMachine(ex, dev, profile=True)

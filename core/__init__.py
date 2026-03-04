@@ -1,7 +1,6 @@
 from .converter import pytorch_to_onnx, onnx_to_relax, apply_relax_transforms, apply_tir_transforms
 from .profiler import profile_tir, profile_executable
 from .validator import validate_correctness
-from .llm_transform_ir import llm_transform_ir
 from .schemas import (
     OpenRouterConfig,
     OpenRouterRequest,
@@ -22,7 +21,6 @@ __all__ = [
     "profile_tir",
     "profile_executable",
     "validate_correctness",
-    "llm_transform_ir",
     "OpenRouterConfig",
     "OpenRouterRequest",
     "OpenRouterMessage",
