@@ -387,44 +387,68 @@ def process_baseline(baseline_path, config_path, kernelbench_root, res_root, gpu
             metrics["latency"]["after_tir"] = {"skipped": True, "reason": f"llm_agent_failed_{reason}"}
         else:
             print("  [8/10] Profiling after TIR transforms / MetaSchedule (GPU)...", flush=True)
-            dev.sync()
-            prof_cfg = config.get("profile", {})
-            warmup = prof_cfg.get("warmup_iters", 3)
-            number = prof_cfg.get("number", 10)
-            repeat = prof_cfg.get("repeat", 5)
-            baseline_mult = prof_cfg.get("baseline_multiplier", 5)
-            if transform_tir_mode == "llm_transform_tir":
-                baseline_mean_ms = _load_baseline_mean_ms(res_root, model_path_rel)
-                prof_result = profile_tir(
-                    mod, inputs_tvm, dev, target=TARGET,
-                    warmup_iters=warmup, number=number, repeat=repeat,
-                    baseline_mean_ms=baseline_mean_ms,
-                    baseline_multiplier=baseline_mult,
-                )
+            prof_ok = False
+            prof_result = None
+            prof_err = None
+            prof_err_cls = None
+            try:
+                dev.sync()
+                prof_cfg = config.get("profile", {})
+                warmup = prof_cfg.get("warmup_iters", 3)
+                number = prof_cfg.get("number", 10)
+                repeat = prof_cfg.get("repeat", 5)
+                baseline_mult = prof_cfg.get("baseline_multiplier", 5)
+                if transform_tir_mode == "llm_transform_tir":
+                    baseline_mean_ms = _load_baseline_mean_ms(res_root, model_path_rel)
+                    prof_result = profile_tir(
+                        mod, inputs_tvm, dev, target=TARGET,
+                        warmup_iters=warmup, number=number, repeat=repeat,
+                        baseline_mean_ms=baseline_mean_ms,
+                        baseline_multiplier=baseline_mult,
+                    )
+                else:
+                    prof_result = profile_executable(
+                        mod_executable, inputs_tvm, dev,
+                        skip_prof_report=config.get("skip_prof_report", True),
+                        warmup_iters=warmup, number=number, repeat=repeat,
+                        verbose=prof_cfg.get("verbose", True),
+                    )
+                prof_ok = True
+            except Exception as e:
+                prof_err = str(e)
+                prof_err_cls = type(e).__name__
+
+            if prof_ok and prof_result is not None:
+                print(f"      Mean latency: {prof_result['mean_ms']:.3f} ms", flush=True)
+                profiles_dir = os.path.join(res_dir, "profiles")
+                os.makedirs(profiles_dir, exist_ok=True)
+                pr = prof_result.get("profiler_report")
+                if pr is not None:
+                    with open(os.path.join(profiles_dir, "after_tir.txt"), "w") as f:
+                        f.write(pr.table())
+                    with open(os.path.join(profiles_dir, "after_tir.json"), "w") as f:
+                        f.write(pr.json())
+                if "latency" not in metrics:
+                    metrics["latency"] = {}
+                metrics["latency"]["after_tir"] = {
+                    k: prof_result[k]
+                    for k in ("mean_ms", "std_ms", "min_ms", "max_ms", "median_ms", "p95_ms", "p99_ms")
+                }
+                if transform_tir_mode == "llm_transform_tir" and "llm_transform_tir" in metrics:
+                    metrics["latency"]["after_tir"]["best_step"] = metrics["llm_transform_tir"].get("best_step")
             else:
-                prof_result = profile_executable(
-                    mod_executable, inputs_tvm, dev,
-                    skip_prof_report=config.get("skip_prof_report", True),
-                    warmup_iters=warmup, number=number, repeat=repeat,
-                    verbose=prof_cfg.get("verbose", True),
-                )
-            print(f"      Mean latency: {prof_result['mean_ms']:.3f} ms", flush=True)
-            profiles_dir = os.path.join(res_dir, "profiles")
-            os.makedirs(profiles_dir, exist_ok=True)
-            pr = prof_result.get("profiler_report")
-            if pr is not None:
-                with open(os.path.join(profiles_dir, "after_tir.txt"), "w") as f:
-                    f.write(pr.table())
-                with open(os.path.join(profiles_dir, "after_tir.json"), "w") as f:
-                    f.write(pr.json())
-            if "latency" not in metrics:
-                metrics["latency"] = {}
-            metrics["latency"]["after_tir"] = {
-                k: prof_result[k]
-                for k in ("mean_ms", "std_ms", "min_ms", "max_ms", "median_ms", "p95_ms", "p99_ms")
-            }
-            if transform_tir_mode == "llm_transform_tir" and "llm_transform_tir" in metrics:
-                metrics["latency"]["after_tir"]["best_step"] = metrics["llm_transform_tir"].get("best_step")
+                print(f"      Profiling failed: {prof_err_cls or 'unknown'} — using best step latency", flush=True)
+                if "latency" not in metrics:
+                    metrics["latency"] = {}
+                best_ms = metrics.get("llm_transform_tir", {}).get("best_latency_ms")
+                metrics["latency"]["after_tir"] = {
+                    "mean_ms": best_ms,
+                    "skipped_profiling": True,
+                    "reason": f"gpu_error_{prof_err_cls or 'unknown'}",
+                    "error": prof_err,
+                }
+                if transform_tir_mode == "llm_transform_tir" and "llm_transform_tir" in metrics:
+                    metrics["latency"]["after_tir"]["best_step"] = metrics["llm_transform_tir"].get("best_step")
 
     if config.get("save_tir_ir", False):
         print("  [9/10] Saving TIR IR...")
