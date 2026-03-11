@@ -1,10 +1,8 @@
 import sys
 import os
-import importlib
 import torch
 import numpy as np
 import time
-import traceback
 import signal
 import logging
 from pathlib import Path
@@ -16,8 +14,11 @@ from app.integration import get_reference_path, get_dataset
 
 from app.core.backends.backend_registry import get_backend
 from app.core.utils.code_utils import extract_first_code
+from app.core.utils.correctness import run_correctness
+from app.core.utils.performance import run_performance
 
 logger = logging.getLogger(__name__)
+
 
 class EvalStage:
     INITIALIZATION = "initialization"
@@ -26,21 +27,15 @@ class EvalStage:
     CORRECTNESS = "correctness"
     PERFORMANCE = "performance"
 
+
 _current_eval_stage = EvalStage.INITIALIZATION
+
 
 def get_current_eval_stage():
     return _current_eval_stage
 
-def _cleanup_cuda():
-    try:
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.synchronize()
-    except Exception as e:
-        logger.warning(f"Failed to clean CUDA: {e}")
 
-
-def _compile_kernel_code(function_code: str, function: str, backend, language: str) -> Tuple[bool, str]:
+def _compile_kernel_code(function_code: str, function: str, backend) -> Tuple[bool, str]:
     generated_code = extract_first_code(function_code, ['python', 'cpp'])
     if generated_code is None:
         generated_code = function_code
@@ -80,84 +75,13 @@ def _override_dimensions_in_code(ref_src: str, batch_size: Optional[int], dim: O
     return ref_src
 
 
-def _create_compiled_time_execution(backend, num_trials: Optional[int] = None):
-    actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
-
-    device = backend.get_device()
-    if hasattr(torch.cuda, 'synchronize') and torch.cuda.is_available():
-        synchronize = torch.cuda.synchronize
-        event_class = torch.cuda.Event
-    else:
-        def synchronize(device=None): pass
-        event_class = None
-
-    get_inputs = backend.context['get_inputs']
-    get_init_inputs = backend.context['get_init_inputs']
-    ModelNew = backend.context['ModelNew']
-
-    init_inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in get_init_inputs()]
-    inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in get_inputs()]
-
-    with torch.no_grad():
-        model_instance = ModelNew(*init_inputs).to(device)
-
-        try:
-            compiled_model = torch.compile(model_instance)
-        except Exception as compile_error:
-            error_msg = str(compile_error)
-            logger.warning(f"torch.compile failed, using original model: {error_msg}")
-            compiled_model = model_instance
-
-        def compiled_time_execution(eval_target='ModelNew'):
-            for _ in range(app_config.NUM_WARMUP):
-                compiled_model(*inputs)
-                synchronize(device=device)
-
-            elapsed_times = []
-            if event_class:
-                for _ in range(actual_num_trials):
-                    start_event = event_class(enable_timing=True)
-                    end_event = event_class(enable_timing=True)
-                    start_event.record()
-                    compiled_model(*inputs)
-                    end_event.record()
-                    synchronize(device=device)
-                    elapsed_times.append(start_event.elapsed_time(end_event))
-            else:
-                for _ in range(actual_num_trials):
-                    synchronize(device=device)
-                    start = time.time()
-                    compiled_model(*inputs)
-                    synchronize(device=device)
-                    elapsed_times.append((time.time() - start) * 1000)
-
-            return elapsed_times
-
-    return compiled_time_execution
-
-
-def _setup_torch_compile(backend, num_trials: Optional[int] = None):
-    if not hasattr(torch, 'compile'):
-        logger.warning(f"torch.compile is not available in PyTorch {torch.__version__}. torch.compile requires PyTorch 2.0+. Continuing without compilation.")
-        return False
-
-    if 'ModelNew' not in backend.context:
-        return False
-
-    compiled_time_execution = _create_compiled_time_execution(backend, num_trials)
-    backend.time_execution = compiled_time_execution
-    return True
-
-
-def _do_compilation(backend, function_code, function, language):
-    if language == 'cuda':
-        _cleanup_cuda()
-
-    compiled, compile_info = _compile_kernel_code(function_code, function, backend, language)
+def _do_compilation(backend, function_code, function):
+    backend.clear_device_memory()
+    compiled, compile_info = _compile_kernel_code(function_code, function, backend)
     return compiled, compile_info
 
 
-def _do_correctness_check(backend, function, language, batch_size, dim, input_dims):
+def _do_correctness_check(backend, function, batch_size, dim, input_dims):
     ref_src_path = get_reference_path(function)
     if not ref_src_path:
         raise FileNotFoundError(f"Reference file not found for function: {function}")
@@ -166,40 +90,26 @@ def _do_correctness_check(backend, function, language, batch_size, dim, input_di
         ref_src = f.read()
 
     ref_src = _override_dimensions_in_code(ref_src, batch_size, dim, input_dims, function)
-    correctness, correctness_info = backend.correctness_execution(ref_src)
-
-    if language == 'cuda':
-        _cleanup_cuda()
-
+    correctness, correctness_info = run_correctness(backend, ref_src)
+    backend.clear_device_memory()
     return correctness, correctness_info
 
 
 def _do_baseline_computation(function, language, batch_size, dim, input_dims):
     baseline_result = compute_baseline(function, language, batch_size, dim, input_dims)
 
-    if language == 'cuda':
-        _cleanup_cuda()
-
     if isinstance(baseline_result, dict) and 'mean' in baseline_result:
         return baseline_result['mean']
     return None
 
 
-def _do_performance_measurement(backend, baseline_mean_ms, function, language, num_trials):
-    if num_trials is not None:
-        original_config = _override_num_perf_trials(language, num_trials)
-    else:
-        original_config = None
-
+def _do_performance_measurement(backend, baseline_mean_ms, function, num_trials, torch_compile):
     actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
     timeout_seconds, use_timeout = _setup_performance_measurement_timeout(baseline_mean_ms, actual_num_trials)
-    elapsed_times, performance_error = _execute_performance_measurement_with_timeout(backend, timeout_seconds, use_timeout, function)
-
-    _restore_num_perf_trials(language, original_config)
-
-    if language == 'cuda':
-        _cleanup_cuda()
-
+    elapsed_times, performance_error = _execute_performance_measurement_with_timeout(
+        backend, timeout_seconds, use_timeout, function, actual_num_trials, torch_compile
+    )
+    backend.clear_device_memory()
     return elapsed_times, performance_error
 
 
@@ -226,7 +136,7 @@ def _do_validation(
     _current_eval_stage = EvalStage.COMPILATION
     t = time.time()
     try:
-        compiled, compile_info = _do_compilation(backend, function_code, function, language)
+        compiled, compile_info = _do_compilation(backend, function_code, function)
     except Exception as e:
         msg = f"{type(e).__name__}: {str(e)}"
         return {**base, 'compiled': False, 'correctness': None, 'compile_info': msg, 'error': msg,
@@ -241,7 +151,7 @@ def _do_validation(
     _current_eval_stage = EvalStage.CORRECTNESS
     t = time.time()
     try:
-        correctness, correctness_info = _do_correctness_check(backend, function, language, batch_size, dim, input_dims)
+        correctness, correctness_info = _do_correctness_check(backend, function, batch_size, dim, input_dims)
     except Exception as e:
         msg = f"{type(e).__name__}: {str(e)}"
         return {**base, 'compiled': True, 'correctness': False, 'correctness_info': msg, 'error': msg,
@@ -261,7 +171,6 @@ def _do_validation(
         if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
             try:
                 backend.cleanup()
-                backend.context = {}
             except Exception:
                 pass
     return result
@@ -272,14 +181,12 @@ def _do_benchmark(
     batch_size, dim, input_dims, torch_compile, num_trials, baseline_mean_ms,
 ) -> Dict[str, Any]:
     global _current_eval_stage
-    # exec() is still needed to load the cached .so into this subprocess's context
     _current_eval_stage = EvalStage.COMPILATION
 
-    # Exec reference code first so get_inputs/get_init_inputs are in context.
-    # (The validation subprocess gets these via _do_correctness_check; benchmark must do it explicitly.)
+    # Load reference code so get_inputs/get_init_inputs are in context for performance measurement.
     try:
         ref_src_path = get_reference_path(function)
-        if ref_src_path and hasattr(backend, 'context'):
+        if ref_src_path:
             with open(ref_src_path, 'r') as f:
                 ref_src = f.read()
             ref_src = _override_dimensions_in_code(ref_src, batch_size, dim, input_dims, function)
@@ -287,17 +194,14 @@ def _do_benchmark(
     except Exception as e:
         logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
 
-    _do_compilation(backend, function_code, function, language)
+    _do_compilation(backend, function_code, function)
     t0 = time.time()
-
-    if torch_compile:
-        _setup_torch_compile(backend, num_trials=num_trials)
 
     _current_eval_stage = EvalStage.PERFORMANCE
     t = time.time()
     try:
         elapsed_times, performance_error = _do_performance_measurement(
-            backend, baseline_mean_ms, function, language, num_trials
+            backend, baseline_mean_ms, function, num_trials, torch_compile
         )
     except Exception as e:
         elapsed_times, performance_error = None, str(e)
@@ -364,7 +268,7 @@ def evaluate_kernel(
     try:
         backend = get_backend(language)
         if backend is None:
-             return {
+            return {
                 'compiled': False,
                 'correctness': None,
                 'performance': None,
@@ -398,26 +302,14 @@ def evaluate_kernel(
 
     finally:
         try:
-            if language == 'cuda':
-                _cleanup_cuda()
-        except Exception:
-            pass
-        try:
             if backend:
                 backend.cleanup()
         except Exception:
             pass
 
 
-def _prepare_backend_for_baseline(backend, language: str):
-    if language == 'cuda':
-        _cleanup_cuda()
-    try:
-        backend.cleanup()
-    except Exception:
-        pass
-    if hasattr(backend, 'context'):
-        backend.context = {}
+def _prepare_backend_for_baseline(backend):
+    backend.cleanup()
 
 
 def _load_reference_code_and_override_dims(function: str, batch_size: Optional[int], dim: Optional[int], input_dims: Optional[Dict[str, Any]]) -> str:
@@ -434,8 +326,8 @@ def _load_reference_code_and_override_dims(function: str, batch_size: Optional[i
     return ref_src
 
 
-def _execute_baseline_with_error_handling(backend, function: str, language: str, hardware: str) -> Dict[str, Any]:
-    elapsed_times = backend.time_execution('Model')
+def _execute_baseline_with_error_handling(backend, function: str, hardware: str) -> Dict[str, Any]:
+    elapsed_times = run_performance(backend, 'Model')
     return {
         "mean": float(f"{np.mean(elapsed_times):.3g}"),
         "std": float(f"{np.std(elapsed_times):.3g}"),
@@ -472,16 +364,11 @@ def compute_baseline(
         }
 
     try:
-        _prepare_backend_for_baseline(backend, language)
+        _prepare_backend_for_baseline(backend)
         ref_src = _load_reference_code_and_override_dims(function, batch_size, dim, input_dims)
+        exec(ref_src, backend.context)
 
-        # We need to manually exec if the backend exposes context, or add a method to backend to load reference code
-        # CudaBackend exposes context, so we can exec into it.
-        # Ideally, we should add 'load_reference_code' to backend interface, but for now:
-        if hasattr(backend, 'context'):
-            exec(ref_src, backend.context)
-
-        result = _execute_baseline_with_error_handling(backend, function, language, hardware)
+        result = _execute_baseline_with_error_handling(backend, function, hardware)
         result['compute_capability'] = compute_capability
 
         if batch_size is not None:
@@ -510,29 +397,15 @@ def compute_baseline(
             pass
 
 
-def _override_num_perf_trials(language: str, num_trials: int) -> Optional[int]:
-    original_config = app_config.NUM_PERF_TRIALS
-    app_config.NUM_PERF_TRIALS = num_trials
-    return original_config
-
-
-def _restore_num_perf_trials(language: str, original_config: Optional[int]):
-    if original_config is not None:
-        app_config.NUM_PERF_TRIALS = original_config
-
-
 def _setup_performance_measurement_timeout(baseline_mean_ms: Optional[float], num_trials: int) -> Tuple[Optional[float], bool]:
-    timeout_seconds = None
-    use_timeout = False
-    if baseline_mean_ms is not None:
-        total_baseline_time_ms = (num_trials + app_config.NUM_WARMUP) * baseline_mean_ms
-        timeout_seconds = max(5.0, (2.0 * total_baseline_time_ms) / 1000.0)
-        use_timeout = True
-
-    return timeout_seconds, use_timeout
+    if baseline_mean_ms is None:
+        return None, False
+    total_baseline_time_ms = (num_trials + app_config.NUM_WARMUP) * baseline_mean_ms
+    timeout_seconds = max(5.0, (2.0 * total_baseline_time_ms) / 1000.0)
+    return timeout_seconds, True
 
 
-def _execute_performance_measurement_with_timeout(backend, timeout_seconds: Optional[float], use_timeout: bool, function: str) -> Tuple[Optional[list], Optional[str]]:
+def _execute_performance_measurement_with_timeout(backend, timeout_seconds, use_timeout, function, num_trials, torch_compile) -> Tuple[Optional[list], Optional[str]]:
     old_handler = None
 
     def timeout_handler(signum, frame):
@@ -543,13 +416,13 @@ def _execute_performance_measurement_with_timeout(backend, timeout_seconds: Opti
             old_handler = signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(int(timeout_seconds) + 1)
 
-        elapsed_times = backend.time_execution()
+        elapsed_times = run_performance(backend, 'ModelNew', num_trials, torch_compile)
 
         if elapsed_times is None:
-            logger.warning(f"Performance measurement returned None")
+            logger.warning("Performance measurement returned None")
             return None, None
         if not isinstance(elapsed_times, (list, tuple, np.ndarray)):
-            logger.warning(f"Performance measurement returned unexpected type")
+            logger.warning("Performance measurement returned unexpected type")
             return None, None
 
         return elapsed_times, None
@@ -579,9 +452,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
     dataset = get_dataset()
 
     result = {}
-    op_tests = dataset.keys()
 
-    for op in op_tests:
+    for op in dataset.keys():
         logger.info(f'Computing baseline for {op}')
         try:
             ref_src_path = get_reference_path(op)
@@ -591,10 +463,8 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
             with open(ref_src_path, 'r') as f:
                 ref_src = f.read()
 
-            if hasattr(backend, 'context'):
-                exec(ref_src, backend.context)
-
-            elapsed_times = backend.time_execution('Model')
+            exec(ref_src, backend.context)
+            elapsed_times = run_performance(backend, 'Model')
 
             result[op] = {
                 "mean": float(f"{np.mean(elapsed_times):.3g}"),
@@ -616,7 +486,6 @@ def compute_all_baselines(language: str) -> Dict[str, Any]:
                 "compute_capability": compute_capability
             }
 
-        if language == 'cuda':
-            _cleanup_cuda()
+        backend.clear_device_memory()
 
     return result

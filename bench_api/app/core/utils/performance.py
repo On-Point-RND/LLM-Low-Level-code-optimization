@@ -1,36 +1,33 @@
 import torch
 import app.config as config
+from typing import Optional
 
-def time_execution_event_template(context, device, synchronize, event_class, eval_target):
-    get_inputs = context['get_inputs']
-    get_init_inputs = context['get_init_inputs']
-    generated_elapsed_times = []
-    ModelNew = context[eval_target]
-    inputs = get_inputs()
-    inputs = [
-        x.to(device) if isinstance(x, torch.Tensor) else x
-        for x in inputs
-    ]
-    init_inputs = get_init_inputs()
-    init_inputs = [
-        x.to(device=device) if isinstance(x, torch.Tensor) else x for x in init_inputs
-    ]
+
+def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional[int] = None, torch_compile: bool = False):
+    """
+    Run warmup + timed trials for eval_target using backend timing primitives.
+    Returns list of elapsed times in ms.
+    """
+    actual_trials = num_trials if num_trials is not None else config.NUM_PERF_TRIALS
+
+    context = backend.context
+    device = backend.get_device()
+
+    inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in context['get_inputs']()]
+    init_inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in context['get_init_inputs']()]
+
     with torch.no_grad():
-        custom_model = ModelNew(*init_inputs).to(device)
-        def internel_eval(kernel_fn, elapsed_times):
-            for _ in range(config.NUM_WARMUP):
-                kernel_fn(*inputs)
-                synchronize(device=device)
-            for trail in range(config.NUM_PERF_TRIALS):
-                start_event = event_class(enable_timing=True)
-                end_event = event_class(enable_timing=True)
-                start_event.record()
-                kernel_fn(*inputs)
-                end_event.record()
-                # Synchronize to ensure the events have completed
-                synchronize(device=device)
-                # Calculate the elapsed time in milliseconds
-                elapsed_time_ms = start_event.elapsed_time(end_event)
-                elapsed_times.append(elapsed_time_ms)
-        internel_eval(custom_model, generated_elapsed_times)
-    return generated_elapsed_times
+        model = context[eval_target](*init_inputs).to(device)
+
+        if torch_compile:
+            try:
+                model = torch.compile(model)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"torch.compile failed, using original model: {e}")
+
+        for _ in range(config.NUM_WARMUP):
+            model(*inputs)
+            backend.synchronize()
+
+        return [backend.elapsed_ms(lambda: model(*inputs)) for _ in range(actual_trials)]
