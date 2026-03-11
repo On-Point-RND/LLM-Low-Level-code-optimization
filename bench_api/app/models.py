@@ -56,6 +56,7 @@ class EvaluateRequest(BaseModel):
     experiment_name: Optional[str] = Field(None, description="MLflow experiment name (folder name in MLflow)")
     run_name: Optional[str] = Field(None, description="MLflow run name (name of the specific run within the experiment)")
     num_trials: Optional[int] = Field(None, description="Number of performance measurement trials (default: 100)")
+    num_warmup: Optional[int] = Field(None, description="Number of warmup iterations before timing (default: 3)")
     batch_size: Optional[int] = Field(None, description="Batch size for evaluation (overrides reference file default)")
     dim: Optional[int] = Field(None, description="Dimension for evaluation (overrides reference file default)")
     input_dims: Optional[Dict[str, Any]] = Field(None, description="Custom input dimensions as dict (e.g., {'batch_size': 32, 'dim': 8192, 'height': 224, 'width': 224})")

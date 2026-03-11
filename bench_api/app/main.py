@@ -188,6 +188,7 @@ async def evaluate(request: EvaluateRequest):
                 experiment_name=request.experiment_name,
                 run_name=request.run_name,
                 num_trials=request.num_trials,
+                num_warmup=request.num_warmup,
                 batch_size=request.batch_size,
                 dim=request.dim,
                 input_dims=request.input_dims,

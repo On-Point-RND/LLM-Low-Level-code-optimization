@@ -103,11 +103,12 @@ def _do_baseline_computation(function, language, batch_size, dim, input_dims, to
     return None
 
 
-def _do_performance_measurement(backend, baseline_mean_ms, function, num_trials, torch_compile):
+def _do_performance_measurement(backend, baseline_mean_ms, function, num_trials, num_warmup, torch_compile):
     actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
-    timeout_seconds, use_timeout = _setup_performance_measurement_timeout(baseline_mean_ms, actual_num_trials)
+    actual_num_warmup = num_warmup if num_warmup is not None else app_config.NUM_WARMUP
+    timeout_seconds, use_timeout = _setup_performance_measurement_timeout(baseline_mean_ms, actual_num_trials, actual_num_warmup)
     elapsed_times, performance_error = _execute_performance_measurement_with_timeout(
-        backend, timeout_seconds, use_timeout, function, actual_num_trials, torch_compile
+        backend, timeout_seconds, use_timeout, function, actual_num_trials, actual_num_warmup, torch_compile
     )
     backend.clear_device_memory()
     return elapsed_times, performance_error
@@ -178,7 +179,7 @@ def _do_validation(
 
 def _do_benchmark(
     backend, function_code, function, language, hardware, compute_capability,
-    batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, baseline_mean_ms,
+    batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, num_warmup, baseline_mean_ms,
 ) -> Dict[str, Any]:
     global _current_eval_stage
     _current_eval_stage = EvalStage.COMPILATION
@@ -203,7 +204,7 @@ def _do_benchmark(
     t = time.time()
     try:
         elapsed_times, performance_error = _do_performance_measurement(
-            backend, baseline_mean_ms, function, num_trials, torch_compile
+            backend, baseline_mean_ms, function, num_trials, num_warmup, torch_compile
         )
     except Exception as e:
         elapsed_times, performance_error = None, str(e)
@@ -233,7 +234,7 @@ def _do_benchmark(
 
 
 def _do_kernel_evaluation(
-    backend, function_code, function, language, hardware, torch_compile, torch_compile_baseline, num_trials,
+    backend, function_code, function, language, hardware, torch_compile, torch_compile_baseline, num_trials, num_warmup,
     batch_size, dim, input_dims,
     mode: str = 'validation',
     baseline_mean_ms: Optional[float] = None,
@@ -243,7 +244,7 @@ def _do_kernel_evaluation(
     if mode == 'benchmark':
         return _do_benchmark(
             backend, function_code, function, language, hardware, compute_capability,
-            batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, baseline_mean_ms,
+            batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, num_warmup, baseline_mean_ms,
         )
     return _do_validation(
         backend, function_code, function, language, hardware, compute_capability,
@@ -258,6 +259,7 @@ def evaluate_kernel(
     torch_compile: bool = False,
     torch_compile_baseline: bool = False,
     num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
@@ -286,7 +288,7 @@ def evaluate_kernel(
 
         logger.debug(f"Starting evaluation for {function} on {language} (mode={mode})")
         return _do_kernel_evaluation(
-            backend, function_code, function, language, hardware, torch_compile, torch_compile_baseline, num_trials,
+            backend, function_code, function, language, hardware, torch_compile, torch_compile_baseline, num_trials, num_warmup,
             batch_size, dim, input_dims, mode=mode, baseline_mean_ms=baseline_mean_ms,
         )
 
@@ -402,15 +404,15 @@ def compute_baseline(
             pass
 
 
-def _setup_performance_measurement_timeout(baseline_mean_ms: Optional[float], num_trials: int) -> Tuple[Optional[float], bool]:
+def _setup_performance_measurement_timeout(baseline_mean_ms: Optional[float], num_trials: int, num_warmup: int) -> Tuple[Optional[float], bool]:
     if baseline_mean_ms is None:
         return None, False
-    total_baseline_time_ms = (num_trials + app_config.NUM_WARMUP) * baseline_mean_ms
+    total_baseline_time_ms = (num_trials + num_warmup) * baseline_mean_ms
     timeout_seconds = max(5.0, (2.0 * total_baseline_time_ms) / 1000.0)
     return timeout_seconds, True
 
 
-def _execute_performance_measurement_with_timeout(backend, timeout_seconds, use_timeout, function, num_trials, torch_compile) -> Tuple[Optional[list], Optional[str]]:
+def _execute_performance_measurement_with_timeout(backend, timeout_seconds, use_timeout, function, num_trials, num_warmup, torch_compile) -> Tuple[Optional[list], Optional[str]]:
     old_handler = None
 
     def timeout_handler(signum, frame):
@@ -421,7 +423,7 @@ def _execute_performance_measurement_with_timeout(backend, timeout_seconds, use_
             old_handler = signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(int(timeout_seconds) + 1)
 
-        elapsed_times = run_performance(backend, 'ModelNew', num_trials, torch_compile)
+        elapsed_times = run_performance(backend, 'ModelNew', num_trials, num_warmup, torch_compile)
 
         if elapsed_times is None:
             logger.warning("Performance measurement returned None")

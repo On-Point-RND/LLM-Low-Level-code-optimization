@@ -3,12 +3,13 @@ import app.config as config
 from typing import Optional
 
 
-def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional[int] = None, torch_compile: bool = False):
+def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional[int] = None, num_warmup: Optional[int] = None, torch_compile: bool = False):
     """
     Run warmup + timed trials for eval_target using backend timing primitives.
     Returns list of elapsed times in ms.
     """
     actual_trials = num_trials if num_trials is not None else config.NUM_PERF_TRIALS
+    actual_warmup = num_warmup if num_warmup is not None else config.NUM_WARMUP
 
     context = backend.context
     device = backend.get_device()
@@ -26,7 +27,7 @@ def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional
                 import logging
                 logging.getLogger(__name__).warning(f"torch.compile failed, using original model: {e}")
 
-        for _ in range(config.NUM_WARMUP):
+        for _ in range(actual_warmup):
             model(*inputs)
             backend.synchronize()
 

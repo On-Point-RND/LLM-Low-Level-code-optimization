@@ -5,54 +5,35 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-ISOLATED_SCRIPT = Path(__file__).parent.parent.parent / 'eval_single_isolated.py'
+# bench_api/ — the directory where `app/` lives, used as cwd for the worker
+_WORKER_CWD = Path(__file__).parent.parent.parent
 
 
 def _run_subprocess(params: Dict[str, Any], timeout: int, device_id: int = 0) -> Dict[str, Any]:
-    """Run eval_single_isolated.py with the given params, return parsed JSON result."""
     child_env = os.environ.copy()
-    child_env["CUDA_VISIBLE_DEVICES"] = str(device_id)
+    child_env['CUDA_VISIBLE_DEVICES'] = str(device_id)
 
     try:
-        result = subprocess.run(
-            [sys.executable, str(ISOLATED_SCRIPT)],
+        proc = subprocess.run(
+            [sys.executable, '-m', 'app.core.eval_worker'],
             input=json.dumps(params),
             capture_output=True,
             text=True,
             timeout=timeout,
-            cwd=str(ISOLATED_SCRIPT.parent.parent),
+            cwd=str(_WORKER_CWD),
             env=child_env,
         )
 
-        stdout_text = result.stdout.strip() if result.stdout else ""
-        stderr_text = result.stderr.strip() if result.stderr else ""
+        if proc.stdout.strip():
+            return json.loads(proc.stdout.strip())
 
-        json_output = None
-        for text in (stderr_text, stdout_text):
-            if not text:
-                continue
-            for line in reversed(text.split('\n')):
-                line = line.strip()
-                if line and (line.startswith('{') or line.startswith('[')):
-                    try:
-                        json_output = json.loads(line)
-                        break
-                    except json.JSONDecodeError:
-                        continue
-            if json_output is not None:
-                break
-
-        if json_output is not None:
-            return json_output
-
-        error_msg = stderr_text or stdout_text or "Unknown error"
+        error_msg = proc.stderr.strip() or 'No output from worker'
         return {
             'compiled': False,
             'correctness': None,
             'performance': None,
             'hardware': 'unknown',
-            'compile_info': f"Subprocess failed (returncode={result.returncode}): {error_msg[:1000]}",
-            'error': f"Failed to find JSON in subprocess output (returncode={result.returncode}): {error_msg[:1000]}"
+            'error': f"Worker produced no output (exit={proc.returncode}): {error_msg[:1000]}",
         }
 
     except subprocess.TimeoutExpired:
@@ -61,8 +42,7 @@ def _run_subprocess(params: Dict[str, Any], timeout: int, device_id: int = 0) ->
             'correctness': None,
             'performance': None,
             'hardware': 'unknown',
-            'compile_info': f"Evaluation timed out after {timeout} seconds",
-            'error': f"Evaluation timed out after {timeout} seconds"
+            'error': f"Evaluation timed out after {timeout}s",
         }
     except Exception as e:
         return {
@@ -70,8 +50,7 @@ def _run_subprocess(params: Dict[str, Any], timeout: int, device_id: int = 0) ->
             'correctness': None,
             'performance': None,
             'hardware': 'unknown',
-            'compile_info': f"Subprocess execution failed: {str(e)}",
-            'error': f"Subprocess execution failed: {str(e)}"
+            'error': f"Failed to run worker: {e}",
         }
 
 
@@ -82,6 +61,7 @@ def evaluate_kernel_isolated(
     torch_compile: bool = False,
     torch_compile_baseline: bool = False,
     num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
@@ -95,6 +75,7 @@ def evaluate_kernel_isolated(
         'torch_compile': torch_compile,
         'torch_compile_baseline': torch_compile_baseline,
         'num_trials': num_trials,
+        'num_warmup': num_warmup,
         'batch_size': batch_size,
         'dim': dim,
         'input_dims': input_dims,
