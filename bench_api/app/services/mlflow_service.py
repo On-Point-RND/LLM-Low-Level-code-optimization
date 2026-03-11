@@ -113,6 +113,7 @@ def log_evaluation_result(
     correctness: Optional[bool],
     performance: Optional[Dict[str, Any]],
     torch_compile: bool,
+    torch_compile_baseline: bool = False,
     compile_info: Optional[str] = None,
     correctness_info: Optional[str] = None,
     speedup: Optional[float] = None,
@@ -152,6 +153,7 @@ def log_evaluation_result(
             mlflow.log_param("language", language)
             mlflow.log_param("hardware", hardware)
             mlflow.log_param("torch_compile", torch_compile)
+            mlflow.log_param("torch_compile_baseline", torch_compile_baseline)
             mlflow.log_param("compiled", compiled)
             
             if run_name:
@@ -218,6 +220,7 @@ def log_evaluation_result(
                 "compiled": compiled,
                 "correctness": correctness,
                 "torch_compile": torch_compile,
+                "torch_compile_baseline": torch_compile_baseline,
                 "performance": performance,
                 "baseline": baseline,
                 "speedup": speedup,
@@ -291,6 +294,7 @@ def log_baseline_result(
     language: str,
     hardware: str,
     baseline: Dict[str, Any],
+    torch_compile: bool = False,
     function_code: Optional[str] = None,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
@@ -325,6 +329,7 @@ def log_baseline_result(
             mlflow.log_param("function", function)
             mlflow.log_param("language", language)
             mlflow.log_param("hardware", hardware)
+            mlflow.log_param("torch_compile", torch_compile)
             
             if batch_size is not None:
                 mlflow.log_param("batch_size", batch_size)
@@ -364,6 +369,7 @@ def log_baseline_result(
                 "function": function,
                 "language": language,
                 "hardware": hardware,
+                "torch_compile": torch_compile,
                 "baseline": baseline,
                 "batch_size": batch_size,
                 "dim": dim,

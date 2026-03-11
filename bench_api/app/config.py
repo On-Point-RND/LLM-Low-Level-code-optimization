@@ -21,18 +21,29 @@ date_format = "%Y-%m-%d %H:%M:%S"
 log_file = LOGS_DIR / f"bench_api_{datetime.now().strftime('%Y%m%d')}.log"
 
 root_logger = logging.getLogger()
-root_logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+log_level_numeric = getattr(logging, LOG_LEVEL, logging.INFO)
+root_logger.setLevel(log_level_numeric)
+
+# Update existing handlers level if they exist (e.g. from uvicorn)
+for handler in root_logger.handlers:
+    handler.setLevel(log_level_numeric)
 
 console_handler = logging.StreamHandler()
-console_handler.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+console_handler.setLevel(log_level_numeric)
 console_handler.setFormatter(logging.Formatter(log_format, date_format))
 
 file_handler = logging.FileHandler(log_file, encoding='utf-8')
-file_handler.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+file_handler.setLevel(log_level_numeric)
 file_handler.setFormatter(logging.Formatter(log_format, date_format))
 
-if not root_logger.handlers:
+# Only add our handlers if they are not already there
+# We check by type to avoid duplicate console/file handlers
+has_console = any(isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler) for h in root_logger.handlers)
+has_file = any(isinstance(h, logging.FileHandler) for h in root_logger.handlers)
+
+if not has_console:
     root_logger.addHandler(console_handler)
+if not has_file:
     root_logger.addHandler(file_handler)
 
 ENABLE_TORCH_COMPILE = os.getenv("ENABLE_TORCH_COMPILE", "false").lower() == "true"

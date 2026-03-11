@@ -16,11 +16,15 @@ sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
 from dataset import dataset
 
 
-def get_baseline_file_path(language: str, hardware: str, dims_key: Optional[str] = None) -> Path:
+def get_baseline_file_path(language: str, hardware: str, dims_key: Optional[str] = None, torch_compile: bool = False) -> Path:
     """Get the path to the baseline file for a language and hardware."""
+    suffix = ""
+    if torch_compile:
+        suffix = "_compiled"
+    
     if dims_key:
-        return BASELINES_DIR / f"{language}_{hardware}_{dims_key}.json"
-    return BASELINES_DIR / f"{language}_{hardware}.json"
+        return BASELINES_DIR / f"{language}_{hardware}_{dims_key}{suffix}.json"
+    return BASELINES_DIR / f"{language}_{hardware}{suffix}.json"
 
 
 def _create_dims_key(batch_size: Optional[int] = None, dim: Optional[int] = None, input_dims: Optional[Dict[str, Any]] = None) -> Optional[str]:
@@ -42,9 +46,9 @@ def _create_dims_key(batch_size: Optional[int] = None, dim: Optional[int] = None
     return "_".join(parts) if parts else None
 
 
-def load_baseline_file(language: str, hardware: str, dims_key: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def load_baseline_file(language: str, hardware: str, dims_key: Optional[str] = None, torch_compile: bool = False) -> Optional[Dict[str, Any]]:
     """Load baseline file if it exists."""
-    baseline_path = get_baseline_file_path(language, hardware, dims_key)
+    baseline_path = get_baseline_file_path(language, hardware, dims_key, torch_compile)
     if baseline_path.exists():
         try:
             with open(baseline_path, 'r') as f:
@@ -54,9 +58,9 @@ def load_baseline_file(language: str, hardware: str, dims_key: Optional[str] = N
     return None
 
 
-def save_baseline_file(language: str, hardware: str, data: Dict[str, Any], dims_key: Optional[str] = None):
+def save_baseline_file(language: str, hardware: str, data: Dict[str, Any], dims_key: Optional[str] = None, torch_compile: bool = False):
     """Save baseline data to file."""
-    baseline_path = get_baseline_file_path(language, hardware, dims_key)
+    baseline_path = get_baseline_file_path(language, hardware, dims_key, torch_compile)
     baseline_path.parent.mkdir(parents=True, exist_ok=True)
     with open(baseline_path, 'w') as f:
         json.dump(data, f, indent=2)
@@ -79,7 +83,8 @@ def get_single_baseline(
     function: str,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
-    input_dims: Optional[Dict[str, Any]] = None
+    input_dims: Optional[Dict[str, Any]] = None,
+    torch_compile: bool = False
 ) -> Dict[str, Any]:
     """
     Get baseline for a single function with optional custom dimensions.
@@ -97,7 +102,7 @@ def get_single_baseline(
     dims_key = _create_dims_key(batch_size, dim, input_dims)
     
     # Try to load from file
-    baseline_data = load_baseline_file(language, hardware, dims_key)
+    baseline_data = load_baseline_file(language, hardware, dims_key, torch_compile)
     
     # Create cache key for this function with dimensions
     cache_key = function
@@ -114,7 +119,7 @@ def get_single_baseline(
             
             logger.info(
                 f"[BASELINE] Function: {function}, Language: {language}, "
-                f"Performance: {baseline['mean']:.3g}ms, Cached: True"
+                f"Performance: {baseline['mean']:.3g}ms, Cached: True, Compiled: {torch_compile}"
             )
             
             return {
@@ -122,6 +127,7 @@ def get_single_baseline(
                 'hardware': hardware,
                 'compute_capability': compute_capability,
                 'cached': True,
+                'torch_compile': torch_compile,
                 'function_code': function_code,
                 'batch_size': cached_batch_size,
                 'dim': cached_dim,
@@ -130,7 +136,7 @@ def get_single_baseline(
     
     # Compute baseline with custom dimensions
     try:
-        baseline = compute_baseline(function, language, batch_size=batch_size, dim=dim, input_dims=input_dims)
+        baseline = compute_baseline(function, language, batch_size=batch_size, dim=dim, input_dims=input_dims, torch_compile=torch_compile)
     except KeyError as e:
         # Function not found in dataset
         raise ValueError(f"Function '{function}' not found in dataset") from e
@@ -147,13 +153,14 @@ def get_single_baseline(
     if baseline_data is None:
         baseline_data = {}
     baseline_data[cache_key] = baseline
-    save_baseline_file(language, hardware, baseline_data, dims_key)
+    save_baseline_file(language, hardware, baseline_data, dims_key, torch_compile)
     
     result = {
         'baseline': baseline,
         'hardware': hardware,
         'compute_capability': compute_capability,
         'cached': False,
+        'torch_compile': torch_compile,
         'function_code': function_code,
         'batch_size': batch_size,
         'dim': dim,
@@ -162,13 +169,13 @@ def get_single_baseline(
 
     logger.info(
         f"[BASELINE] Function: {function}, Language: {language}, "
-        f"Performance: {baseline['mean']:.3g}ms, Cached: False"
+        f"Performance: {baseline['mean']:.3g}ms, Cached: False, Compiled: {torch_compile}"
     )
     
     return result
 
 
-def get_all_baselines(language: str) -> Dict[str, Any]:
+def get_all_baselines(language: str, torch_compile: bool = False) -> Dict[str, Any]:
     """
     Get all baselines for a language.
     Returns dict with 'baselines', 'hardware', 'cached', 'function_codes' keys.
@@ -179,7 +186,7 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
     compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     
     # Try to load from file
-    baseline_data = load_baseline_file(language, hardware)
+    baseline_data = load_baseline_file(language, hardware, torch_compile=torch_compile)
     
     # Read reference codes for all functions
     function_codes = {}
@@ -200,10 +207,11 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
                 'hardware': hardware,
                 'compute_capability': compute_capability,
                 'cached': True,
+                'torch_compile': torch_compile,
                 'function_codes': function_codes if function_codes else None
             }
     
-    baselines = compute_all_baselines(language)
+    baselines = compute_all_baselines(language, torch_compile=torch_compile)
     
     valid_baselines = {
         k: v for k, v in baselines.items()
@@ -211,13 +219,14 @@ def get_all_baselines(language: str) -> Dict[str, Any]:
     }
     
     # Save to file
-    save_baseline_file(language, hardware, valid_baselines)
+    save_baseline_file(language, hardware, valid_baselines, torch_compile=torch_compile)
     
     return {
         'baselines': valid_baselines,
         'hardware': hardware,
         'compute_capability': compute_capability,
         'cached': False,
+        'torch_compile': torch_compile,
         'function_codes': function_codes if function_codes else None
     }
 
