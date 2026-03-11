@@ -133,7 +133,7 @@ def evaluate_kernel_isolated(
                 result['timing']['correctness'] = val_result['timing'].get('correctness', 0.0)
                 result['timing']['total'] += val_result['timing'].get('total', 0.0)
 
-        if not val_result.get('compiled') or val_result.get('correctness') is False:
+        if not val_result.get('compiled'):
             return result
             
         current_baseline_mean_ms = val_result.get('baseline_mean_ms') or baseline_mean_ms
