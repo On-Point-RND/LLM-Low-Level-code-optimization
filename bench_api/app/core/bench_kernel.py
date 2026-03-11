@@ -118,36 +118,47 @@ def _make_timing(comp=0.0, corr=0.0, perf=0.0, total=0.0):
     return {'compilation': comp, 'correctness': corr, 'performance': perf, 'total': total}
 
 
-def _do_validation(
-    backend, function_code, function, language, hardware, compute_capability,
-    batch_size, dim, input_dims, torch_compile_baseline=False,
-) -> Dict[str, Any]:
+def _do_compilation_only(backend, function_code, function, hardware, compute_capability) -> Dict[str, Any]:
     global _current_eval_stage
-    base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None}
-
-    _current_eval_stage = EvalStage.BASELINE
-    try:
-        baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims, torch_compile=torch_compile_baseline)
-    except Exception as e:
-        return {**base, 'compiled': False, 'correctness': None,
-                'stage': EvalStage.BASELINE, 'error': f"Baseline computation failed: {str(e)}"}
-
+    base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None, 'correctness': None}
     t0 = time.time()
-
     _current_eval_stage = EvalStage.COMPILATION
     t = time.time()
     try:
         compiled, compile_info = _do_compilation(backend, function_code, function)
     except Exception as e:
         msg = f"{type(e).__name__}: {str(e)}"
-        return {**base, 'compiled': False, 'correctness': None, 'compile_info': msg, 'error': msg,
+        return {**base, 'compiled': False, 'compile_info': msg, 'error': msg,
                 'stage': EvalStage.COMPILATION, 'timing': _make_timing(comp=time.time()-t, total=time.time()-t0)}
     comp_time = time.time() - t
-
     if not compiled:
-        return {**base, 'compiled': False, 'correctness': None,
-                'compile_info': compile_info, 'error': compile_info,
+        return {**base, 'compiled': False, 'compile_info': compile_info, 'error': compile_info,
                 'stage': EvalStage.COMPILATION, 'timing': _make_timing(comp=comp_time, total=time.time()-t0)}
+    return {**base, 'compiled': True, 'stage': EvalStage.COMPILATION,
+            'timing': _make_timing(comp=comp_time, total=time.time()-t0)}
+
+
+def _do_validation(
+    backend, function_code, function, language, hardware, compute_capability,
+    batch_size, dim, input_dims, torch_compile_baseline=False,
+    baseline_mean_ms: Optional[float] = None,
+) -> Dict[str, Any]:
+    global _current_eval_stage
+    base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None}
+    t0 = time.time()
+
+    # Re-compile from cache to populate backend.context with ModelNew (fast, cache hit)
+    _current_eval_stage = EvalStage.COMPILATION
+    _do_compilation(backend, function_code, function)
+
+    if baseline_mean_ms is None:
+        _current_eval_stage = EvalStage.BASELINE
+        try:
+            baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims, torch_compile=torch_compile_baseline)
+        except Exception as e:
+            return {**base, 'compiled': True, 'correctness': None,
+                    'stage': EvalStage.BASELINE, 'error': f"Baseline computation failed: {str(e)}",
+                    'timing': _make_timing(total=time.time()-t0)}
 
     _current_eval_stage = EvalStage.CORRECTNESS
     t = time.time()
@@ -157,13 +168,13 @@ def _do_validation(
         msg = f"{type(e).__name__}: {str(e)}"
         return {**base, 'compiled': True, 'correctness': False, 'correctness_info': msg, 'error': msg,
                 'stage': EvalStage.CORRECTNESS,
-                'timing': _make_timing(comp=comp_time, corr=time.time()-t, total=time.time()-t0)}
+                'timing': _make_timing(corr=time.time()-t, total=time.time()-t0)}
     corr_time = time.time() - t
 
     result = {
         **base, 'compiled': True, 'correctness': correctness,
         'stage': EvalStage.CORRECTNESS,
-        'timing': _make_timing(comp=comp_time, corr=corr_time, total=time.time()-t0),
+        'timing': _make_timing(corr=corr_time, total=time.time()-t0),
         'baseline_mean_ms': baseline_mean_ms,
     }
     if not correctness:
@@ -241,6 +252,8 @@ def _do_kernel_evaluation(
 ) -> Dict[str, Any]:
     capability = backend.get_compute_capability()
     compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
+    if mode == 'compilation':
+        return _do_compilation_only(backend, function_code, function, hardware, compute_capability)
     if mode == 'benchmark':
         return _do_benchmark(
             backend, function_code, function, language, hardware, compute_capability,
@@ -249,6 +262,7 @@ def _do_kernel_evaluation(
     return _do_validation(
         backend, function_code, function, language, hardware, compute_capability,
         batch_size, dim, input_dims, torch_compile_baseline=torch_compile_baseline,
+        baseline_mean_ms=baseline_mean_ms,
     )
 
 

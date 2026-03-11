@@ -83,6 +83,8 @@ def evaluate_kernel_isolated(
     input_dims: Optional[Dict[str, Any]] = None,
     timeout: int = 300,
     device_id: int = 0,
+    mode: str = 'full',
+    baseline_mean_ms: Optional[float] = None,
 ) -> Dict[str, Any]:
     base_params = {
         'function_code': function_code,
@@ -97,27 +99,67 @@ def evaluate_kernel_isolated(
         'input_dims': input_dims,
     }
 
-    # Subprocess 1: baseline + compile + correctness (CUDA_LAUNCH_BLOCKING=1 for accurate tracebacks)
-    result = _run_subprocess({**base_params, 'mode': 'validation'}, timeout, device_id)
+    result = {}
 
-    if not result.get('compiled'):
-        return result
+    # Phase A: Compilation (Subprocess A)
+    if mode in ('compilation', 'full'):
+        result = _run_subprocess({**base_params, 'mode': 'compilation'}, timeout, device_id)
+        if mode == 'compilation' or not result.get('compiled'):
+            return result
 
-    baseline_mean_ms = result.pop('baseline_mean_ms', None)
+    # Phase B: Validation (Subprocess B)
+    if mode in ('validation_benchmark', 'full'):
+        # Subprocess B: baseline + compile (cache) + correctness
+        # Use baseline_mean_ms if provided (e.g. from a previous call)
+        val_params = {**base_params, 'mode': 'validation'}
+        if baseline_mean_ms is not None:
+            val_params['baseline_mean_ms'] = baseline_mean_ms
+            
+        val_result = _run_subprocess(val_params, timeout, device_id)
+        
+        # Merge results. If we're in 'full' mode, 'result' already has compilation info.
+        # If we're in 'validation_benchmark', 'result' is empty.
+        if not result:
+            result = val_result
+        else:
+            # Update result with validation info
+            result.update({
+                'correctness': val_result.get('correctness'),
+                'correctness_info': val_result.get('correctness_info'),
+                'error': val_result.get('error'),
+                'stage': val_result.get('stage'),
+            })
+            if 'timing' in val_result:
+                result['timing']['correctness'] = val_result['timing'].get('correctness', 0.0)
+                result['timing']['total'] += val_result['timing'].get('total', 0.0)
 
-    # Subprocess 2: performance only, no CUDA_LAUNCH_BLOCKING
-    # Runs regardless of correctness — speedup is useful even for incorrect kernels
-    # Compilation cache from subprocess 1 is reused (torch_extensions / Triton cache on disk)
-    perf_result = _run_subprocess(
-        {**base_params, 'mode': 'benchmark', 'baseline_mean_ms': baseline_mean_ms},
-        timeout,
-        device_id,
-    )
+        if not val_result.get('compiled') or val_result.get('correctness') is False:
+            return result
+            
+        current_baseline_mean_ms = val_result.get('baseline_mean_ms') or baseline_mean_ms
 
-    result['performance'] = perf_result.get('performance')
-    if perf_result.get('performance_error'):
-        result['performance_error'] = perf_result['performance_error']
-    result['timing']['performance'] = perf_result.get('timing', {}).get('performance', 0.0)
-    result['timing']['total'] += perf_result.get('timing', {}).get('total', 0.0)
+        # Phase C: Benchmark (Subprocess C)
+        perf_result = _run_subprocess(
+            {**base_params, 'mode': 'benchmark', 'baseline_mean_ms': current_baseline_mean_ms},
+            timeout,
+            device_id,
+        )
+
+        result['performance'] = perf_result.get('performance')
+        if perf_result.get('performance_error'):
+            result['performance_error'] = perf_result['performance_error']
+            if not result.get('error'):
+                result['error'] = perf_result['performance_error']
+        
+        if 'timing' in perf_result:
+            if 'timing' not in result:
+                result['timing'] = perf_result['timing']
+            else:
+                result['timing']['performance'] = perf_result['timing'].get('performance', 0.0)
+                result['timing']['total'] += perf_result['timing'].get('total', 0.0)
+        
+        # Preserve baseline_mean_ms for the caller if needed
+        if current_baseline_mean_ms:
+            result['baseline_mean_ms'] = current_baseline_mean_ms
 
     return result

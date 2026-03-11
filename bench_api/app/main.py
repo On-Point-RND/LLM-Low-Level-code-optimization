@@ -176,8 +176,32 @@ async def evaluate(request: EvaluateRequest):
         else:
             raise HTTPException(status_code=400, detail="Either function_code or function_code_file must be provided")
 
+        # Phase A: Compilation (Subprocess A) - No device lock
+        result = await asyncio.to_thread(
+            evaluate_function,
+            function_code=function_code,
+            function=request.function,
+            language=request.language,
+            torch_compile=request.torch_compile or False,
+            torch_compile_baseline=request.torch_compile_baseline or False,
+            experiment_name=request.experiment_name,
+            run_name=request.run_name,
+            num_trials=request.num_trials,
+            num_warmup=request.num_warmup,
+            batch_size=request.batch_size,
+            dim=request.dim,
+            input_dims=request.input_dims,
+            device_id=0,  # Dummy device_id for compilation
+            mode='compilation',
+        )
+
+        if not result.compiled:
+            return result
+
+        # Phase B & C: Validation and Benchmark - With device lock
         device_id = await _device_pool.acquire()
         try:
+            baseline_mean_ms = result.baseline.mean if result.baseline else None
             return await asyncio.to_thread(
                 evaluate_function,
                 function_code=function_code,
@@ -193,6 +217,8 @@ async def evaluate(request: EvaluateRequest):
                 dim=request.dim,
                 input_dims=request.input_dims,
                 device_id=device_id,
+                mode='validation_benchmark',
+                baseline_mean_ms=baseline_mean_ms,
             )
         finally:
             _device_pool.release(device_id)

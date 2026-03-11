@@ -28,6 +28,8 @@ def evaluate_function(
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
     device_id: int = 0,
+    mode: str = 'full',
+    baseline_mean_ms: Optional[float] = None,
 ) -> EvaluateResponse:
     """
     Evaluate a kernel function.
@@ -41,6 +43,8 @@ def evaluate_function(
         experiment_name: Optional MLflow experiment name (folder name)
         run_name: Optional MLflow run name (specific run name)
         num_trials: Optional number of performance measurement trials (default: 100)
+        mode: Evaluation mode ('full', 'compilation', 'validation_benchmark')
+        baseline_mean_ms: Optional baseline mean to use (avoids re-computation)
     
     Returns:
         EvaluateResponse with evaluation results
@@ -57,6 +61,8 @@ def evaluate_function(
         dim=dim,
         input_dims=input_dims,
         device_id=device_id,
+        mode=mode,
+        baseline_mean_ms=baseline_mean_ms,
     )
     
     if result.get('system_error'):
@@ -94,15 +100,18 @@ def evaluate_function(
     baseline = None
     speedup = None
     baseline_function_code = None
-    try:
-        baseline_result = get_single_baseline(
-            language, 
-            function,
-            batch_size=batch_size,
-            dim=dim,
-            input_dims=input_dims,
-            torch_compile=torch_compile_baseline
-        )
+    # Only get baseline if we're NOT in compilation-only mode
+    # If we're in validation_benchmark or full mode, we'll need it.
+    if mode != 'compilation':
+        try:
+            baseline_result = get_single_baseline(
+                language, 
+                function,
+                batch_size=batch_size,
+                dim=dim,
+                input_dims=input_dims,
+                torch_compile=torch_compile_baseline
+            )
 
         if baseline_result and 'baseline' in baseline_result:
             baseline_data = baseline_result['baseline']
@@ -133,7 +142,13 @@ def evaluate_function(
         logger.warning(f"Failed to get baseline for {function} on {language}: {e}", exc_info=True)
     
     # Log to MLflow if enabled (if experiment_name or run_name provided)
-    if experiment_name or run_name:
+    # Only log if it's a full run, or the final phase (validation_benchmark),
+    # or if compilation failed in the compilation phase.
+    should_log = (experiment_name or run_name) and (
+        mode in ('full', 'validation_benchmark') or not result.get('compiled')
+    )
+    
+    if should_log:
         baseline_dict = None
         if baseline:
             baseline_dict = {
