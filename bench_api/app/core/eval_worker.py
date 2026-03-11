@@ -12,8 +12,14 @@ import sys
 
 
 def _write(result: dict) -> None:
-    sys.stdout.write(json.dumps(result) + '\n')
-    sys.stdout.flush()
+    fd = int(os.environ.get('RESULT_FD', -1))
+    data = json.dumps(result).encode()
+    if fd >= 0:
+        os.write(fd, data)
+        os.close(fd)
+    else:
+        sys.stdout.buffer.write(data + b'\n')
+        sys.stdout.flush()
 
 
 def _signal_handler(signum, frame):
@@ -33,7 +39,9 @@ def _signal_handler(signum, frame):
         'stage': stage,
         'error': error_msg,
     }
-    if stage == 'compilation':
+    if stage in ('initialization', 'baseline'):
+        result['system_error'] = True
+    elif stage == 'compilation':
         result['compile_info'] = error_msg
     elif stage == 'correctness':
         result['correctness_info'] = error_msg
@@ -82,6 +90,7 @@ def main():
             'performance': None,
             'hardware': 'unknown',
             'error': f"Evaluation failed: {e}\n{traceback.format_exc()}",
+            'system_error': True,
         }
 
     _write(result)

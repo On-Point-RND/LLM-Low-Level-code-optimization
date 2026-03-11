@@ -9,49 +9,65 @@ from typing import Dict, Any, Optional
 _WORKER_CWD = Path(__file__).parent.parent.parent
 
 
+def _error(msg: str) -> Dict[str, Any]:
+    return {
+        'compiled': False,
+        'correctness': None,
+        'performance': None,
+        'hardware': 'unknown',
+        'error': msg,
+        'system_error': True,
+    }
+
+
 def _run_subprocess(params: Dict[str, Any], timeout: int, device_id: int = 0) -> Dict[str, Any]:
+    r_fd, w_fd = os.pipe()
+
     child_env = os.environ.copy()
     child_env['CUDA_VISIBLE_DEVICES'] = str(device_id)
+    child_env['RESULT_FD'] = str(w_fd)
 
     try:
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             [sys.executable, '-m', 'app.core.eval_worker'],
-            input=json.dumps(params),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
             cwd=str(_WORKER_CWD),
             env=child_env,
+            pass_fds=(w_fd,),
         )
+        os.close(w_fd)
 
-        if proc.stdout.strip():
-            return json.loads(proc.stdout.strip())
+        proc.stdin.write(json.dumps(params).encode())
+        proc.stdin.close()
 
-        error_msg = proc.stderr.strip() or 'No output from worker'
-        return {
-            'compiled': False,
-            'correctness': None,
-            'performance': None,
-            'hardware': 'unknown',
-            'error': f"Worker produced no output (exit={proc.returncode}): {error_msg[:1000]}",
-        }
+        with os.fdopen(r_fd, 'r') as result_pipe:
+            result_json = result_pipe.read()
 
-    except subprocess.TimeoutExpired:
-        return {
-            'compiled': False,
-            'correctness': None,
-            'performance': None,
-            'hardware': 'unknown',
-            'error': f"Evaluation timed out after {timeout}s",
-        }
+        try:
+            proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+            return _error(f"Evaluation timed out after {timeout}s")
+
+        if result_json:
+            return json.loads(result_json)
+
+        stderr = proc.stderr.read().strip() if proc.stderr else ''
+        return _error(f"Worker produced no output (exit={proc.returncode}): {stderr[:1000]}")
+
     except Exception as e:
-        return {
-            'compiled': False,
-            'correctness': None,
-            'performance': None,
-            'hardware': 'unknown',
-            'error': f"Failed to run worker: {e}",
-        }
+        try:
+            os.close(r_fd)
+        except OSError:
+            pass
+        try:
+            os.close(w_fd)
+        except OSError:
+            pass
+        return _error(f"Failed to run worker: {e}")
 
 
 def evaluate_kernel_isolated(

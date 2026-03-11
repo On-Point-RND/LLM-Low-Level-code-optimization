@@ -59,12 +59,8 @@ def evaluate_function(
         device_id=device_id,
     )
     
-    # If baseline computation failed inside the kernel evaluation, raise an error to return HTTP 500
-    if result.get('error'):
-        if "Baseline computation failed" in str(result['error']):
-             raise RuntimeError(result['error'])
-        if result.get('stage') in ['initialization', 'baseline']:
-             raise RuntimeError(f"System error during {result['stage']}: {result['error']}")
+    if result.get('system_error'):
+        raise RuntimeError(result['error'])
     
     # Convert to response model
     performance = None
@@ -73,6 +69,7 @@ def evaluate_function(
     else:
         if result.get('performance_error'):
             logger.debug(f"Performance Error: {result['performance_error']}")
+
         if result.get('error'):
             logger.debug(f"General Error: {result['error']}")
     
@@ -88,6 +85,10 @@ def evaluate_function(
     correctness_info = result.get('correctness_info')
     if result.get('compiled') is True and result.get('correctness') is False and correctness_info is None:
         correctness_info = result.get('error') or "Correctness check failed"
+
+    performance_error = result.get('performance_error')
+    if result.get('compiled') is True and result.get('performance') is None and performance_error is None:
+        performance_error = result.get('error')
 
     # Get baseline and calculate speedup
     baseline = None
@@ -198,6 +199,6 @@ def evaluate_function(
         speedup=speedup,
         function_code=function_code,
         baseline_function_code=baseline_function_code,
-        performance_error=result.get('performance_error')
+        performance_error=performance_error
     )
 
