@@ -147,10 +147,8 @@ def _do_validation(
     base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None}
     t0 = time.time()
 
-    # Re-compile from cache to populate backend.context with ModelNew (fast, cache hit)
-    _current_eval_stage = EvalStage.COMPILATION
-    _do_compilation(backend, function_code, function)
-
+    # Step 1: Compute baseline if not provided. 
+    # NOTE: compute_baseline calls backend.cleanup(), which wipes the context.
     if baseline_mean_ms is None:
         _current_eval_stage = EvalStage.BASELINE
         try:
@@ -160,6 +158,19 @@ def _do_validation(
                     'stage': EvalStage.BASELINE, 'error': f"Baseline computation failed: {str(e)}",
                     'timing': _make_timing(total=time.time()-t0)}
 
+    # Step 2: Re-compile from cache to populate backend.context with ModelNew.
+    # This must happen AFTER baseline computation to avoid having the context wiped.
+    _current_eval_stage = EvalStage.COMPILATION
+    t = time.time()
+    try:
+        _do_compilation(backend, function_code, function)
+    except Exception as e:
+        msg = f"Re-compilation failed: {str(e)}"
+        return {**base, 'compiled': False, 'correctness': None, 'error': msg,
+                'stage': EvalStage.COMPILATION, 'timing': _make_timing(total=time.time()-t0)}
+    comp_time = time.time() - t
+
+    # Step 3: Run correctness check
     _current_eval_stage = EvalStage.CORRECTNESS
     t = time.time()
     try:
@@ -168,13 +179,13 @@ def _do_validation(
         msg = f"{type(e).__name__}: {str(e)}"
         return {**base, 'compiled': True, 'correctness': False, 'correctness_info': msg, 'error': msg,
                 'stage': EvalStage.CORRECTNESS,
-                'timing': _make_timing(corr=time.time()-t, total=time.time()-t0)}
+                'timing': _make_timing(comp=comp_time, corr=time.time()-t, total=time.time()-t0)}
     corr_time = time.time() - t
 
     result = {
         **base, 'compiled': True, 'correctness': correctness,
         'stage': EvalStage.CORRECTNESS,
-        'timing': _make_timing(corr=corr_time, total=time.time()-t0),
+        'timing': _make_timing(comp=comp_time, corr=corr_time, total=time.time()-t0),
         'baseline_mean_ms': baseline_mean_ms,
     }
     if not correctness:
