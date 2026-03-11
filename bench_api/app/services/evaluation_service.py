@@ -26,6 +26,7 @@ def evaluate_function(
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
+    device_id: int = 0,
 ) -> EvaluateResponse:
     """
     Evaluate a kernel function.
@@ -52,7 +53,8 @@ def evaluate_function(
         num_trials=num_trials,
         batch_size=batch_size,
         dim=dim,
-        input_dims=input_dims
+        input_dims=input_dims,
+        device_id=device_id,
     )
     
     # If baseline computation failed inside the kernel evaluation, raise an error to return HTTP 500

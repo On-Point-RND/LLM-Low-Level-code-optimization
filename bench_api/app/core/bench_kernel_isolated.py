@@ -1,5 +1,6 @@
 import subprocess
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -7,8 +8,11 @@ from typing import Dict, Any, Optional
 ISOLATED_SCRIPT = Path(__file__).parent.parent.parent / 'eval_single_isolated.py'
 
 
-def _run_subprocess(params: Dict[str, Any], timeout: int) -> Dict[str, Any]:
+def _run_subprocess(params: Dict[str, Any], timeout: int, device_id: int = 0) -> Dict[str, Any]:
     """Run eval_single_isolated.py with the given params, return parsed JSON result."""
+    child_env = os.environ.copy()
+    child_env["CUDA_VISIBLE_DEVICES"] = str(device_id)
+
     try:
         result = subprocess.run(
             [sys.executable, str(ISOLATED_SCRIPT)],
@@ -16,7 +20,8 @@ def _run_subprocess(params: Dict[str, Any], timeout: int) -> Dict[str, Any]:
             capture_output=True,
             text=True,
             timeout=timeout,
-            cwd=str(ISOLATED_SCRIPT.parent.parent)
+            cwd=str(ISOLATED_SCRIPT.parent.parent),
+            env=child_env,
         )
 
         stdout_text = result.stdout.strip() if result.stdout else ""
@@ -80,7 +85,8 @@ def evaluate_kernel_isolated(
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
-    timeout: int = 300
+    timeout: int = 300,
+    device_id: int = 0,
 ) -> Dict[str, Any]:
     base_params = {
         'function_code': function_code,
@@ -95,7 +101,7 @@ def evaluate_kernel_isolated(
     }
 
     # Subprocess 1: baseline + compile + correctness (CUDA_LAUNCH_BLOCKING=1 for accurate tracebacks)
-    result = _run_subprocess({**base_params, 'mode': 'validation'}, timeout)
+    result = _run_subprocess({**base_params, 'mode': 'validation'}, timeout, device_id)
 
     if not result.get('compiled'):
         return result
@@ -104,9 +110,11 @@ def evaluate_kernel_isolated(
 
     # Subprocess 2: performance only, no CUDA_LAUNCH_BLOCKING
     # Runs regardless of correctness — speedup is useful even for incorrect kernels
+    # Compilation cache from subprocess 1 is reused (torch_extensions / Triton cache on disk)
     perf_result = _run_subprocess(
         {**base_params, 'mode': 'benchmark', 'baseline_mean_ms': baseline_mean_ms},
-        timeout
+        timeout,
+        device_id,
     )
 
     result['performance'] = perf_result.get('performance')

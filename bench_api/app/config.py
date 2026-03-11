@@ -62,4 +62,7 @@ ARCH_LIST = os.getenv("ARCH_LIST", None)
 if ARCH_LIST:
     ARCH_LIST = ARCH_LIST.split(",")
 
+# Comma-separated CUDA device indices to use for evaluation, e.g. "0,1,2,3"
+DEVICE_IDS: list[int] = [int(x.strip()) for x in os.getenv("DEVICE_IDS", "0").split(",") if x.strip()]
+
 

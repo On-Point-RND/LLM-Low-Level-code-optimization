@@ -108,3 +108,5 @@ class HelpResponse(BaseModel):
     categories: list[str]
     endpoints: Dict[str, Any]
 
+
+
