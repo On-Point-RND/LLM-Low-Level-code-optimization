@@ -100,8 +100,8 @@ def evaluate_function(
     baseline = None
     speedup = None
     baseline_function_code = None
+    
     # Only get baseline if we're NOT in compilation-only mode
-    # If we're in validation_benchmark or full mode, we'll need it.
     if mode != 'compilation':
         try:
             baseline_result = get_single_baseline(
@@ -113,33 +113,32 @@ def evaluate_function(
                 torch_compile=torch_compile_baseline
             )
 
-        if baseline_result and 'baseline' in baseline_result:
-            baseline_data = baseline_result['baseline']
-            if isinstance(baseline_data, dict) and 'mean' in baseline_data:
-                baseline = BaselineStats(
-                    mean=baseline_data['mean'],
-                    std=baseline_data['std'],
-                    min=baseline_data['min'],
-                    max=baseline_data['max'],
-                    num_trials=baseline_data.get('num_trials', 0)
-                )
-                # Calculate speedup: baseline_mean / current_mean
-                # Calculate even if correctness is False, as long as performance is available
-                if performance and performance.mean > 0:
-                    speedup = baseline.mean / performance.mean
-                
-                # Read baseline/reference code
-                try:
-                    ref_src_path = get_reference_path(function)
-                    if ref_src_path:
-                        with open(ref_src_path, 'r', encoding='utf-8') as f:
-                            baseline_function_code = f.read()
-                except Exception as e:
-                    logger.warning(f"Failed to read baseline code for {function}: {e}")
-
-    except Exception as e:
-        # If baseline can't be retrieved, just continue without it
-        logger.warning(f"Failed to get baseline for {function} on {language}: {e}", exc_info=True)
+            if baseline_result and 'baseline' in baseline_result:
+                baseline_data = baseline_result['baseline']
+                if isinstance(baseline_data, dict) and 'mean' in baseline_data:
+                    baseline = BaselineStats(
+                        mean=baseline_data['mean'],
+                        std=baseline_data['std'],
+                        min=baseline_data['min'],
+                        max=baseline_data['max'],
+                        num_trials=baseline_data.get('num_trials', 0)
+                    )
+                    # Calculate speedup: baseline_mean / current_mean
+                    # Calculate even if correctness is False, as long as performance is available
+                    if performance and performance.mean > 0:
+                        speedup = baseline.mean / performance.mean
+                    
+                    # Read baseline/reference code
+                    try:
+                        ref_src_path = get_reference_path(function)
+                        if ref_src_path:
+                            with open(ref_src_path, 'r', encoding='utf-8') as f:
+                                baseline_function_code = f.read()
+                    except Exception as e:
+                        logger.warning(f"Failed to read baseline code for {function}: {e}")
+        except Exception as e:
+            # If baseline can't be retrieved, just continue without it
+            logger.warning(f"Failed to get baseline for {function} on {language}: {e}", exc_info=True)
     
     # Log to MLflow if enabled (if experiment_name or run_name provided)
     # Only log if it's a full run, or the final phase (validation_benchmark),
@@ -216,4 +215,3 @@ def evaluate_function(
         baseline_function_code=baseline_function_code,
         performance_error=performance_error
     )
-
