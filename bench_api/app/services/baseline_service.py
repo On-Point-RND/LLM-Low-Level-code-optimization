@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from app.config import BASELINES_DIR, REFERENCE_DIR, MULTIKERNELBENCH_PATH
-from app.core.bench_kernel import compute_baseline, compute_all_baselines, get_backend
+from app.core.phases.baseline import compute_baseline, compute_all_baselines
+from app.core.backends.backend_registry import get_backend
 from app.integration import get_reference_path
 
 logger = logging.getLogger(__name__)

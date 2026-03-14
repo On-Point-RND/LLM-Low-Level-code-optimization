@@ -221,9 +221,6 @@ async def evaluate(request: EvaluateRequest):
                 req_id=req_id,
             )
 
-            if not validate_result.compiled:
-                return validate_result
-
             baseline = await asyncio.to_thread(
                 baseline_kernel,
                 function=request.function,
@@ -237,6 +234,9 @@ async def evaluate(request: EvaluateRequest):
                 device_id=device_id,
                 req_id=req_id,
             )
+
+            if baseline is None:
+                raise RuntimeError(f"Baseline measurement failed for {request.function}, cannot compute speedup")
 
             return await asyncio.to_thread(
                 evaluate_kernel,

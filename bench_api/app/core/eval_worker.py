@@ -24,7 +24,7 @@ def _write(result: dict) -> None:
 
 def _signal_handler(signum, frame):
     try:
-        from app.core.bench_kernel import get_current_eval_stage, EvalStage
+        from app.core.phases.common import get_current_eval_stage
         stage = get_current_eval_stage()
     except Exception:
         stage = 'initialization'
@@ -65,33 +65,78 @@ def main():
     from app.integration import register_kernelbench_dataset
     register_kernelbench_dataset()
 
-    from app.core.bench_kernel import evaluate_kernel
+    from app.core.backends.backend_registry import get_backend
+    backend = None
 
     try:
-        result = evaluate_kernel(
-            function_code=params['function_code'],
-            function=params['function'],
-            language=params['language'],
-            torch_compile=params.get('torch_compile', False),
-            torch_compile_baseline=params.get('torch_compile_baseline', False),
-            num_trials=params.get('num_trials'),
-            num_warmup=params.get('num_warmup'),
-            batch_size=params.get('batch_size'),
-            dim=params.get('dim'),
-            input_dims=params.get('input_dims'),
-            mode=mode,
-            baseline_mean_ms=params.get('baseline_mean_ms'),
-        )
+        backend = get_backend(params['language'])
+        if backend is None:
+            _write({
+                'compiled': False, 'correctness': None, 'performance': None,
+                'hardware': 'unknown', 'error': f"Backend {params['language']} not found",
+            })
+            return
+
+        hardware = backend.get_hardware_name()
+        capability = backend.get_compute_capability()
+        compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
+
+        if mode == 'compilation':
+            from app.core.phases.compilation import run_compilation_phase
+            result = run_compilation_phase(
+                backend, params['function_code'], params['function'], hardware, compute_capability,
+            )
+        elif mode == 'baseline':
+            from app.core.phases.baseline import run_baseline_phase
+            result = run_baseline_phase(
+                backend, params['function'], hardware, compute_capability,
+                batch_size=params.get('batch_size'),
+                dim=params.get('dim'),
+                input_dims=params.get('input_dims'),
+                torch_compile=params.get('torch_compile_baseline', False),
+                num_trials=params.get('num_trials'),
+                num_warmup=params.get('num_warmup'),
+            )
+        elif mode == 'validation':
+            from app.core.phases.validation import run_validation_phase
+            result = run_validation_phase(
+                backend, params['function_code'], params['function'], hardware, compute_capability,
+                batch_size=params.get('batch_size'),
+                dim=params.get('dim'),
+                input_dims=params.get('input_dims'),
+            )
+        elif mode == 'benchmark':
+            from app.core.phases.benchmark import run_benchmark_phase
+            result = run_benchmark_phase(
+                backend, params['function_code'], params['function'], hardware, compute_capability,
+                batch_size=params.get('batch_size'),
+                dim=params.get('dim'),
+                input_dims=params.get('input_dims'),
+                torch_compile=params.get('torch_compile', False),
+                num_trials=params.get('num_trials'),
+                num_warmup=params.get('num_warmup'),
+                baseline_mean_ms=params.get('baseline_mean_ms'),
+            )
+        else:
+            result = {
+                'compiled': False, 'correctness': None, 'performance': None,
+                'hardware': hardware, 'error': f"Unknown mode: {mode}",
+            }
+
     except Exception as e:
         import traceback
         result = {
-            'compiled': False,
-            'correctness': None,
-            'performance': None,
+            'compiled': False, 'correctness': None, 'performance': None,
             'hardware': 'unknown',
             'error': f"Evaluation failed: {e}\n{traceback.format_exc()}",
             'system_error': True,
         }
+    finally:
+        try:
+            if backend:
+                backend.cleanup()
+        except Exception:
+            pass
 
     _write(result)
 

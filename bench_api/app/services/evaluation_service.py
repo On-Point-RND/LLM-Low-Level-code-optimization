@@ -204,9 +204,12 @@ def validate_kernel(
     if result.get('system_error'):
         raise RuntimeError(result['error'])
 
+    if not result['compiled']:
+        raise RuntimeError(f"Recompilation failed during validation for {function}: {result.get('error')}")
+
     timing = EvaluationTiming(**result['timing']) if result.get('timing') else None
     correctness_info = result.get('correctness_info')
-    if result.get('compiled') is True and result.get('correctness') is False and correctness_info is None:
+    if result.get('correctness') is False and correctness_info is None:
         correctness_info = result.get('error') or "Correctness check failed"
 
     req_str = f", ReqID: {req_id}" if req_id else ""
@@ -226,7 +229,7 @@ def validate_kernel(
         function=function,
         language=language,
         hardware=result['hardware'],
-        compiled=result.get('compiled', True),
+        compiled=result['compiled'],
         correctness=result.get('correctness'),
         timing=timing,
         correctness_info=correctness_info,
@@ -271,7 +274,7 @@ def evaluate_kernel(
         performance_error = result.get('error')
 
     speedup = None
-    if baseline and performance and performance.mean > 0:
+    if performance and performance.mean > 0:
         speedup = baseline.mean / performance.mean
 
     baseline_function_code = None
@@ -314,10 +317,14 @@ def evaluate_kernel(
     speedup_str = f"{speedup:.2f}x" if speedup is not None else "N/A"
     req_str = f", ReqID: {req_id}" if req_id else ""
     perf_timing = f" Timing: (perf: {timing.performance:.2f}s)" if timing and timing.performance else ""
+    perf_error_str = ""
+    if performance_error:
+        first_line = performance_error.strip().split('\n')[0]
+        perf_error_str = f", PerfError: {first_line}"
 
     logger.info(
         f"[BENCH] Function: {function}, Language: {language}, Device: {device_id}, "
-        f"Performance: {perf_str}, Speedup: {speedup_str}{perf_timing}{req_str}"
+        f"Performance: {perf_str}, Speedup: {speedup_str}{perf_timing}{perf_error_str}{req_str}"
     )
 
     return EvaluateResponse(
