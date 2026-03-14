@@ -1,6 +1,5 @@
 import time
 import logging
-from typing import Dict, Any
 
 from app.core.phases.common import (
     EvalStage,
@@ -8,9 +7,10 @@ from app.core.phases.common import (
     make_timing,
     compile_kernel,
     load_reference_code,
+    InfraError,
 )
 from app.core.utils.correctness import run_correctness
-from app.core.phases.common import InfraError
+from app.core.phases.results import ValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +24,7 @@ def run_validation_phase(
     batch_size=None,
     dim=None,
     input_dims=None,
-) -> Dict[str, Any]:
-    base = {
-        "hardware": hardware,
-        "compute_capability": compute_capability,
-        "performance": None,
-    }
+) -> ValidationResult:
     t0 = time.time()
 
     set_eval_stage(EvalStage.COMPILATION)
@@ -37,26 +32,25 @@ def run_validation_phase(
     try:
         compiled, compile_info = compile_kernel(backend, function_code, function)
         if not compiled:
-            return {
-                **base,
-                "compiled": False,
-                "correctness": None,
-                "compile_info": compile_info,
-                "stage": EvalStage.COMPILATION,
-                "timing": make_timing(total=time.time() - t0),
-            }
+            return ValidationResult(
+                hardware=hardware,
+                compiled=False,
+                correctness=None,
+                compute_capability=compute_capability,
+                compile_info=compile_info,
+                timing=make_timing(total=time.time() - t0),
+            )
     except InfraError:
         raise
     except Exception as e:
-        msg = f"Re-compilation failed: {str(e)}"
-        return {
-            **base,
-            "compiled": False,
-            "correctness": None,
-            "compile_info": msg,
-            "stage": EvalStage.COMPILATION,
-            "timing": make_timing(total=time.time() - t0),
-        }
+        return ValidationResult(
+            hardware=hardware,
+            compiled=False,
+            correctness=None,
+            compute_capability=compute_capability,
+            compile_info=f"Re-compilation failed: {str(e)}",
+            timing=make_timing(total=time.time() - t0),
+        )
     comp_time = time.time() - t
 
     set_eval_stage(EvalStage.CORRECTNESS)
@@ -68,32 +62,36 @@ def run_validation_phase(
     except InfraError:
         raise
     except Exception as e:
-        msg = f"{type(e).__name__}: {str(e)}"
-        return {
-            **base,
-            "compiled": True,
-            "correctness": False,
-            "correctness_info": msg,
-            "stage": EvalStage.CORRECTNESS,
-            "timing": make_timing(
-                comp=comp_time, corr=time.time() - t, total=time.time() - t0
-            ),
-        }
+        return ValidationResult(
+            hardware=hardware,
+            compiled=True,
+            correctness=False,
+            compute_capability=compute_capability,
+            correctness_info=f"{type(e).__name__}: {str(e)}",
+            timing=make_timing(comp=comp_time, corr=time.time() - t, total=time.time() - t0),
+        )
     corr_time = time.time() - t
 
-    result = {
-        **base,
-        "compiled": True,
-        "correctness": correctness,
-        "stage": EvalStage.CORRECTNESS,
-        "timing": make_timing(comp=comp_time, corr=corr_time, total=time.time() - t0),
-    }
     if not correctness:
-        result["correctness_info"] = correctness_info or "Correctness check failed"
-        info = result["correctness_info"]
+        info = correctness_info or "Correctness check failed"
         if "cuda error" in info.lower() or "illegal memory access" in info.lower():
             try:
                 backend.cleanup()
             except Exception:
                 pass
-    return result
+        return ValidationResult(
+            hardware=hardware,
+            compiled=True,
+            correctness=False,
+            compute_capability=compute_capability,
+            correctness_info=info,
+            timing=make_timing(comp=comp_time, corr=corr_time, total=time.time() - t0),
+        )
+
+    return ValidationResult(
+        hardware=hardware,
+        compiled=True,
+        correctness=True,
+        compute_capability=compute_capability,
+        timing=make_timing(comp=comp_time, corr=corr_time, total=time.time() - t0),
+    )

@@ -1,6 +1,5 @@
 import time
 import logging
-from typing import Dict, Any
 
 from app.core.phases.common import (
     EvalStage,
@@ -9,6 +8,7 @@ from app.core.phases.common import (
     compile_kernel,
     InfraError,
 )
+from app.core.phases.results import CompilationResult
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +19,7 @@ def run_compilation_phase(
     function: str,
     hardware: str,
     compute_capability: str,
-) -> Dict[str, Any]:
-    base = {
-        "hardware": hardware,
-        "compute_capability": compute_capability,
-        "performance": None,
-        "correctness": None,
-    }
+) -> CompilationResult:
     set_eval_stage(EvalStage.COMPILATION)
     t0 = t = time.time()
     try:
@@ -33,26 +27,18 @@ def run_compilation_phase(
     except InfraError:
         raise
     except Exception as e:
-        msg = f"{type(e).__name__}: {str(e)}"
-        return {
-            **base,
-            "compiled": False,
-            "compile_info": msg,
-            "stage": EvalStage.COMPILATION,
-            "timing": make_timing(comp=time.time() - t, total=time.time() - t0),
-        }
+        return CompilationResult(
+            hardware=hardware,
+            compiled=False,
+            compute_capability=compute_capability,
+            compile_info=f"{type(e).__name__}: {str(e)}",
+            timing=make_timing(comp=time.time() - t, total=time.time() - t0),
+        )
     comp_time = time.time() - t
-    if not compiled:
-        return {
-            **base,
-            "compiled": False,
-            "compile_info": compile_info,
-            "stage": EvalStage.COMPILATION,
-            "timing": make_timing(comp=comp_time, total=time.time() - t0),
-        }
-    return {
-        **base,
-        "compiled": True,
-        "stage": EvalStage.COMPILATION,
-        "timing": make_timing(comp=comp_time, total=time.time() - t0),
-    }
+    return CompilationResult(
+        hardware=hardware,
+        compiled=compiled,
+        compute_capability=compute_capability,
+        compile_info=compile_info or None,
+        timing=make_timing(comp=comp_time, total=time.time() - t0),
+    )

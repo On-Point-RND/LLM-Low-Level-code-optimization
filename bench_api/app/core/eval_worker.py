@@ -10,9 +10,13 @@ import json
 import os
 import signal
 import sys
+from dataclasses import asdict, is_dataclass
 
 
-def _write(result: dict) -> None:
+def _write(result) -> None:
+    if is_dataclass(result):
+        result = asdict(result)
+
     fd = int(os.environ.get("RESULT_FD", -1))
     data = json.dumps(result).encode()
     if fd >= 0:

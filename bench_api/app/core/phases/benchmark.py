@@ -2,7 +2,7 @@ import time
 import signal
 import logging
 import torch
-from typing import Dict, Any, Optional, Tuple
+from typing import Optional, Tuple
 
 import app.config as app_config
 from app.core.phases.common import (
@@ -13,6 +13,7 @@ from app.core.phases.common import (
     load_reference_code,
     summarize_elapsed_times,
 )
+from app.core.phases.results import BenchmarkResult
 from app.core.utils.performance import run_performance
 from app.core.phases.common import InfraError
 
@@ -82,7 +83,7 @@ def run_benchmark_phase(
     num_trials: Optional[int] = None,
     num_warmup: Optional[int] = None,
     baseline_mean_ms: Optional[float] = None,
-) -> Dict[str, Any]:
+) -> BenchmarkResult:
     set_eval_stage(EvalStage.COMPILATION)
 
     try:
@@ -120,17 +121,10 @@ def run_benchmark_phase(
 
     backend.clear_device_memory()
 
-    result = {
-        "hardware": hardware,
-        "compute_capability": compute_capability,
-        "compiled": True,
-        "correctness": None,
-        "stage": EvalStage.PERFORMANCE,
-        "timing": make_timing(perf=perf_time, total=time.time() - t0),
-    }
-    if performance_info:
-        result["performance"] = None
-        result["performance_info"] = performance_info
-    else:
-        result["performance"] = summarize_elapsed_times(elapsed_times)
-    return result
+    return BenchmarkResult(
+        hardware=hardware,
+        compute_capability=compute_capability,
+        performance=summarize_elapsed_times(elapsed_times) if elapsed_times else None,
+        performance_info=performance_info,
+        timing=make_timing(perf=perf_time, total=time.time() - t0),
+    )

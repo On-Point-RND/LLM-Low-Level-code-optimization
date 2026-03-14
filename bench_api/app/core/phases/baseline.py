@@ -9,6 +9,7 @@ from app.core.phases.common import (
     load_reference_code,
     summarize_elapsed_times,
 )
+from app.core.phases.results import BaselineResult
 from app.core.utils.performance import run_performance
 from app.integration import get_reference_path, get_dataset
 
@@ -26,7 +27,7 @@ def run_baseline_phase(
     torch_compile: bool = False,
     num_trials: Optional[int] = None,
     num_warmup: Optional[int] = None,
-) -> Dict[str, Any]:
+) -> BaselineResult:
     set_eval_stage(EvalStage.BASELINE)
     t0 = time.time()
     try:
@@ -50,22 +51,19 @@ def run_baseline_phase(
             baseline["dim"] = dim
         if input_dims:
             baseline["input_dims"] = input_dims
-        return {
-            "hardware": hardware,
-            "compute_capability": compute_capability,
-            "compiled": True,
-            "baseline": baseline,
-            "timing": make_timing(total=time.time() - t0),
-        }
+        return BaselineResult(
+            hardware=hardware,
+            compute_capability=compute_capability,
+            baseline=baseline,
+            timing=make_timing(total=time.time() - t0),
+        )
     except Exception as e:
-        msg = f"{type(e).__name__}: {str(e)}"
-        return {
-            "hardware": hardware,
-            "compute_capability": compute_capability,
-            "compiled": True,
-            "system_error": msg,
-            "timing": make_timing(total=time.time() - t0),
-        }
+        return BaselineResult(
+            hardware=hardware,
+            compute_capability=compute_capability,
+            system_error=f"{type(e).__name__}: {str(e)}",
+            timing=make_timing(total=time.time() - t0),
+        )
 
 
 def compute_baseline(
@@ -110,15 +108,15 @@ def compute_baseline(
             num_trials=num_trials,
             num_warmup=num_warmup,
         )
-        if result.get("system_error"):
+        if result.system_error:
             return {
                 "not_supported": True,
-                "error": result.get("system_error"),
+                "error": result.system_error,
                 "error_type": "RuntimeError",
                 "device": hardware,
                 "compute_capability": compute_capability,
             }
-        return result["baseline"]
+        return result.baseline
     except Exception as e:
         logger.error(f"Baseline computation failed: {e}", exc_info=True)
         return {
