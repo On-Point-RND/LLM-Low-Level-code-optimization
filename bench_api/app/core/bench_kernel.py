@@ -138,28 +138,57 @@ def _do_compilation_only(backend, function_code, function, hardware, compute_cap
             'timing': _make_timing(comp=comp_time, total=time.time()-t0)}
 
 
+def _do_baseline_only(
+    backend, function, hardware, compute_capability,
+    batch_size, dim, input_dims, torch_compile, num_trials, num_warmup,
+) -> Dict[str, Any]:
+    global _current_eval_stage
+    _current_eval_stage = EvalStage.BASELINE
+    t0 = time.time()
+    try:
+        backend.cleanup()
+        ref_src = _load_reference_code_and_override_dims(function, batch_size, dim, input_dims)
+        exec(ref_src, backend.context)
+        baseline = _execute_baseline_with_error_handling(
+            backend, function, hardware, torch_compile,
+            num_trials=num_trials, num_warmup=num_warmup,
+        )
+        baseline['compute_capability'] = compute_capability
+        baseline['torch_compile'] = torch_compile
+        if batch_size is not None:
+            baseline['batch_size'] = batch_size
+        if dim is not None:
+            baseline['dim'] = dim
+        if input_dims:
+            baseline['input_dims'] = input_dims
+        return {
+            'hardware': hardware,
+            'compute_capability': compute_capability,
+            'compiled': True,
+            'baseline': baseline,
+            'timing': _make_timing(total=time.time() - t0),
+        }
+    except Exception as e:
+        msg = f"{type(e).__name__}: {str(e)}"
+        return {
+            'hardware': hardware,
+            'compute_capability': compute_capability,
+            'compiled': True,
+            'error': msg,
+            'system_error': True,
+            'timing': _make_timing(total=time.time() - t0),
+        }
+
+
 def _do_validation(
-    backend, function_code, function, language, hardware, compute_capability,
-    batch_size, dim, input_dims, torch_compile_baseline=False,
-    baseline_mean_ms: Optional[float] = None,
+    backend, function_code, function, hardware, compute_capability,
+    batch_size, dim, input_dims,
 ) -> Dict[str, Any]:
     global _current_eval_stage
     base = {'hardware': hardware, 'compute_capability': compute_capability, 'performance': None}
     t0 = time.time()
 
-    # Step 1: Compute baseline if not provided. 
-    # NOTE: compute_baseline calls backend.cleanup(), which wipes the context.
-    if baseline_mean_ms is None:
-        _current_eval_stage = EvalStage.BASELINE
-        try:
-            baseline_mean_ms = _do_baseline_computation(function, language, batch_size, dim, input_dims, torch_compile=torch_compile_baseline)
-        except Exception as e:
-            return {**base, 'compiled': True, 'correctness': None,
-                    'stage': EvalStage.BASELINE, 'error': f"Baseline computation failed: {str(e)}",
-                    'timing': _make_timing(total=time.time()-t0)}
-
-    # Step 2: Re-compile from cache to populate backend.context with ModelNew.
-    # This must happen AFTER baseline computation to avoid having the context wiped.
+    # Step 1: Re-compile from cache to populate backend.context with ModelNew.
     _current_eval_stage = EvalStage.COMPILATION
     t = time.time()
     try:
@@ -186,7 +215,6 @@ def _do_validation(
         **base, 'compiled': True, 'correctness': correctness,
         'stage': EvalStage.CORRECTNESS,
         'timing': _make_timing(comp=comp_time, corr=corr_time, total=time.time()-t0),
-        'baseline_mean_ms': baseline_mean_ms,
     }
     if not correctness:
         result['correctness_info'] = correctness_info
@@ -265,15 +293,19 @@ def _do_kernel_evaluation(
     compute_capability = f"{capability[0]}.{capability[1]}" if capability else None
     if mode == 'compilation':
         return _do_compilation_only(backend, function_code, function, hardware, compute_capability)
+    if mode == 'baseline':
+        return _do_baseline_only(
+            backend, function, hardware, compute_capability,
+            batch_size, dim, input_dims, torch_compile_baseline, num_trials, num_warmup,
+        )
     if mode == 'benchmark':
         return _do_benchmark(
             backend, function_code, function, language, hardware, compute_capability,
             batch_size, dim, input_dims, torch_compile, torch_compile_baseline, num_trials, num_warmup, baseline_mean_ms,
         )
     return _do_validation(
-        backend, function_code, function, language, hardware, compute_capability,
-        batch_size, dim, input_dims, torch_compile_baseline=torch_compile_baseline,
-        baseline_mean_ms=baseline_mean_ms,
+        backend, function_code, function, hardware, compute_capability,
+        batch_size, dim, input_dims,
     )
 
 
@@ -356,8 +388,8 @@ def _load_reference_code_and_override_dims(function: str, batch_size: Optional[i
     return ref_src
 
 
-def _execute_baseline_with_error_handling(backend, function: str, hardware: str, torch_compile: bool = False) -> Dict[str, Any]:
-    elapsed_times = run_performance(backend, 'Model', torch_compile=torch_compile)
+def _execute_baseline_with_error_handling(backend, function: str, hardware: str, torch_compile: bool = False, num_trials: Optional[int] = None, num_warmup: Optional[int] = None) -> Dict[str, Any]:
+    elapsed_times = run_performance(backend, 'Model', num_trials=num_trials, num_warmup=num_warmup, torch_compile=torch_compile)
     return {
         "mean": float(f"{np.mean(elapsed_times):.3g}"),
         "std": float(f"{np.std(elapsed_times):.3g}"),
@@ -374,7 +406,9 @@ def compute_baseline(
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
-    torch_compile: bool = False
+    torch_compile: bool = False,
+    num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
 ) -> Dict[str, Any]:
     backend = get_backend(language)
     if backend is None:
@@ -399,7 +433,7 @@ def compute_baseline(
         ref_src = _load_reference_code_and_override_dims(function, batch_size, dim, input_dims)
         exec(ref_src, backend.context)
 
-        result = _execute_baseline_with_error_handling(backend, function, hardware, torch_compile)
+        result = _execute_baseline_with_error_handling(backend, function, hardware, torch_compile, num_trials=num_trials, num_warmup=num_warmup)
         result['compute_capability'] = compute_capability
         result['torch_compile'] = torch_compile
 

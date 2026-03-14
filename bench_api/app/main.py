@@ -2,6 +2,7 @@ import asyncio
 import base64
 import os
 import logging
+import uuid
 
 from fastapi import FastAPI, HTTPException
 
@@ -14,7 +15,7 @@ from app.models import (
     HelpResponse,
 )
 from app.services.baseline_service import get_single_baseline, get_all_baselines
-from app.services.evaluation_service import evaluate_function
+from app.services.evaluation_service import compile_kernel, validate_kernel, baseline_kernel, evaluate_kernel
 from app.services.help_service import get_help_info
 from app.services.mlflow_service import log_baseline_result
 from app.services.device_pool import DevicePool
@@ -176,52 +177,91 @@ async def evaluate(request: EvaluateRequest):
         else:
             raise HTTPException(status_code=400, detail="Either function_code or function_code_file must be provided")
 
-        # Phase A: Compilation (Subprocess A) - No device lock
-        result = await asyncio.to_thread(
-            evaluate_function,
+        req_id = uuid.uuid4().hex[:8]
+
+        # Phase A: Compilation - No device lock
+        compile_result = await asyncio.to_thread(
+            compile_kernel,
             function_code=function_code,
             function=request.function,
             language=request.language,
             torch_compile=request.torch_compile or False,
             torch_compile_baseline=request.torch_compile_baseline or False,
-            experiment_name=request.experiment_name,
-            run_name=request.run_name,
             num_trials=request.num_trials,
             num_warmup=request.num_warmup,
             batch_size=request.batch_size,
             dim=request.dim,
             input_dims=request.input_dims,
-            device_id=0,  # Dummy device_id for compilation
-            mode='compilation',
+            device_id=0,
+            experiment_name=request.experiment_name,
+            run_name=request.run_name,
+            req_id=req_id,
         )
 
-        if not result.compiled:
-            return result
+        if not compile_result.compiled:
+            return compile_result
 
         # Phase B & C: Validation and Benchmark - With device lock
         device_id = await _device_pool.acquire()
+        logger.info(f"Acquired device {device_id} for {request.function}, ReqID: {req_id}")
         try:
-            baseline_mean_ms = result.baseline.mean if result.baseline else None
-            return await asyncio.to_thread(
-                evaluate_function,
+            validate_result = await asyncio.to_thread(
+                validate_kernel,
                 function_code=function_code,
                 function=request.function,
                 language=request.language,
                 torch_compile=request.torch_compile or False,
                 torch_compile_baseline=request.torch_compile_baseline or False,
-                experiment_name=request.experiment_name,
-                run_name=request.run_name,
                 num_trials=request.num_trials,
                 num_warmup=request.num_warmup,
                 batch_size=request.batch_size,
                 dim=request.dim,
                 input_dims=request.input_dims,
                 device_id=device_id,
-                mode='validation_benchmark',
-                baseline_mean_ms=baseline_mean_ms,
+                req_id=req_id,
+            )
+
+            if not validate_result.compiled:
+                return validate_result
+
+            baseline = await asyncio.to_thread(
+                baseline_kernel,
+                function=request.function,
+                language=request.language,
+                torch_compile_baseline=request.torch_compile_baseline or False,
+                num_trials=request.num_trials,
+                num_warmup=request.num_warmup,
+                batch_size=request.batch_size,
+                dim=request.dim,
+                input_dims=request.input_dims,
+                device_id=device_id,
+                req_id=req_id,
+            )
+
+            return await asyncio.to_thread(
+                evaluate_kernel,
+                function_code=function_code,
+                function=request.function,
+                language=request.language,
+                torch_compile=request.torch_compile or False,
+                torch_compile_baseline=request.torch_compile_baseline or False,
+                num_trials=request.num_trials,
+                num_warmup=request.num_warmup,
+                batch_size=request.batch_size,
+                dim=request.dim,
+                input_dims=request.input_dims,
+                device_id=device_id,
+                baseline_mean_ms=baseline.mean if baseline else None,
+                baseline=baseline,
+                correctness=validate_result.correctness,
+                correctness_info=validate_result.correctness_info,
+                experiment_name=request.experiment_name,
+                run_name=request.run_name,
+                req_id=req_id,
             )
         finally:
             _device_pool.release(device_id)
+            logger.info(f"Released device {device_id}, ReqID: {req_id}")
 
     except HTTPException:
         raise

@@ -78,13 +78,73 @@ def _read_reference_code(function: str) -> Optional[str]:
     return None
 
 
-def get_single_baseline(
-    language: str, 
+def _build_cache_key(
     function: str,
     batch_size: Optional[int] = None,
     dim: Optional[int] = None,
     input_dims: Optional[Dict[str, Any]] = None,
-    torch_compile: bool = False
+    num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
+) -> tuple:
+    """Returns (dims_key, cache_key)."""
+    dims_key = _create_dims_key(batch_size, dim, input_dims)
+    cache_key = function
+    if dims_key:
+        cache_key = f"{function}_{dims_key}"
+    if num_trials is not None:
+        cache_key = f"{cache_key}_t{num_trials}"
+    if num_warmup is not None:
+        cache_key = f"{cache_key}_w{num_warmup}"
+    return dims_key, cache_key
+
+
+def get_cached_baseline(
+    language: str,
+    function: str,
+    hardware: str,
+    batch_size: Optional[int] = None,
+    dim: Optional[int] = None,
+    input_dims: Optional[Dict[str, Any]] = None,
+    torch_compile: bool = False,
+    num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
+) -> Optional[Dict[str, Any]]:
+    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup)
+    baseline_data = load_baseline_file(language, hardware, dims_key, torch_compile)
+    if baseline_data and cache_key in baseline_data:
+        entry = baseline_data[cache_key]
+        if isinstance(entry, dict) and 'mean' in entry and not entry.get('not_supported'):
+            return entry
+    return None
+
+
+def save_cached_baseline(
+    language: str,
+    hardware: str,
+    function: str,
+    entry: Dict[str, Any],
+    batch_size: Optional[int] = None,
+    dim: Optional[int] = None,
+    input_dims: Optional[Dict[str, Any]] = None,
+    torch_compile: bool = False,
+    num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
+):
+    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup)
+    baseline_data = load_baseline_file(language, hardware, dims_key, torch_compile) or {}
+    baseline_data[cache_key] = entry
+    save_baseline_file(language, hardware, baseline_data, dims_key, torch_compile)
+
+
+def get_single_baseline(
+    language: str,
+    function: str,
+    batch_size: Optional[int] = None,
+    dim: Optional[int] = None,
+    input_dims: Optional[Dict[str, Any]] = None,
+    torch_compile: bool = False,
+    num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Get baseline for a single function with optional custom dimensions.
@@ -98,19 +158,13 @@ def get_single_baseline(
     # Read reference code
     function_code = _read_reference_code(function)
     
-    # Create dimensions key for cache
-    dims_key = _create_dims_key(batch_size, dim, input_dims)
-    
-    # Try to load from file
-    baseline_data = load_baseline_file(language, hardware, dims_key, torch_compile)
-    
-    # Create cache key for this function with dimensions
-    cache_key = function
-    if dims_key:
-        cache_key = f"{function}_{dims_key}"
-    
-    if baseline_data and cache_key in baseline_data:
-        baseline = baseline_data[cache_key]
+    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup)
+
+    cached = get_cached_baseline(language, function, hardware, batch_size=batch_size, dim=dim,
+                                  input_dims=input_dims, torch_compile=torch_compile,
+                                  num_trials=num_trials, num_warmup=num_warmup)
+    if cached:
+        baseline = cached
         if isinstance(baseline, dict) and 'mean' in baseline and not baseline.get('not_supported'):
             # Extract dimensions from cached baseline if available
             cached_batch_size = baseline.get('batch_size', batch_size)
@@ -136,7 +190,7 @@ def get_single_baseline(
     
     # Compute baseline with custom dimensions
     try:
-        baseline = compute_baseline(function, language, batch_size=batch_size, dim=dim, input_dims=input_dims, torch_compile=torch_compile)
+        baseline = compute_baseline(function, language, batch_size=batch_size, dim=dim, input_dims=input_dims, torch_compile=torch_compile, num_trials=num_trials, num_warmup=num_warmup)
     except KeyError as e:
         # Function not found in dataset
         raise ValueError(f"Function '{function}' not found in dataset") from e
@@ -149,11 +203,9 @@ def get_single_baseline(
         error_type = baseline.get('error_type', 'Unknown')
         raise ValueError(f"Baseline computation not supported for {function} on {language}: {error_type} - {error_msg}")
     
-    # Update or create baseline file
-    if baseline_data is None:
-        baseline_data = {}
-    baseline_data[cache_key] = baseline
-    save_baseline_file(language, hardware, baseline_data, dims_key, torch_compile)
+    save_cached_baseline(language, hardware, function, baseline, batch_size=batch_size, dim=dim,
+                         input_dims=input_dims, torch_compile=torch_compile,
+                         num_trials=num_trials, num_warmup=num_warmup)
     
     result = {
         'baseline': baseline,
