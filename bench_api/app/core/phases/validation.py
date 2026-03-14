@@ -6,6 +6,7 @@ from app.core.phases.common import (
     EvalStage, set_eval_stage, make_timing, compile_kernel, load_reference_code,
 )
 from app.core.utils.correctness import run_correctness
+from app.core.phases.common import InfraError
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,13 @@ def run_validation_phase(
     try:
         compiled, compile_info = compile_kernel(backend, function_code, function)
         if not compiled:
-            return {**base, 'compiled': False, 'correctness': None, 'error': compile_info,
+            return {**base, 'compiled': False, 'correctness': None, 'compile_info': compile_info,
                     'stage': EvalStage.COMPILATION, 'timing': make_timing(total=time.time()-t0)}
+    except InfraError:
+        raise
     except Exception as e:
         msg = f"Re-compilation failed: {str(e)}"
-        return {**base, 'compiled': False, 'correctness': None, 'error': msg,
+        return {**base, 'compiled': False, 'correctness': None, 'compile_info': msg,
                 'stage': EvalStage.COMPILATION, 'timing': make_timing(total=time.time()-t0)}
     comp_time = time.time() - t
 
@@ -36,9 +39,11 @@ def run_validation_phase(
         ref_src = load_reference_code(function, batch_size, dim, input_dims)
         correctness, correctness_info = run_correctness(backend, ref_src)
         backend.clear_device_memory()
+    except InfraError:
+        raise
     except Exception as e:
         msg = f"{type(e).__name__}: {str(e)}"
-        return {**base, 'compiled': True, 'correctness': False, 'correctness_info': msg, 'error': msg,
+        return {**base, 'compiled': True, 'correctness': False, 'correctness_info': msg,
                 'stage': EvalStage.CORRECTNESS,
                 'timing': make_timing(comp=comp_time, corr=time.time()-t, total=time.time()-t0)}
     corr_time = time.time() - t
@@ -49,9 +54,9 @@ def run_validation_phase(
         'timing': make_timing(comp=comp_time, corr=corr_time, total=time.time()-t0),
     }
     if not correctness:
-        result['correctness_info'] = correctness_info
-        result['error'] = correctness_info or "Correctness check failed"
-        if "CUDA error" in result['error'] or "illegal memory access" in result['error'].lower():
+        result['correctness_info'] = correctness_info or "Correctness check failed"
+        info = result['correctness_info']
+        if "cuda error" in info.lower() or "illegal memory access" in info.lower():
             try:
                 backend.cleanup()
             except Exception:

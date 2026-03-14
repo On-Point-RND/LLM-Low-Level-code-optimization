@@ -86,6 +86,7 @@ def _build_cache_key(
     input_dims: Optional[Dict[str, Any]] = None,
     num_trials: Optional[int] = None,
     num_warmup: Optional[int] = None,
+    device_id: Optional[int] = None,
 ) -> tuple:
     """Returns (dims_key, cache_key)."""
     dims_key = _create_dims_key(batch_size, dim, input_dims)
@@ -96,6 +97,8 @@ def _build_cache_key(
         cache_key = f"{cache_key}_t{num_trials}"
     if num_warmup is not None:
         cache_key = f"{cache_key}_w{num_warmup}"
+    if device_id is not None:
+        cache_key = f"{cache_key}_d{device_id}"
     return dims_key, cache_key
 
 
@@ -109,8 +112,9 @@ def get_cached_baseline(
     torch_compile: bool = False,
     num_trials: Optional[int] = None,
     num_warmup: Optional[int] = None,
+    device_id: Optional[int] = None,
 ) -> Optional[Dict[str, Any]]:
-    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup)
+    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup, device_id)
     baseline_data = load_baseline_file(language, hardware, dims_key, torch_compile)
     if baseline_data and cache_key in baseline_data:
         entry = baseline_data[cache_key]
@@ -130,8 +134,9 @@ def save_cached_baseline(
     torch_compile: bool = False,
     num_trials: Optional[int] = None,
     num_warmup: Optional[int] = None,
+    device_id: Optional[int] = None,
 ):
-    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup)
+    dims_key, cache_key = _build_cache_key(function, batch_size, dim, input_dims, num_trials, num_warmup, device_id)
     baseline_data = load_baseline_file(language, hardware, dims_key, torch_compile) or {}
     baseline_data[cache_key] = entry
     save_baseline_file(language, hardware, baseline_data, dims_key, torch_compile)

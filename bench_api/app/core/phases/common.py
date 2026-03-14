@@ -4,6 +4,11 @@ from typing import Dict, Any, Optional, Tuple
 
 from app.integration import get_reference_path
 
+
+class InfraError(Exception):
+    """Raised when infrastructure (our code) fails, as opposed to user kernel failures."""
+    pass
+
 logger = logging.getLogger(__name__)
 
 
@@ -57,18 +62,24 @@ def override_dimensions(ref_src: str, batch_size, dim, input_dims) -> str:
 
 
 def load_reference_code(function: str, batch_size=None, dim=None, input_dims=None) -> str:
-    ref_src_path = get_reference_path(function)
-    if not ref_src_path:
-        raise FileNotFoundError(f"Reference file not found for function: {function}")
-    with open(ref_src_path, 'r') as f:
-        ref_src = f.read()
+    try:
+        ref_src_path = get_reference_path(function)
+        if not ref_src_path:
+            raise FileNotFoundError(f"Reference file not found for function: {function}")
+        with open(ref_src_path, 'r') as f:
+            ref_src = f.read()
+    except Exception as e:
+        raise InfraError(f"Failed to load reference code for {function}: {e}") from e
     return override_dimensions(ref_src, batch_size, dim, input_dims)
 
 
 def compile_kernel(backend, function_code: str, function: str) -> Tuple[bool, str]:
     from app.core.utils.code_utils import extract_first_code
     generated_code = extract_first_code(function_code, ['python', 'cpp']) or function_code
-    backend.clear_device_memory()
+    try:
+        backend.clear_device_memory()
+    except Exception as e:
+        raise InfraError(f"Failed to clear device memory: {e}") from e
     compiled, compile_info = backend.compile(generated_code, function)
     if not compiled:
         logger.debug(f"Compilation failed for {function}: {compile_info}")

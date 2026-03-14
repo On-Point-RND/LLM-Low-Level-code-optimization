@@ -22,6 +22,26 @@ class Backend:
         """Extract the relevant lines from a raw compilation error string."""
         return raw
 
+    def format_runtime_error(self, e: Exception) -> str:
+        """Format a runtime exception, filtering traceback to user code frames."""
+        import traceback
+        import os
+        try:
+            app_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        except Exception:
+            app_root = ""
+
+        full_tb = traceback.extract_tb(e.__traceback__)
+        filtered_tb = [
+            frame for frame in full_tb
+            if ("<" in frame.filename and ">" in frame.filename)
+            or (app_root and not os.path.abspath(frame.filename).startswith(app_root))
+        ]
+        if not filtered_tb:
+            filtered_tb = full_tb[-2:]
+
+        return f"{type(e).__name__}: {e}\n\nTraceback (most recent call last):\n{''.join(traceback.format_list(filtered_tb))}"
+
     def synchronize(self) -> None:
         """Block until all pending device operations complete."""
         pass

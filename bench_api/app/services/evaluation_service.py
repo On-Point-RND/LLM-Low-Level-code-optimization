@@ -60,12 +60,10 @@ def compile_kernel(
     result = run_compilation(params, device_id=device_id)
 
     if result.get('system_error'):
-        raise RuntimeError(result['error'])
+        raise RuntimeError(result['system_error'])
 
     timing = EvaluationTiming(**result['timing']) if result.get('timing') else None
-    compile_info = result.get('compile_info')
-    if not result.get('compiled') and compile_info is None:
-        compile_info = result.get('error') or "Compilation failed"
+    compile_info = result.get('compile_info') or ("Compilation failed" if not result.get('compiled') else None)
 
     if not result.get('compiled') and (experiment_name or run_name):
         mlflow_run_id = log_evaluation_result(
@@ -84,8 +82,8 @@ def compile_kernel(
             speedup=None,
             baseline=None,
         )
-        if mlflow_run_id and result.get('error'):
-            log_error_to_run(mlflow_run_id, result['error'])
+        if mlflow_run_id and compile_info:
+            log_error_to_run(mlflow_run_id, compile_info)
 
     req_str = f", ReqID: {req_id}" if req_id else ""
     timing_str = f"Timing: (comp: {timing.compilation:.2f}s)" if timing and timing.compilation else ""
@@ -129,7 +127,7 @@ def baseline_kernel(
     cached = get_cached_baseline(
         language, function, hardware, batch_size=batch_size, dim=dim,
         input_dims=input_dims, torch_compile=torch_compile_baseline,
-        num_trials=num_trials, num_warmup=num_warmup,
+        num_trials=num_trials, num_warmup=num_warmup, device_id=device_id,
     )
 
     req_str = f", ReqID: {req_id}" if req_id else ""
@@ -160,7 +158,7 @@ def baseline_kernel(
     result = run_baseline(params, device_id=device_id)
 
     if result.get('system_error') or not result.get('baseline'):
-        logger.warning(f"[BASELINE] Failed for {function}: {result.get('error')}{req_str}")
+        logger.warning(f"[BASELINE] Failed for {function}: {result.get('system_error')}{req_str}")
         return None
 
     entry = result['baseline']
@@ -168,6 +166,7 @@ def baseline_kernel(
         language, result['hardware'], function, entry,
         batch_size=batch_size, dim=dim, input_dims=input_dims,
         torch_compile=torch_compile_baseline, num_trials=num_trials, num_warmup=num_warmup,
+        device_id=device_id,
     )
 
     logger.info(
@@ -202,15 +201,13 @@ def validate_kernel(
     result = run_validation(params, device_id=device_id)
 
     if result.get('system_error'):
-        raise RuntimeError(result['error'])
+        raise RuntimeError(result['system_error'])
 
     if not result['compiled']:
-        raise RuntimeError(f"Recompilation failed during validation for {function}: {result.get('error')}")
+        raise RuntimeError(f"Recompilation failed during validation for {function}: {result.get('compile_info')}")
 
     timing = EvaluationTiming(**result['timing']) if result.get('timing') else None
-    correctness_info = result.get('correctness_info')
-    if result.get('correctness') is False and correctness_info is None:
-        correctness_info = result.get('error') or "Correctness check failed"
+    correctness_info = result.get('correctness_info') or ("Correctness check failed" if result.get('correctness') is False else None)
 
     req_str = f", ReqID: {req_id}" if req_id else ""
     corr_timing = f" Timing: (corr: {timing.correctness:.2f}s)" if timing and timing.correctness else ""
@@ -264,14 +261,11 @@ def evaluate_kernel(
     result = run_benchmark(params, device_id=device_id, baseline_mean_ms=baseline_mean_ms)
 
     if result.get('system_error'):
-        raise RuntimeError(result['error'])
+        raise RuntimeError(result['system_error'])
 
     performance = PerformanceStats(**result['performance']) if result.get('performance') else None
     timing = EvaluationTiming(**result['timing']) if result.get('timing') else None
-
-    performance_error = result.get('performance_error')
-    if performance is None and performance_error is None:
-        performance_error = result.get('error')
+    performance_info = result.get('performance_info')
 
     speedup = None
     if performance and performance.mean > 0:
@@ -310,16 +304,16 @@ def evaluate_kernel(
             speedup=speedup,
             baseline=baseline_dict,
         )
-        if mlflow_run_id and result.get('error'):
-            log_error_to_run(mlflow_run_id, result['error'])
+        if mlflow_run_id and performance_info:
+            log_error_to_run(mlflow_run_id, performance_info)
 
     perf_str = f"{performance.mean:.3g}ms" if performance else "N/A"
     speedup_str = f"{speedup:.2f}x" if speedup is not None else "N/A"
     req_str = f", ReqID: {req_id}" if req_id else ""
     perf_timing = f" Timing: (perf: {timing.performance:.2f}s)" if timing and timing.performance else ""
     perf_error_str = ""
-    if performance_error:
-        first_line = performance_error.strip().split('\n')[0]
+    if performance_info:
+        first_line = performance_info.strip().split('\n')[0]
         perf_error_str = f", PerfError: {first_line}"
 
     logger.info(
@@ -341,5 +335,5 @@ def evaluate_kernel(
         speedup=speedup,
         function_code=function_code,
         baseline_function_code=baseline_function_code,
-        performance_error=performance_error,
+        performance_info=performance_info,
     )

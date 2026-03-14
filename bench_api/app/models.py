@@ -100,7 +100,7 @@ class EvaluateResponse(BaseModel):
     speedup: Optional[float] = Field(None, description="Speedup relative to baseline (baseline_mean / current_mean)")
     function_code: Optional[str] = Field(None, description="The kernel code that was evaluated")
     baseline_function_code: Optional[str] = Field(None, description="The reference/baseline kernel code")
-    performance_error: Optional[str] = Field(None, description="Error message if performance measurement failed")
+    performance_info: Optional[str] = Field(None, description="Error message if performance measurement failed")
 
 
 class HelpResponse(BaseModel):

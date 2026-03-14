@@ -50,8 +50,7 @@ def run_baseline_phase(
             'hardware': hardware,
             'compute_capability': compute_capability,
             'compiled': True,
-            'error': msg,
-            'system_error': True,
+            'system_error': msg,
             'timing': make_timing(total=time.time() - t0),
         }
 
@@ -91,7 +90,7 @@ def compute_baseline(
         if result.get('system_error'):
             return {
                 "not_supported": True,
-                "error": result.get('error'),
+                "error": result.get('system_error'),
                 "error_type": "RuntimeError",
                 "device": hardware,
                 "compute_capability": compute_capability,

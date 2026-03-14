@@ -1,7 +1,6 @@
 import time
 import signal
 import logging
-import numpy as np
 import torch
 from typing import Dict, Any, Optional, Tuple
 
@@ -11,6 +10,7 @@ from app.core.phases.common import (
     compile_kernel, load_reference_code, summarize_elapsed_times,
 )
 from app.core.utils.performance import run_performance
+from app.core.phases.common import InfraError
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,8 @@ def _run_timed(
 
         return run_performance(backend, 'ModelNew', num_trials, num_warmup, torch_compile), None
 
+    except InfraError:
+        raise
     except TimeoutError as e:
         logger.error(f"Performance measurement timed out: {e}")
         return None, str(e)
@@ -49,8 +51,7 @@ def _run_timed(
     finally:
         if use_timeout and timeout_seconds is not None:
             signal.alarm(0)
-            if old_handler is not None:
-                signal.signal(signal.SIGALRM, old_handler)
+            signal.signal(signal.SIGALRM, old_handler)
 
 
 def run_benchmark_phase(
@@ -73,6 +74,7 @@ def run_benchmark_phase(
         logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
 
     compile_kernel(backend, function_code, function)
+    backend.clear_device_memory()
     t0 = time.time()
 
     actual_num_trials = num_trials if num_trials is not None else app_config.NUM_PERF_TRIALS
@@ -81,12 +83,9 @@ def run_benchmark_phase(
 
     set_eval_stage(EvalStage.PERFORMANCE)
     t = time.time()
-    try:
-        elapsed_times, performance_error = _run_timed(
-            backend, timeout_seconds, use_timeout, actual_num_trials, actual_num_warmup, torch_compile,
-        )
-    except Exception as e:
-        elapsed_times, performance_error = None, str(e)
+    elapsed_times, performance_info = _run_timed(
+        backend, timeout_seconds, use_timeout, actual_num_trials, actual_num_warmup, torch_compile,
+    )
     perf_time = time.time() - t
 
     backend.clear_device_memory()
@@ -97,10 +96,9 @@ def run_benchmark_phase(
         'stage': EvalStage.PERFORMANCE,
         'timing': make_timing(perf=perf_time, total=time.time() - t0),
     }
-    if performance_error:
+    if performance_info:
         result['performance'] = None
-        result['performance_error'] = performance_error
-        result['error'] = performance_error
+        result['performance_info'] = performance_info
     else:
         result['performance'] = summarize_elapsed_times(elapsed_times)
     return result

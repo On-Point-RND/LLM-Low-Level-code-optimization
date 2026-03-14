@@ -37,16 +37,17 @@ def _signal_handler(signum, frame):
         'performance': None,
         'hardware': 'unknown',
         'stage': stage,
-        'error': error_msg,
     }
     if stage in ('initialization', 'baseline'):
-        result['system_error'] = True
+        result['system_error'] = error_msg
     elif stage == 'compilation':
         result['compile_info'] = error_msg
     elif stage == 'correctness':
         result['correctness_info'] = error_msg
     elif stage == 'performance':
-        result['performance_error'] = error_msg
+        result['performance_info'] = error_msg
+    else:
+        result['system_error'] = error_msg
 
     _write(result)
     os._exit(signum)
@@ -73,7 +74,8 @@ def main():
         if backend is None:
             _write({
                 'compiled': False, 'correctness': None, 'performance': None,
-                'hardware': 'unknown', 'error': f"Backend {params['language']} not found",
+                'hardware': 'unknown',
+                'system_error': f"Backend {params['language']} not found",
             })
             return
 
@@ -120,7 +122,8 @@ def main():
         else:
             result = {
                 'compiled': False, 'correctness': None, 'performance': None,
-                'hardware': hardware, 'error': f"Unknown mode: {mode}",
+                'hardware': hardware,
+                'system_error': f"Unknown mode: {mode}",
             }
 
     except Exception as e:
@@ -128,8 +131,7 @@ def main():
         result = {
             'compiled': False, 'correctness': None, 'performance': None,
             'hardware': 'unknown',
-            'error': f"Evaluation failed: {e}\n{traceback.format_exc()}",
-            'system_error': True,
+            'system_error': f"Evaluation failed: {e}\n{traceback.format_exc()}",
         }
     finally:
         try:

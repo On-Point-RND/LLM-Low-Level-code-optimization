@@ -15,8 +15,7 @@ def _error(msg: str) -> Dict[str, Any]:
         'correctness': None,
         'performance': None,
         'hardware': 'unknown',
-        'error': msg,
-        'system_error': True,
+        'system_error': msg,
     }
 
 

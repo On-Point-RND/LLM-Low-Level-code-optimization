@@ -74,6 +74,7 @@ class CudaBackend(Backend):
     def parse_compile_error(self, raw: str) -> str:
         return compact_build_log(raw)
 
+
     def synchronize(self) -> None:
         if torch.cuda.is_available():
             torch.cuda.synchronize(device=self._device)
