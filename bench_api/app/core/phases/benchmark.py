@@ -26,8 +26,9 @@ def _setup_timeout(
 ) -> Tuple[Optional[float], bool]:
     if baseline_mean_ms is None:
         return None, False
-    total_ms = (num_trials + num_warmup) * baseline_mean_ms
-    return max(5.0, (2.0 * total_ms) / 1000.0), True
+    trials_ms = num_trials * baseline_mean_ms
+    warmup_ms = num_warmup * baseline_mean_ms * 3
+    return max(5.0, (2.0 * trials_ms + warmup_ms) / 1000.0), True
 
 
 def _run_timed(
