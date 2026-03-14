@@ -3,10 +3,9 @@ import app.config as config
 from app.core.phases.common import InfraError
 
 
-def _set_seed(seed: int):
+def _set_seed(backend, seed: int):
     torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
+    backend.set_seed(seed)
 
 
 def run_correctness(backend, ref_src: str):
@@ -34,14 +33,14 @@ def run_correctness(backend, ref_src: str):
 
     with torch.no_grad():
         try:
-            _set_seed(config.SEED_NUM)
+            _set_seed(backend, config.SEED_NUM)
             original_model = context["Model"](*init_inputs).to(device)
             backend.synchronize()
         except Exception as e:
             raise InfraError(f"Failed to instantiate reference model: {e}") from e
 
         try:
-            _set_seed(config.SEED_NUM)
+            _set_seed(backend, config.SEED_NUM)
             custom_model = context["ModelNew"](*init_inputs).to(device)
             backend.synchronize()
         except InfraError:

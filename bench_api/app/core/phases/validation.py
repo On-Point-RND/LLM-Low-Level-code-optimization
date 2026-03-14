@@ -68,13 +68,15 @@ def run_validation_phase(
             correctness=False,
             compute_capability=compute_capability,
             correctness_info=f"{type(e).__name__}: {str(e)}",
-            timing=make_timing(comp=comp_time, corr=time.time() - t, total=time.time() - t0),
+            timing=make_timing(
+                comp=comp_time, corr=time.time() - t, total=time.time() - t0
+            ),
         )
     corr_time = time.time() - t
 
     if not correctness:
         info = correctness_info or "Correctness check failed"
-        if "cuda error" in info.lower() or "illegal memory access" in info.lower():
+        if backend.is_fatal_error(info):
             try:
                 backend.cleanup()
             except Exception:

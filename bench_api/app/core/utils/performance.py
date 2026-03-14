@@ -62,7 +62,7 @@ def run_performance(
 
         try:
             backend.synchronize()
-            torch.cuda.empty_cache()
+            backend.clear_device_memory()
         except Exception as e:
             raise InfraError(f"Sync failed before timed trials: {e}") from e
 

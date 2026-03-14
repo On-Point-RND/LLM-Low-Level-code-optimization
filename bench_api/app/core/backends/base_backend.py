@@ -59,8 +59,21 @@ class Backend:
         """Keyword args for torch.allclose during correctness checks."""
         return {"atol": 1e-4, "rtol": 1e-4}
 
+    @classmethod
+    def get_subprocess_env(cls, device_id: int, benchmark_mode: bool) -> dict:
+        """Env vars to apply to the subprocess before fork. None value means unset."""
+        return {}
+
     def is_available(self) -> bool:
         return True
+
+    def set_seed(self, seed: int) -> None:
+        """Set random seed for reproducible input generation."""
+        pass
+
+    def is_fatal_error(self, error_info: str) -> bool:
+        """Return True if the error requires full backend cleanup (e.g. CUDA context corruption)."""
+        return False
 
     def clear_device_memory(self) -> None:
         """Free device memory between evaluation stages (no context reset)."""

@@ -1,7 +1,6 @@
 import time
 import signal
 import logging
-import torch
 from typing import Optional, Tuple
 
 import app.config as app_config
@@ -91,7 +90,7 @@ def run_benchmark_phase(
         exec(ref_src, backend.context)
         model = backend.context.pop("Model", None)
         del model
-        torch.cuda.empty_cache()
+        backend.clear_device_memory()
     except Exception as e:
         logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
 

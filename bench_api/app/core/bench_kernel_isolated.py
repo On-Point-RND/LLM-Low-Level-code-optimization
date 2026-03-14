@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+from app.core.backends.backend_registry import get_subprocess_env
+
 # bench_api/ — the directory where `app/` lives, used as cwd for the worker
 _WORKER_CWD = Path(__file__).parent.parent.parent
 
@@ -25,10 +27,15 @@ def _run_subprocess(
     r_fd, w_fd = os.pipe()
 
     child_env = os.environ.copy()
-    child_env["CUDA_VISIBLE_DEVICES"] = str(device_id)
     child_env["RESULT_FD"] = str(w_fd)
-    child_env.pop("CUDA_LAUNCH_BLOCKING", None)
-    child_env.pop("TORCH_USE_CUDA_DSA", None)
+    benchmark_mode = params.get("mode") == "benchmark"
+    for key, value in get_subprocess_env(
+        params["language"], device_id, benchmark_mode
+    ).items():
+        if value is None:
+            child_env.pop(key, None)
+        else:
+            child_env[key] = value
 
     try:
         proc = subprocess.Popen(

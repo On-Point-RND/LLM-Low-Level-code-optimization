@@ -66,9 +66,6 @@ def main():
     params = json.loads(sys.stdin.read())
     mode = params.get("mode", "validation")
 
-    if mode != "benchmark":
-        os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-
     from app.integration import register_kernelbench_dataset
 
     register_kernelbench_dataset()

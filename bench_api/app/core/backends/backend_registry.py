@@ -3,7 +3,6 @@ BACKEND_REGISTRY = {}
 
 def register_backend(name):
     def decorator(cls):
-        # Instantiate the backend immediately upon registration, as per original design
         try:
             BACKEND_REGISTRY[name] = cls()
         except Exception as e:
@@ -15,7 +14,6 @@ def register_backend(name):
 
 def get_backend(name):
     if name not in BACKEND_REGISTRY:
-        # Try to import the module dynamically if not found
         try:
             import importlib
 
@@ -24,3 +22,10 @@ def get_backend(name):
             pass
 
     return BACKEND_REGISTRY.get(name)
+
+
+def get_subprocess_env(language: str, device_id: int, benchmark_mode: bool) -> dict:
+    backend = get_backend(language)
+    if backend:
+        return type(backend).get_subprocess_env(device_id, benchmark_mode)
+    return {}

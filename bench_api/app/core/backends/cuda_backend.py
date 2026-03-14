@@ -80,6 +80,21 @@ class CudaBackend(Backend):
     def parse_compile_error(self, raw: str) -> str:
         return compact_build_log(raw)
 
+    @classmethod
+    def get_subprocess_env(cls, device_id: int, benchmark_mode: bool) -> dict:
+        return {
+            "CUDA_VISIBLE_DEVICES": str(device_id),
+            "TORCH_USE_CUDA_DSA": None,
+            "CUDA_LAUNCH_BLOCKING": None if benchmark_mode else "1",
+        }
+
+    def set_seed(self, seed: int) -> None:
+        torch.cuda.manual_seed(seed)
+
+    def is_fatal_error(self, error_info: str) -> bool:
+        lower = error_info.lower()
+        return "cuda error" in lower or "illegal memory access" in lower
+
     def synchronize(self) -> None:
         if torch.cuda.is_available():
             torch.cuda.synchronize(device=self._device)
