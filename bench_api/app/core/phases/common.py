@@ -1,13 +1,15 @@
 import logging
 import numpy as np
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 
 from app.integration import get_reference_path
 
 
 class InfraError(Exception):
     """Raised when infrastructure (our code) fails, as opposed to user kernel failures."""
+
     pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,12 @@ def set_eval_stage(stage: str):
 
 
 def make_timing(comp=0.0, corr=0.0, perf=0.0, total=0.0) -> Dict[str, Any]:
-    return {'compilation': comp, 'correctness': corr, 'performance': perf, 'total': total}
+    return {
+        "compilation": comp,
+        "correctness": corr,
+        "performance": perf,
+        "total": total,
+    }
 
 
 def override_dimensions(ref_src: str, batch_size, dim, input_dims) -> str:
@@ -49,24 +56,33 @@ def override_dimensions(ref_src: str, batch_size, dim, input_dims) -> str:
     if not overrides:
         return ref_src
 
-    lines = ref_src.split('\n')
+    lines = ref_src.split("\n")
     insert_pos = 0
     for i, line in enumerate(lines):
-        if line.strip().startswith('import ') or line.strip().startswith('from '):
+        if line.strip().startswith("import ") or line.strip().startswith("from "):
             insert_pos = i + 1
-        elif line.strip().startswith('class ') and insert_pos > 0:
+        elif line.strip().startswith("class ") and insert_pos > 0:
             break
 
-    override_code = '\n'.join(overrides) + '\n'
-    return '\n'.join(lines[:insert_pos]) + '\n' + override_code + '\n'.join(lines[insert_pos:])
+    override_code = "\n".join(overrides) + "\n"
+    return (
+        "\n".join(lines[:insert_pos])
+        + "\n"
+        + override_code
+        + "\n".join(lines[insert_pos:])
+    )
 
 
-def load_reference_code(function: str, batch_size=None, dim=None, input_dims=None) -> str:
+def load_reference_code(
+    function: str, batch_size=None, dim=None, input_dims=None
+) -> str:
     try:
         ref_src_path = get_reference_path(function)
         if not ref_src_path:
-            raise FileNotFoundError(f"Reference file not found for function: {function}")
-        with open(ref_src_path, 'r') as f:
+            raise FileNotFoundError(
+                f"Reference file not found for function: {function}"
+            )
+        with open(ref_src_path, "r") as f:
             ref_src = f.read()
     except Exception as e:
         raise InfraError(f"Failed to load reference code for {function}: {e}") from e
@@ -75,7 +91,10 @@ def load_reference_code(function: str, batch_size=None, dim=None, input_dims=Non
 
 def compile_kernel(backend, function_code: str, function: str) -> Tuple[bool, str]:
     from app.core.utils.code_utils import extract_first_code
-    generated_code = extract_first_code(function_code, ['python', 'cpp']) or function_code
+
+    generated_code = (
+        extract_first_code(function_code, ["python", "cpp"]) or function_code
+    )
     try:
         backend.clear_device_memory()
     except Exception as e:

@@ -4,12 +4,18 @@ from pathlib import Path
 from datetime import datetime
 
 BASE_DIR = Path(__file__).parent.parent
-MULTIKERNELBENCH_PATH = Path(os.getenv("MULTIKERNELBENCH_PATH", str(BASE_DIR / "MultiKernelBench")))
-KERNELBENCH_PATH = Path(os.getenv("KERNELBENCH_PATH", str(BASE_DIR / "KernelBench/KernelBench")))
+MULTIKERNELBENCH_PATH = Path(
+    os.getenv("MULTIKERNELBENCH_PATH", str(BASE_DIR / "MultiKernelBench"))
+)
+KERNELBENCH_PATH = Path(
+    os.getenv("KERNELBENCH_PATH", str(BASE_DIR / "KernelBench/KernelBench"))
+)
 BASELINES_DIR = Path(os.getenv("BASELINES_DIR", str(BASE_DIR / "baselines")))
-REFERENCE_DIR = Path(os.getenv("REFERENCE_DIR", str(MULTIKERNELBENCH_PATH / "reference")))
+REFERENCE_DIR = Path(
+    os.getenv("REFERENCE_DIR", str(MULTIKERNELBENCH_PATH / "reference"))
+)
 
-DEFAULT_HARDWARE = os.getenv("DEFAULT_HARDWARE", None)  
+DEFAULT_HARDWARE = os.getenv("DEFAULT_HARDWARE", None)
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 LOGS_DIR = BASE_DIR / "logs"
@@ -32,13 +38,16 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(log_level_numeric)
 console_handler.setFormatter(logging.Formatter(log_format, date_format))
 
-file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler = logging.FileHandler(log_file, encoding="utf-8")
 file_handler.setLevel(log_level_numeric)
 file_handler.setFormatter(logging.Formatter(log_format, date_format))
 
 # Only add our handlers if they are not already there
 # We check by type to avoid duplicate console/file handlers
-has_console = any(isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler) for h in root_logger.handlers)
+has_console = any(
+    isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
+    for h in root_logger.handlers
+)
 has_file = any(isinstance(h, logging.FileHandler) for h in root_logger.handlers)
 
 if not has_console:
@@ -63,6 +72,6 @@ if ARCH_LIST:
     ARCH_LIST = ARCH_LIST.split(",")
 
 # Comma-separated CUDA device indices to use for evaluation, e.g. "0,1,2,3"
-DEVICE_IDS: list[int] = [int(x.strip()) for x in os.getenv("DEVICE_IDS", "0").split(",") if x.strip()]
-
-
+DEVICE_IDS: list[int] = [
+    int(x.strip()) for x in os.getenv("DEVICE_IDS", "0").split(",") if x.strip()
+]

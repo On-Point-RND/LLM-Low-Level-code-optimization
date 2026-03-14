@@ -1,5 +1,6 @@
 import re
 
+
 def extract_first_code(output_string: str, code_language_types: list[str]) -> str:
     """
     Extract first code block from model output, specified by code_language_type

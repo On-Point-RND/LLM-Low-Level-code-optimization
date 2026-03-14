@@ -26,14 +26,18 @@ class Backend:
         """Format a runtime exception, filtering traceback to user code frames."""
         import traceback
         import os
+
         try:
-            app_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            app_root = os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            )
         except Exception:
             app_root = ""
 
         full_tb = traceback.extract_tb(e.__traceback__)
         filtered_tb = [
-            frame for frame in full_tb
+            frame
+            for frame in full_tb
             if ("<" in frame.filename and ">" in frame.filename)
             or (app_root and not os.path.abspath(frame.filename).startswith(app_root))
         ]
@@ -53,7 +57,7 @@ class Backend:
     @property
     def tolerances(self) -> dict:
         """Keyword args for torch.allclose during correctness checks."""
-        return {'atol': 1e-4, 'rtol': 1e-4}
+        return {"atol": 1e-4, "rtol": 1e-4}
 
     def is_available(self) -> bool:
         return True

@@ -13,7 +13,6 @@ BASE_URL = "http://localhost:8123"
 
 
 def main():
-
     cuda_code = """import torch
 import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
@@ -72,9 +71,11 @@ def get_init_inputs():
 
     # Настройки MLflow
     experiment_name = "my_experiments"  # Название папки с экспериментами в MLflow
-    run_name = f"relu_cuda_{uuid.uuid4().hex[:8]}_{int(time.time())}"  # Имя конкретного run
+    run_name = (
+        f"relu_cuda_{uuid.uuid4().hex[:8]}_{int(time.time())}"  # Имя конкретного run
+    )
     num_trials = 100  # Количество триалов для замеров производительности (можно уменьшить для отладки)
-    
+
     # Формируем запрос
     payload = {
         "torch_compile": False,
@@ -84,12 +85,12 @@ def get_init_inputs():
         "feedback": None,
         "experiment_name": experiment_name,
         "run_name": run_name,
-        "num_trials": num_trials
+        "num_trials": num_trials,
     }
-    
-    print("="*70)
+
+    print("=" * 70)
     print("Пример: CUDA kernel для ReLU")
-    print("="*70)
+    print("=" * 70)
     print(f"\nОтправка запроса:")
     print(f"  Бэкенд: CUDA")
     print(f"  Функция: relu")
@@ -97,19 +98,14 @@ def get_init_inputs():
     print(f"  Run name: {run_name}")
     print(f"  Num trials: {num_trials}")
     print(f"  Размер кода: {len(cuda_code)} символов")
-    
+
     # Отправляем запрос
     try:
-        response = requests.post(
-            f"{BASE_URL}/evaluate",
-            json=payload,
-            timeout=300
-        )
-        
+        response = requests.post(f"{BASE_URL}/evaluate", json=payload, timeout=300)
+
         print(f"\nОтвет сервера:")
         print(f"  Status: {response.status_code}")
 
-        
         if response.status_code == 200:
             data = response.json()
             print(data)
@@ -121,61 +117,57 @@ def get_init_inputs():
             print(f"  Hardware: {data.get('hardware')}")
             print(f"  Compiled: {data.get('compiled')}")
             print(f"  Correctness: {data.get('correctness')}")
-            
-            if data.get('performance'):
-                perf = data['performance']
+
+            if data.get("performance"):
+                perf = data["performance"]
                 print(f"\nПроизводительность:")
                 print(f"  Mean: {perf.get('mean')} ms")
                 print(f"  Std: {perf.get('std')} ms")
                 print(f"  Min: {perf.get('min')} ms")
                 print(f"  Max: {perf.get('max')} ms")
                 print(f"  Trials: {perf.get('num_trials')}")
-            
-            if data.get('baseline'):
-                baseline = data['baseline']
+
+            if data.get("baseline"):
+                baseline = data["baseline"]
                 print(f"\nBaseline:")
                 print(f"  Mean: {baseline.get('mean')} ms")
                 print(f"  Std: {baseline.get('std')} ms")
                 print(f"  Min: {baseline.get('min')} ms")
                 print(f"  Max: {baseline.get('max')} ms")
-            
-            if data.get('speedup') is not None:
+
+            if data.get("speedup") is not None:
                 print(f"\nУскорение: {data.get('speedup'):.3f}x")
-            
-            if data.get('function_code'):
-                code_preview = data.get('function_code')
+
+            if data.get("function_code"):
+                code_preview = data.get("function_code")
                 if len(code_preview) > 200:
                     code_preview = code_preview[:200] + "..."
                 print(f"\nКод (первые 200 символов):")
                 print(f"  {code_preview}")
-            
-            if data.get('baseline_function_code'):
-                baseline_code_preview = data.get('baseline_function_code')
+
+            if data.get("baseline_function_code"):
+                baseline_code_preview = data.get("baseline_function_code")
                 if len(baseline_code_preview) > 200:
                     baseline_code_preview = baseline_code_preview[:200] + "..."
                 print(f"\nBaseline код (первые 200 символов):")
                 print(f"  {baseline_code_preview}")
-            
-            if data.get('compile_info'):
+
+            if data.get("compile_info"):
                 print(f"\nCompile info: {data.get('compile_info')[:100]}...")
-            
-            if data.get('correctness_info'):
+
+            if data.get("correctness_info"):
                 print(f"\nCorrectness info: {data.get('correctness_info')[:100]}...")
-            
+
             print(f"\nПроверьте MLflow: http://195.209.214.105:5050")
             print(f"Experiment: {experiment_name}")
             print(f"Run name: {run_name}")
         else:
             print(f"\n✗ Ошибка:")
             print(f"  {response.text}")
-            
+
     except Exception as e:
         print(f"\n✗ Исключение: {e}")
 
 
 if __name__ == "__main__":
     main()
-
-
-
-

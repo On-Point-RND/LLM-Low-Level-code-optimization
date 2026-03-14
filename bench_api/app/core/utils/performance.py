@@ -8,7 +8,13 @@ from app.core.phases.common import InfraError
 logger = logging.getLogger(__name__)
 
 
-def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional[int] = None, num_warmup: Optional[int] = None, torch_compile: bool = False):
+def run_performance(
+    backend,
+    eval_target: str = "ModelNew",
+    num_trials: Optional[int] = None,
+    num_warmup: Optional[int] = None,
+    torch_compile: bool = False,
+):
     """
     Run warmup + timed trials for eval_target using backend timing primitives.
     Returns list of elapsed times in ms.
@@ -22,7 +28,10 @@ def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional
 
     try:
         device = backend.get_device()
-        init_inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in context['get_init_inputs']()]
+        init_inputs = [
+            x.to(device) if isinstance(x, torch.Tensor) else x
+            for x in context["get_init_inputs"]()
+        ]
     except Exception as e:
         raise InfraError(f"Failed to prepare inputs: {e}") from e
 
@@ -39,7 +48,10 @@ def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional
 
         for _ in range(actual_warmup):
             try:
-                inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in context['get_inputs']()]
+                inputs = [
+                    x.to(device) if isinstance(x, torch.Tensor) else x
+                    for x in context["get_inputs"]()
+                ]
             except Exception as e:
                 raise InfraError(f"Failed to prepare inputs: {e}") from e
             model(*inputs)
@@ -56,7 +68,10 @@ def run_performance(backend, eval_target: str = 'ModelNew', num_trials: Optional
         elapsed = []
         for _ in range(actual_trials):
             try:
-                inputs = [x.to(device) if isinstance(x, torch.Tensor) else x for x in context['get_inputs']()]
+                inputs = [
+                    x.to(device) if isinstance(x, torch.Tensor) else x
+                    for x in context["get_inputs"]()
+                ]
             except Exception as e:
                 raise InfraError(f"Failed to prepare inputs: {e}") from e
             elapsed.append(backend.elapsed_ms(lambda: model(*inputs)))

@@ -15,7 +15,12 @@ from app.models import (
     HelpResponse,
 )
 from app.services.baseline_service import get_single_baseline, get_all_baselines
-from app.services.evaluation_service import compile_kernel, validate_kernel, baseline_kernel, evaluate_kernel
+from app.services.evaluation_service import (
+    compile_kernel,
+    validate_kernel,
+    baseline_kernel,
+    evaluate_kernel,
+)
 from app.services.help_service import get_help_info
 from app.services.mlflow_service import log_baseline_result
 from app.services.device_pool import DevicePool
@@ -28,7 +33,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="MultiKernelBench API",
     description="API for evaluating kernel performance using MultiKernelBench",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 _device_pool: DevicePool = None
@@ -51,13 +56,17 @@ async def startup_event():
     if not os.getenv("CUDA_CACHE_PATH"):
         os.environ["CUDA_CACHE_PATH"] = cuda_cache_dir
 
-    logger.info(f"TMPDIR={os.getenv('TMPDIR')}, CUDA_CACHE_PATH={os.getenv('CUDA_CACHE_PATH')}")
+    logger.info(
+        f"TMPDIR={os.getenv('TMPDIR')}, CUDA_CACHE_PATH={os.getenv('CUDA_CACHE_PATH')}"
+    )
 
     try:
         import torch
+
         if torch.cuda.is_available():
             logger.info("CUDA detected. Initializing CudaBackend...")
             from app.core.backends.cuda_backend import CudaBackend
+
             _ = CudaBackend()
             logger.info("CudaBackend initialized successfully.")
         else:
@@ -79,30 +88,36 @@ async def get_help():
     try:
         return HelpResponse(**get_help_info())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get help info: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get help info: {str(e)}"
+        )
 
 
 @app.post("/baseline", response_model=SingleBaselineResponse | AllBaselinesResponse)
 async def get_baseline(request: BaselineRequest):
-    logger.info(f"Received baseline request: function={request.function}, language={request.language}")
+    logger.info(
+        f"Received baseline request: function={request.function}, language={request.language}"
+    )
     try:
         backend = get_backend(request.language)
         if backend and not backend.is_available():
             raise HTTPException(
                 status_code=503,
-                detail=f"Backend '{request.language}' is not available on this server hardware."
+                detail=f"Backend '{request.language}' is not available on this server hardware.",
             )
 
         if request.function == "all":
-            result = get_all_baselines(request.language, torch_compile=request.torch_compile)
+            result = get_all_baselines(
+                request.language, torch_compile=request.torch_compile
+            )
             return AllBaselinesResponse(
                 function="all",
                 language=request.language,
-                hardware=result['hardware'],
-                baselines=result['baselines'],
-                cached=result['cached'],
-                torch_compile=result['torch_compile'],
-                function_codes=result.get('function_codes')
+                hardware=result["hardware"],
+                baselines=result["baselines"],
+                cached=result["cached"],
+                torch_compile=result["torch_compile"],
+                function_codes=result.get("function_codes"),
             )
         else:
             result = get_single_baseline(
@@ -111,7 +126,7 @@ async def get_baseline(request: BaselineRequest):
                 batch_size=request.batch_size,
                 dim=request.dim,
                 input_dims=request.input_dims,
-                torch_compile=request.torch_compile
+                torch_compile=request.torch_compile,
             )
 
             if request.experiment_name or request.run_name:
@@ -120,62 +135,70 @@ async def get_baseline(request: BaselineRequest):
                     run_name=request.run_name,
                     function=request.function,
                     language=request.language,
-                    hardware=result['hardware'],
-                    baseline=result['baseline'],
-                    torch_compile=result['torch_compile'],
-                    function_code=result.get('function_code'),
-                    batch_size=result.get('batch_size'),
-                    dim=result.get('dim'),
-                    input_dims=result.get('input_dims')
+                    hardware=result["hardware"],
+                    baseline=result["baseline"],
+                    torch_compile=result["torch_compile"],
+                    function_code=result.get("function_code"),
+                    batch_size=result.get("batch_size"),
+                    dim=result.get("dim"),
+                    input_dims=result.get("input_dims"),
                 )
 
             return SingleBaselineResponse(
                 function=request.function,
                 language=request.language,
-                hardware=result['hardware'],
-                baseline=result['baseline'],
-                cached=result['cached'],
-                torch_compile=result['torch_compile'],
-                function_code=result.get('function_code'),
-                batch_size=result.get('batch_size'),
-                dim=result.get('dim'),
-                input_dims=result.get('input_dims')
+                hardware=result["hardware"],
+                baseline=result["baseline"],
+                cached=result["cached"],
+                torch_compile=result["torch_compile"],
+                function_code=result.get("function_code"),
+                batch_size=result.get("batch_size"),
+                dim=result.get("dim"),
+                input_dims=result.get("input_dims"),
             )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         import traceback
+
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to get baseline: {str(e)}")
 
 
 @app.post("/evaluate", response_model=EvaluateResponse)
 async def evaluate(request: EvaluateRequest):
-    logger.info(f"Received evaluation request: function={request.function}, language={request.language}")
+    logger.info(
+        f"Received evaluation request: function={request.function}, language={request.language}"
+    )
     try:
         backend = get_backend(request.language)
         if backend and not backend.is_available():
             raise HTTPException(
                 status_code=503,
-                detail=f"Backend '{request.language}' is not available on this server hardware."
+                detail=f"Backend '{request.language}' is not available on this server hardware.",
             )
 
         if request.function_code:
             function_code = request.function_code
         elif request.function_code_file:
             try:
-                function_code = base64.b64decode(request.function_code_file).decode('utf-8')
+                function_code = base64.b64decode(request.function_code_file).decode(
+                    "utf-8"
+                )
             except Exception:
                 if os.path.exists(request.function_code_file):
-                    with open(request.function_code_file, 'r', encoding='utf-8') as f:
+                    with open(request.function_code_file, "r", encoding="utf-8") as f:
                         function_code = f.read()
                 else:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"function_code_file is not valid base64 and file not found: {request.function_code_file}"
+                        detail=f"function_code_file is not valid base64 and file not found: {request.function_code_file}",
                     )
         else:
-            raise HTTPException(status_code=400, detail="Either function_code or function_code_file must be provided")
+            raise HTTPException(
+                status_code=400,
+                detail="Either function_code or function_code_file must be provided",
+            )
 
         req_id = uuid.uuid4().hex[:8]
 
@@ -203,7 +226,9 @@ async def evaluate(request: EvaluateRequest):
 
         # Phase B & C: Validation and Benchmark - With device lock
         device_id = await _device_pool.acquire()
-        logger.info(f"Acquired device {device_id} for {request.function}, ReqID: {req_id}")
+        logger.info(
+            f"Acquired device {device_id} for {request.function}, ReqID: {req_id}"
+        )
         try:
             validate_result = await asyncio.to_thread(
                 validate_kernel,
@@ -236,7 +261,9 @@ async def evaluate(request: EvaluateRequest):
             )
 
             if baseline is None:
-                raise RuntimeError(f"Baseline measurement failed for {request.function}, cannot compute speedup")
+                raise RuntimeError(
+                    f"Baseline measurement failed for {request.function}, cannot compute speedup"
+                )
 
             return await asyncio.to_thread(
                 evaluate_kernel,
@@ -280,5 +307,5 @@ async def root():
             "GET /help": "Get help information",
             "POST /baseline": "Get baseline performance",
             "POST /evaluate": "Evaluate kernel code",
-        }
+        },
     }

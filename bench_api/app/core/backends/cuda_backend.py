@@ -9,7 +9,7 @@ from app.config import ARCH_LIST
 logger = logging.getLogger(__name__)
 
 
-@register_backend('cuda')
+@register_backend("cuda")
 class CudaBackend(Backend):
     def __init__(self):
         self.context = {}
@@ -30,10 +30,14 @@ class CudaBackend(Backend):
             else:
                 logger.info(f"Using configured CUDA architecture: {self.arch_list}")
         else:
-            logger.warning("CUDA is not available. CudaBackend functionality will be limited.")
+            logger.warning(
+                "CUDA is not available. CudaBackend functionality will be limited."
+            )
 
     def get_device(self):
-        return torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+        return (
+            torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        )
 
     def get_hardware_name(self) -> str:
         if torch.cuda.is_available():
@@ -57,7 +61,9 @@ class CudaBackend(Backend):
             os.environ["TORCH_CUDA_ARCH_LIST"] = ";".join(self.arch_list)
 
         try:
-            fake_fname = f"<cuda_code_{hashlib.md5(generated_code.encode()).hexdigest()[:8]}>"
+            fake_fname = (
+                f"<cuda_code_{hashlib.md5(generated_code.encode()).hexdigest()[:8]}>"
+            )
             linecache.cache[fake_fname] = (
                 len(generated_code),
                 None,
@@ -74,7 +80,6 @@ class CudaBackend(Backend):
     def parse_compile_error(self, raw: str) -> str:
         return compact_build_log(raw)
 
-
     def synchronize(self) -> None:
         if torch.cuda.is_available():
             torch.cuda.synchronize(device=self._device)
@@ -90,7 +95,7 @@ class CudaBackend(Backend):
 
     @property
     def tolerances(self) -> dict:
-        return {'atol': 1e-4, 'rtol': 1e-4}
+        return {"atol": 1e-4, "rtol": 1e-4}
 
     def clear_device_memory(self) -> None:
         if torch.cuda.is_available():
