@@ -1,10 +1,13 @@
 import torch
 import os
 import logging
+from pathlib import Path
 from app.core.backends.base_backend import Backend
 from app.core.backends.backend_registry import register_backend
 from app.core.utils.build_log import compact_build_log
 from app.config import ARCH_LIST
+
+CUDA_BUILD_ROOT = Path("/tmp/bench_builds")
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +58,31 @@ class CudaBackend(Backend):
     def compile(self, generated_code: str, op: str):
         import hashlib
         import linecache
+        import torch.utils.cpp_extension as _cpp_ext
+
+        if "cpp_extension" not in generated_code:
+            return False, (
+                "CUDA submissions must use torch.utils.cpp_extension "
+                "(load or load_inline) to implement ModelNew"
+            )
 
         os.environ["TORCH_USE_CUDA_DSA"] = "1"
         if self.arch_list:
             os.environ["TORCH_CUDA_ARCH_LIST"] = ";".join(self.arch_list)
 
+        _called = []
+        _orig_load, _orig_load_inline = _cpp_ext.load, _cpp_ext.load_inline
+
+        def _patched_load(*args, **kwargs):
+            _called.append(True)
+            return _orig_load(*args, **kwargs)
+
+        def _patched_load_inline(*args, **kwargs):
+            _called.append(True)
+            return _orig_load_inline(*args, **kwargs)
+
+        _cpp_ext.load = _patched_load
+        _cpp_ext.load_inline = _patched_load_inline
         try:
             fake_fname = (
                 f"<cuda_code_{hashlib.md5(generated_code.encode()).hexdigest()[:8]}>"
@@ -72,21 +95,49 @@ class CudaBackend(Backend):
             )
             compiled_code = compile(generated_code, fake_fname, "exec")
             exec(compiled_code, self.context)
-            return True, None
         except Exception as e:
             raw = f"{type(e).__name__}: {str(e)}"
             return False, self.parse_compile_error(raw)
+        finally:
+            _cpp_ext.load = _orig_load
+            _cpp_ext.load_inline = _orig_load_inline
+
+        if not _called:
+            return False, (
+                "cpp_extension is imported but load/load_inline is never called — "
+                "ModelNew must compile and load a CUDA kernel"
+            )
+
+        return True, None
 
     def parse_compile_error(self, raw: str) -> str:
         return compact_build_log(raw)
 
     @classmethod
-    def get_subprocess_env(cls, device_id: int, benchmark_mode: bool) -> dict:
-        return {
+    def get_subprocess_env(cls, device_id: int, benchmark_mode: bool, req_id: str = None) -> dict:
+        env = {
             "CUDA_VISIBLE_DEVICES": str(device_id),
             "TORCH_USE_CUDA_DSA": None,
             "CUDA_LAUNCH_BLOCKING": None if benchmark_mode else "1",
         }
+        if req_id:
+            build_dir = CUDA_BUILD_ROOT / req_id
+            build_dir.mkdir(parents=True, exist_ok=True)
+            env["TORCH_EXTENSIONS_DIR"] = str(build_dir)
+        return env
+
+    @classmethod
+    def cleanup_request(cls, req_id: str) -> None:
+        import shutil
+        shutil.rmtree(CUDA_BUILD_ROOT / req_id, ignore_errors=True)
+
+    @classmethod
+    def setup_server_env(cls, workspace_tmp: str) -> None:
+        cuda_cache_dir = os.path.join(workspace_tmp, "cuda_cache")
+        os.makedirs(cuda_cache_dir, exist_ok=True)
+        if not os.getenv("CUDA_CACHE_PATH"):
+            os.environ["CUDA_CACHE_PATH"] = cuda_cache_dir
+
 
     def set_seed(self, seed: int) -> None:
         torch.cuda.manual_seed(seed)

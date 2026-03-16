@@ -3,6 +3,7 @@ import base64
 import os
 import logging
 import uuid
+from app.core.backends.backend_registry import cleanup_request as cleanup_backend_request
 
 from fastapi import FastAPI, HTTPException
 
@@ -25,8 +26,8 @@ from app.services.help_service import get_help_info
 from app.services.mlflow_service import log_baseline_result
 from app.services.device_pool import DevicePool
 from app.integration import register_kernelbench_dataset
-from app.core.backends.backend_registry import get_backend
-from app.config import DEVICE_IDS
+from app.core.backends.backend_registry import get_backend, setup_server_env
+from app.config import DEVICE_IDS, BACKENDS
 
 logger = logging.getLogger(__name__)
 
@@ -51,28 +52,17 @@ async def startup_event():
         if not os.getenv(key):
             os.environ[key] = workspace_tmp
 
-    cuda_cache_dir = os.path.join(workspace_tmp, "cuda_cache")
-    os.makedirs(cuda_cache_dir, exist_ok=True)
-    if not os.getenv("CUDA_CACHE_PATH"):
-        os.environ["CUDA_CACHE_PATH"] = cuda_cache_dir
+    for language in BACKENDS:
+        setup_server_env(language, workspace_tmp)
 
     logger.info(
         f"TMPDIR={os.getenv('TMPDIR')}, CUDA_CACHE_PATH={os.getenv('CUDA_CACHE_PATH')}"
     )
 
-    try:
-        import torch
-
-        if torch.cuda.is_available():
-            logger.info("CUDA detected. Initializing CudaBackend...")
-            from app.core.backends.cuda_backend import CudaBackend
-
-            _ = CudaBackend()
-            logger.info("CudaBackend initialized successfully.")
-        else:
-            logger.warning("CUDA not detected. CUDA-based benchmarks will fail.")
-    except Exception as e:
-        logger.error(f"Failed to initialize CUDA backend: {e}")
+    for language in BACKENDS:
+        backend = get_backend(language)
+        if backend and not backend.is_available():
+            logger.warning(f"{language} backend is not available on this hardware")
 
     _device_pool = DevicePool(DEVICE_IDS)
     logger.info(f"Device pool initialized with devices {DEVICE_IDS}")
@@ -204,37 +194,10 @@ async def evaluate(request: EvaluateRequest):
             )
 
         req_id = uuid.uuid4().hex[:8]
-
-        # Phase A: Compilation - No device lock
-        compile_result = await asyncio.to_thread(
-            compile_kernel,
-            function_code=function_code,
-            function=request.function,
-            language=request.language,
-            torch_compile=request.torch_compile or False,
-            torch_compile_baseline=request.torch_compile_baseline or False,
-            num_trials=request.num_trials,
-            num_warmup=request.num_warmup,
-            batch_size=request.batch_size,
-            dim=request.dim,
-            input_dims=request.input_dims,
-            device_id=0,
-            experiment_name=request.experiment_name,
-            run_name=request.run_name,
-            req_id=req_id,
-        )
-
-        if not compile_result.compiled:
-            return compile_result
-
-        # Phase B & C: Validation and Benchmark - With device lock
-        device_id = await _device_pool.acquire()
-        logger.info(
-            f"Acquired device {device_id} for {request.function}, ReqID: {req_id}"
-        )
         try:
-            validate_result = await asyncio.to_thread(
-                validate_kernel,
+            # Phase A: Compilation - No device lock
+            compile_result = await asyncio.to_thread(
+                compile_kernel,
                 function_code=function_code,
                 function=request.function,
                 language=request.language,
@@ -245,53 +208,82 @@ async def evaluate(request: EvaluateRequest):
                 batch_size=request.batch_size,
                 dim=request.dim,
                 input_dims=request.input_dims,
-                device_id=device_id,
-                req_id=req_id,
-            )
-
-            baseline = await asyncio.to_thread(
-                baseline_kernel,
-                function=request.function,
-                language=request.language,
-                torch_compile_baseline=request.torch_compile_baseline or False,
-                num_trials=request.num_trials,
-                num_warmup=request.num_warmup,
-                batch_size=request.batch_size,
-                dim=request.dim,
-                input_dims=request.input_dims,
-                device_id=device_id,
-                req_id=req_id,
-            )
-
-            if baseline is None:
-                raise RuntimeError(
-                    f"Baseline measurement failed for {request.function}, cannot compute speedup"
-                )
-
-            return await asyncio.to_thread(
-                evaluate_kernel,
-                function_code=function_code,
-                function=request.function,
-                language=request.language,
-                torch_compile=request.torch_compile or False,
-                torch_compile_baseline=request.torch_compile_baseline or False,
-                num_trials=request.num_trials,
-                num_warmup=request.num_warmup,
-                batch_size=request.batch_size,
-                dim=request.dim,
-                input_dims=request.input_dims,
-                device_id=device_id,
-                baseline_mean_ms=baseline.mean if baseline else None,
-                baseline=baseline,
-                correctness=validate_result.correctness,
-                correctness_info=validate_result.correctness_info,
+                device_id=0,
                 experiment_name=request.experiment_name,
                 run_name=request.run_name,
                 req_id=req_id,
             )
+
+            if not compile_result.compiled:
+                return compile_result
+
+            # Phase B & C: Validation and Benchmark - With device lock
+            device_id = await _device_pool.acquire()
+            logger.info(
+                f"Acquired device {device_id} for {request.function}, ReqID: {req_id}"
+            )
+            try:
+                validate_result = await asyncio.to_thread(
+                    validate_kernel,
+                    function_code=function_code,
+                    function=request.function,
+                    language=request.language,
+                    torch_compile=request.torch_compile or False,
+                    torch_compile_baseline=request.torch_compile_baseline or False,
+                    num_trials=request.num_trials,
+                    num_warmup=request.num_warmup,
+                    batch_size=request.batch_size,
+                    dim=request.dim,
+                    input_dims=request.input_dims,
+                    device_id=device_id,
+                    req_id=req_id,
+                )
+
+                baseline = await asyncio.to_thread(
+                    baseline_kernel,
+                    function=request.function,
+                    language=request.language,
+                    torch_compile_baseline=request.torch_compile_baseline or False,
+                    num_trials=request.num_trials,
+                    num_warmup=request.num_warmup,
+                    batch_size=request.batch_size,
+                    dim=request.dim,
+                    input_dims=request.input_dims,
+                    device_id=device_id,
+                    req_id=req_id,
+                )
+
+                if baseline is None:
+                    raise RuntimeError(
+                        f"Baseline measurement failed for {request.function}, cannot compute speedup"
+                    )
+
+                return await asyncio.to_thread(
+                    evaluate_kernel,
+                    function_code=function_code,
+                    function=request.function,
+                    language=request.language,
+                    torch_compile=request.torch_compile or False,
+                    torch_compile_baseline=request.torch_compile_baseline or False,
+                    num_trials=request.num_trials,
+                    num_warmup=request.num_warmup,
+                    batch_size=request.batch_size,
+                    dim=request.dim,
+                    input_dims=request.input_dims,
+                    device_id=device_id,
+                    baseline_mean_ms=baseline.mean if baseline else None,
+                    baseline=baseline,
+                    correctness=validate_result.correctness,
+                    correctness_info=validate_result.correctness_info,
+                    experiment_name=request.experiment_name,
+                    run_name=request.run_name,
+                    req_id=req_id,
+                )
+            finally:
+                _device_pool.release(device_id)
+                logger.info(f"Released device {device_id}, ReqID: {req_id}")
         finally:
-            _device_pool.release(device_id)
-            logger.info(f"Released device {device_id}, ReqID: {req_id}")
+            cleanup_backend_request(request.language, req_id)
 
     except HTTPException:
         raise

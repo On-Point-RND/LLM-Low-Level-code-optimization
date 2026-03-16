@@ -30,7 +30,7 @@ def _run_subprocess(
     child_env["RESULT_FD"] = str(w_fd)
     benchmark_mode = params.get("mode") == "benchmark"
     for key, value in get_subprocess_env(
-        params["language"], device_id, benchmark_mode
+        params["language"], device_id, benchmark_mode, req_id=params.get("req_id")
     ).items():
         if value is None:
             child_env.pop(key, None)
@@ -80,6 +80,7 @@ def _run_subprocess(
         except OSError:
             pass
         return _error(f"Failed to run worker: {e}")
+
 
 
 def run_baseline(

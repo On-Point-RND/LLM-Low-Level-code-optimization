@@ -75,6 +75,8 @@ def compile_kernel(
         dim,
         input_dims,
     )
+    if req_id:
+        params["req_id"] = req_id
     result = run_compilation(params, device_id=device_id)
 
     if result.get("system_error"):
@@ -250,6 +252,8 @@ def validate_kernel(
         dim,
         input_dims,
     )
+    if req_id:
+        params["req_id"] = req_id
     result = run_validation(params, device_id=device_id)
 
     if result.get("system_error"):
@@ -326,6 +330,8 @@ def evaluate_kernel(
         dim,
         input_dims,
     )
+    if req_id:
+        params["req_id"] = req_id
     result = run_benchmark(
         params, device_id=device_id, baseline_mean_ms=baseline_mean_ms
     )

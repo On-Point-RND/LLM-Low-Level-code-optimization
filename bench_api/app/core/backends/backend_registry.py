@@ -24,8 +24,21 @@ def get_backend(name):
     return BACKEND_REGISTRY.get(name)
 
 
-def get_subprocess_env(language: str, device_id: int, benchmark_mode: bool) -> dict:
+def get_subprocess_env(language: str, device_id: int, benchmark_mode: bool, req_id: str = None) -> dict:
     backend = get_backend(language)
     if backend:
-        return type(backend).get_subprocess_env(device_id, benchmark_mode)
+        return type(backend).get_subprocess_env(device_id, benchmark_mode, req_id=req_id)
     return {}
+
+
+def cleanup_request(language: str, req_id: str) -> None:
+    backend = get_backend(language)
+    if backend:
+        type(backend).cleanup_request(req_id)
+
+
+def setup_server_env(language: str, workspace_tmp: str) -> None:
+    backend = get_backend(language)
+    if backend:
+        type(backend).setup_server_env(workspace_tmp)
+

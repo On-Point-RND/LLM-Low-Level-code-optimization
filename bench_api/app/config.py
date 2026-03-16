@@ -75,3 +75,8 @@ if ARCH_LIST:
 DEVICE_IDS: list[int] = [
     int(x.strip()) for x in os.getenv("DEVICE_IDS", "0").split(",") if x.strip()
 ]
+
+# Comma-separated backends to enable at startup, e.g. "cuda,triton"
+BACKENDS: list[str] = [
+    x.strip() for x in os.getenv("BACKENDS", "cuda").split(",") if x.strip()
+]

@@ -60,9 +60,19 @@ class Backend:
         return {"atol": 1e-4, "rtol": 1e-4}
 
     @classmethod
-    def get_subprocess_env(cls, device_id: int, benchmark_mode: bool) -> dict:
+    def get_subprocess_env(cls, device_id: int, benchmark_mode: bool, req_id: str = None) -> dict:
         """Env vars to apply to the subprocess before fork. None value means unset."""
         return {}
+
+    @classmethod
+    def cleanup_request(cls, req_id: str) -> None:
+        """Clean up any per-request resources created by get_subprocess_env."""
+        pass
+
+    @classmethod
+    def setup_server_env(cls, workspace_tmp: str) -> None:
+        """Set process-level env vars needed by this backend at server startup."""
+        pass
 
     def is_available(self) -> bool:
         return True
