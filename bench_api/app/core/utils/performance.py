@@ -32,6 +32,8 @@ def run_performance(
             x.to(device) if isinstance(x, torch.Tensor) else x
             for x in context["get_init_inputs"]()
         ]
+    except TimeoutError:
+        raise
     except Exception as e:
         raise InfraError(f"Failed to prepare inputs: {e}") from e
 
@@ -52,6 +54,8 @@ def run_performance(
                     x.to(device) if isinstance(x, torch.Tensor) else x
                     for x in context["get_inputs"]()
                 ]
+            except TimeoutError:
+                raise
             except Exception as e:
                 raise InfraError(f"Failed to prepare inputs: {e}") from e
             model(*inputs)
@@ -73,6 +77,8 @@ def run_performance(
                     x.to(device) if isinstance(x, torch.Tensor) else x
                     for x in context["get_inputs"]()
                 ]
+            except TimeoutError:
+                raise
             except Exception as e:
                 raise InfraError(f"Failed to prepare inputs: {e}") from e
             elapsed.append(backend.elapsed_ms(lambda: model(*inputs)))
