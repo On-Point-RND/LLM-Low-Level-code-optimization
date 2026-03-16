@@ -88,6 +88,9 @@ async def get_help():
     try:
         return HelpResponse(**get_help_info())
     except Exception as e:
+        import traceback
+
+        traceback.print_exc()
         raise HTTPException(
             status_code=500, detail=f"Failed to get help info: {str(e)}"
         )
@@ -295,6 +298,9 @@ async def evaluate(request: EvaluateRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        import traceback
+
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to evaluate: {str(e)}")
 
 
