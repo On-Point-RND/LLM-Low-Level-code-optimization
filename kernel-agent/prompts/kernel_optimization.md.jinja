@@ -1,0 +1,76 @@
+Your task is to implement an optimized version of the kernel provided in the `<reference>` section.
+Maximize the kernel's performance using various optimization strategies, ensure that the output remains numerically identical to the provided reference and avoid memory errors.
+
+
+Strictly adhere to these requirements:
+
+1. **Class Definition:** You must define a class named exactly `ModelNew`. This is the entry point used to instantiate your kernel.
+2. **Inheritance:** The class must inherit from `torch.nn.Module`.
+3. **Initialization:** `__init__(self, ...)` must accept the arguments provided by the reference implementation's `get_init_inputs()`.
+4. **Forward Pass:** `forward(self, ...)` must accept the arguments provided by the reference implementation's `get_inputs()`.
+   - *Example:* If the baseline `get_inputs()` returns `[x, y]`, your method signature must be `forward(self, x, y)`.
+5. **Output:** The return value of `forward` must have the exact same shape and data type as the reference output.
+6. Use torch.utils.cpp_extension.load_inline to compile C++/CUDA source strings.
+7. Do not write any code except described above.
+8. Make code agnostic to device number, allocate output on the same GPU as the input (e.g. using `input.options()`).
+9. Start code with # Hypothesis: ... comment.
+
+{% if hardware_info %}
+**Target Hardware:**
+{{ hardware_info }}{% if compute_capability %} (Compute Capability: {{ compute_capability }}){% endif %}
+{% endif %}
+
+<reference>
+{{ reference_code }}
+</reference>
+
+Start the file with a single comment line: `# Hypothesis: <your plan>` — briefly describe which specific optimization technique you are applying and why you expect it to improve{% if last_code %} (fix compilation, fix correctness, or increase speedup){% else %} performance{% endif %}.
+
+{% if example_pre and example_after and not last_code %}
+Refer to the following example to see how to rewrite a PyTorch model to an Inline CUDA model.
+
+<example_pre>
+{{ example_pre }}
+</example_pre>
+
+<example_after>
+# Hypothesis: ...
+{{ example_after }}
+</example_after>
+{% endif %}
+
+{% if history %}
+**Previous attempts (oldest first):**
+{% for entry in history %}
+- Hypothesis: {{ entry.hypothesis or '(none)' }}
+  Result: {% if not entry.result.compiled %}Compilation failed: {{ (entry.result.compilation_error or '')[:1000] }}{% if entry.result.compilation_error and entry.result.compilation_error|length > 1000 %} ...{% endif %}{% elif not entry.result.valid %}Incorrect: {{ (entry.result.correctness_info or '')[:1000] }}{% if entry.result.correctness_info and entry.result.correctness_info|length > 1000 %} ...{% endif %}{% if entry.result.speedup is not none %} (speedup: {{ "%.2f"|format(entry.result.speedup) }}x){% endif %}{% elif entry.result.speedup is none %}Correct but performance measurement failed or timed out{{ (': ' ~ entry.result.performance_info) if entry.result.performance_info }}{% else %}Correct, speedup: {{ "%.2f"|format(entry.result.speedup) }}x{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if last_code %}
+**Last attempt:**
+<last_attempt>
+{{ last_code }}
+</last_attempt>
+
+**Result:**
+{% if not last_result.compiled %}
+Compilation failed:
+{{ (last_result.compilation_error or '')[:4000] }}{% if last_result.compilation_error and last_result.compilation_error|length > 4000 %} ... (truncated){% endif %}
+{% elif not last_result.valid %}
+Incorrect results:
+{{ (last_result.correctness_info or '')[:4000] }}{% if last_result.correctness_info and last_result.correctness_info|length > 4000 %} ... (truncated){% endif %}
+{% if last_result.speedup is not none %}
+Performance: {{ "%.2f"|format(last_result.speedup) }}x
+{% endif %}
+{% elif last_result.speedup is none %}
+Correct but performance measurement failed or timed out{{ (': ' ~ last_result.performance_info) if last_result.performance_info }}
+{% else %}
+Correct, speedup: {{ "%.2f"|format(last_result.speedup) }}x
+{% endif %}
+{% endif %}
+
+Now write the new version of the kernel.
+
+**IMPORTANT:** Begin your response with `# Hypothesis: <your plan>`.

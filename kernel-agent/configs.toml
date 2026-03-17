@@ -1,0 +1,25 @@
+[qwen3-coder-next]
+model_name  = "Qwen3-Coder-Next"
+base_url    = "http://localhost:8052/v1"
+api_key     = "EMPTY"
+
+[iterative]
+width       = 1
+height      = 5
+temperature = 0.7
+top_p       = 0.95
+beam_size   = 1
+
+[sampling]
+width       = 5
+height      = 1
+temperature = 0.7
+top_p       = 0.95
+beam_size   = 1
+
+[tree-search]
+width       = 5
+height      = 3
+temperature = 0.7
+top_p       = 0.95
+beam_size   = 3

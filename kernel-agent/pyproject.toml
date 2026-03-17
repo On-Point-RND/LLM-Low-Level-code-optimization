@@ -1,0 +1,85 @@
+[project]
+name = "kernel-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic-ai>=1.52.0",
+    "jinja2>=3.1.5",
+    "httpx>=0.28.1",
+    "pandas>=2.2.3",
+    "pyarrow>=19.0.0",
+    "torch",
+    "openai",
+    "requests",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.29.2",
+    "pre-commit>=4.2.0",
+    "ruff>=0.12.9",
+]
+
+
+[tool.ruff]
+line-length = 96
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = [
+    "E", # https://docs.astral.sh/ruff/rules/#error-e
+    "F", # https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "UP", # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "B", # https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "I", # https://docs.astral.sh/ruff/rules/#isort-i
+    "D", # https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "SIM", # https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+]
+ignore = [
+    "E501", # https://docs.astral.sh/ruff/rules/line-too-long/
+    "E402", # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
+    "E731", # https://docs.astral.sh/ruff/rules/lambda-assignment/
+    "EM102", # https://docs.astral.sh/ruff/rules/f-string-in-exception/
+    "W191", # https://docs.astral.sh/ruff/rules/tab-indentation/
+    "E111", # https://docs.astral.sh/ruff/rules/indentation-with-invalid-multiple/
+    "E114", # https://docs.astral.sh/ruff/rules/indentation-with-invalid-multiple-comment/
+    "E117", # https://docs.astral.sh/ruff/rules/over-indented/
+    "D100", # https://docs.astral.sh/ruff/rules/undocumented-public-module/
+    "D202", # https://docs.astral.sh/ruff/rules/blank-line-after-function/
+    "D203", # https://docs.astral.sh/ruff/rules/incorrect-blank-line-before-class/
+    "D204", # https://docs.astral.sh/ruff/rules/incorrect-blank-line-after-class/
+    "D206", # https://docs.astral.sh/ruff/rules/docstring-tab-indentation/
+    "D212", # https://docs.astral.sh/ruff/rules/multi-line-summary-second-line/
+    "D300", # https://docs.astral.sh/ruff/rules/triple-single-quotes/
+    "D400", # https://docs.astral.sh/ruff/rules/missing-trailing-period/
+    "D401", # https://docs.astral.sh/ruff/rules/non-imperative-mood/
+    "Q000", # https://docs.astral.sh/ruff/rules/bad-quotes-inline-string/
+    "Q001", # https://docs.astral.sh/ruff/rules/bad-quotes-multiline-string/
+    "Q002", # https://docs.astral.sh/ruff/rules/bad-quotes-docstring/
+    "Q003", # https://docs.astral.sh/ruff/rules/avoidable-escaped-quote/
+    "COM812", # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
+    "COM819", # https://docs.astral.sh/ruff/rules/prohibited-trailing-comma/
+    "ISC002", # https://docs.astral.sh/ruff/rules/multi-line-implicit-string-concatenation/
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.basedpyright]
+reportIgnoreCommentWithoutRule = false
+reportUnnecessaryTypeIgnoreComment = false
+reportAny = false
+reportExplicitAny = false
+reportMissingTypeStubs = false
+reportUnusedCallResult = false
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+reportUnknownLambdaType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportMissingParameterType = false
+reportMissingTypeArgument = false
