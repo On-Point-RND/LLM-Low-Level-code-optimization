@@ -52,7 +52,7 @@ Then pass `--search-method my-search` to `main.py`.
 python report.py --exp-id my-exp
 ```
 
-Prints per-category and per-model tables with `Comp@k`, `Pass@k`, `SU1@k` (geomean, speedup > 1×), `AvgSU@k`, and `MaxSU@k` for each iteration depth k.
+Prints per-category and per-model tables with `Comp@k`, `Pass@k`, `SU1@k` (speedup > 1× and valid), `AvgSU@k` (geomean), and `MaxSU@k` for each iteration depth k.
 
 ## Data directory
 
