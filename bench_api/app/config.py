@@ -5,10 +5,10 @@ from datetime import datetime
 
 BASE_DIR = Path(__file__).parent.parent
 MULTIKERNELBENCH_PATH = Path(
-    os.getenv("MULTIKERNELBENCH_PATH", str(BASE_DIR / "MultiKernelBench"))
+    os.getenv("MULTIKERNELBENCH_PATH", str(BASE_DIR.parent / "MultiKernelBench"))
 )
 KERNELBENCH_PATH = Path(
-    os.getenv("KERNELBENCH_PATH", str(BASE_DIR / "KernelBench/KernelBench"))
+    os.getenv("KERNELBENCH_PATH", str(BASE_DIR.parent / "KernelBench/KernelBench"))
 )
 BASELINES_DIR = Path(os.getenv("BASELINES_DIR", str(BASE_DIR / "baselines")))
 REFERENCE_DIR = Path(

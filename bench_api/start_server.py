@@ -49,7 +49,7 @@ def main():
         sys.exit(1)
 
     # Проверка наличия MultiKernelBench
-    if not os.path.exists("MultiKernelBench"):
+    if not os.path.exists("../MultiKernelBench"):
         print("Warning: MultiKernelBench not found")
         print("The API may not work correctly without MultiKernelBench")
 

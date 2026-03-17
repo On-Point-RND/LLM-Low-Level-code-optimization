@@ -636,14 +636,14 @@ async def main():
 
         print(f'[DEBUG] Discovering kernels from {args.dataset}...')
         if args.dataset == 'kernelbench':
-            base_path = Path('KernelBench/KernelBench')
+            base_path = Path('../KernelBench/KernelBench')
             # Discover all level* directories
             all_reference_files = []
             for level_dir in sorted(base_path.glob('level*')):
                 if level_dir.is_dir():
                     all_reference_files.extend(list(level_dir.glob('*.py')))
         else:
-            base_path = Path('MultiKernelBench/reference')
+            base_path = Path('../MultiKernelBench/reference')
             all_reference_files = list(base_path.glob('**/*.py'))
 
         reference_files = []
