@@ -33,9 +33,9 @@ Then pass `--model my-model` to `main.py`.
 
 ```toml
 [my-search]
-width       = 3    # candidates per node
-height      = 4    # tree depth (iterations)
-beam_size   = 2    # nodes kept between levels
+width       = 3    # expansion candidates per node
+height      = 4    # tree depth (refinement iterations)
+beam_size   = 2    # nodes kept between levels (greedy search only)
 temperature = 0.7
 top_p       = 0.95
 ```
@@ -52,4 +52,33 @@ Then pass `--search-method my-search` to `main.py`.
 python report.py --exp-id my-exp
 ```
 
-Prints per-category and per-model tables with `Comp@k`, `Pass@k`, `SU1@k` (speedup > 1×), `AvgSU@k`, and `MaxSU@k` for each iteration depth k.
+Prints per-category and per-model tables with `Comp@k`, `Pass@k`, `SU1@k` (geomean, speedup > 1×), `AvgSU@k`, and `MaxSU@k` for each iteration depth k.
+
+## Data directory
+
+```
+data/
+└── <exp-id>/
+    └── results.parquet
+```
+
+Each row is one generated candidate. Key columns:
+
+| Column | Description |
+|---|---|
+| `model_name` | Model identifier |
+| `search_method` | Search method name |
+| `iteration` | Depth index (0-based) |
+| `kernel_category` | Problem category (e.g. `level1`) |
+| `kernel_name` | Problem filename stem |
+| `dataset` | `kernelbench` or `multikernelbench` |
+| `compiled` | Whether the code compiled |
+| `correctness` | Whether output matches reference |
+| `speedup` | Speedup over reference (null if incorrect) |
+| `generated_code` | Full generated kernel source |
+| `reference_code` | Reference PyTorch implementation |
+| `hypothesis` | Model's stated optimization hypothesis |
+| `node_id` / `parent_node_id` | Tree node linkage |
+| `input_tokens` / `output_tokens` / `cached_tokens` | Token usage |
+| `generation_timing` | Generation time (s) |
+| `evaluation_timing_total` | Evaluation time (s) |
