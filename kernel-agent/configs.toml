@@ -3,6 +3,11 @@ model_name  = "Qwen3-Coder-Next"
 base_url    = "http://localhost:8052/v1"
 api_key     = "EMPTY"
 
+[gpt-oss-120b]
+model_name  = "openai/gpt-oss-120b"
+base_url    = "http://localhost:8000/v1"
+api_key     = "EMPTY"
+
 [iterative]
 width       = 1
 height      = 5

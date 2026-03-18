@@ -39,6 +39,8 @@ experiment_logs = []
 
 GEN_SEMAPHORE = asyncio.Semaphore(16)
 EVAL_SEMAPHORE = asyncio.Semaphore(8)
+KERNEL_SEMAPHORE = asyncio.Semaphore(1)
+SAVE_LOCK = asyncio.Lock()
 
 # Set to True at startup if vLLM supports n>1 sampling
 VLLM_SUPPORTS_N_SAMPLING: bool = False
@@ -599,6 +601,12 @@ async def main():
         help='Comma-separated list of kernel names to run (e.g. add,relu)',
     )
     parser.add_argument(
+        '--parallel-kernels',
+        type=int,
+        default=1,
+        help='Number of kernels to search in parallel (default: 1)',
+    )
+    parser.add_argument(
         '--categories',
         type=str,
         help='Comma-separated list of kernel categories/levels to run (e.g. level1,math)',
@@ -674,9 +682,17 @@ async def main():
 
         print(f'Found {len(reference_files)} kernels to process.')
         print('[DEBUG] Starting processing loop...')
-        global experiment_logs, VLLM_SUPPORTS_N_SAMPLING
+        global experiment_logs, VLLM_SUPPORTS_N_SAMPLING, GEN_SEMAPHORE, EVAL_SEMAPHORE, KERNEL_SEMAPHORE
         client = AsyncOpenAI(api_key=cfg['api_key'], base_url=VLLM_BASE_URL)
-        VLLM_SUPPORTS_N_SAMPLING = await probe_n_sampling(client, MODEL_NAME, n=search_cfg['width'])
+        VLLM_SUPPORTS_N_SAMPLING = (
+            await probe_n_sampling(client, MODEL_NAME, n=search_cfg['width'])
+            if search_cfg['width'] > 1 else True
+        )
+
+        pk = args.parallel_kernels
+        GEN_SEMAPHORE = asyncio.Semaphore(16 * pk)
+        EVAL_SEMAPHORE = asyncio.Semaphore(8 * pk)
+        KERNEL_SEMAPHORE = asyncio.Semaphore(pk)
 
         try:
             run_idx = 0
@@ -692,40 +708,52 @@ async def main():
                 except Exception as e:
                     print(f'Error reading existing log file {run_file}: {e}')
 
+            in_progress = set()
+
+            async def process_kernel(file_idx, target_path):
+                function_name = target_path.stem
+                async with KERNEL_SEMAPHORE:
+                    print(f'\n[{file_idx + 1}/{len(reference_files)}] {target_path} | Experiment {args.exp_id}')
+                    kernel_category = target_path.parent.name
+                    reference_code = target_path.read_text()
+                    await tree_search(
+                        client=client,
+                        model_name=MODEL_NAME,
+                        reference_code=reference_code,
+                        hardware_info=hardware_info,
+                        compute_capability=compute_capability,
+                        example_pre=example_pre,
+                        example_after=example_after,
+                        language='cuda',
+                        function_name=function_name,
+                        run_idx=run_idx,
+                        run_seed=GLOBAL_SEED,
+                        width=search_cfg['width'],
+                        height=search_cfg['height'],
+                        selector=GreedySelector(beam_size=search_cfg['beam_size']),
+                        kernel_category=kernel_category,
+                        dataset=args.dataset,
+                        search_method_name=args.search_method,
+                        temperature=search_cfg['temperature'],
+                        top_p=search_cfg['top_p'],
+                        httpx_client=httpx_client,
+                    )
+                async with SAVE_LOCK:
+                    save_logs(args.exp_id)
+
+            tasks = []
             for file_idx, target_path in enumerate(reference_files):
                 function_name = target_path.stem
-                if (function_name, args.search_method) in completed_tasks:
+                key = (function_name, args.search_method)
+                if key in completed_tasks or key in in_progress:
                     print(f'Skipping {function_name} / {args.search_method} - already completed.')
                     continue
+                in_progress.add(key)
+                tasks.append(process_kernel(file_idx, target_path))
 
-                print(f'\n[{file_idx + 1}/{len(reference_files)}] {target_path} | Experiment {args.exp_id}')
-                kernel_category = target_path.parent.name
-                reference_code = target_path.read_text()
-
-                await tree_search(
-                    client=client,
-                    model_name=MODEL_NAME,
-                    reference_code=reference_code,
-                    hardware_info=hardware_info,
-                    compute_capability=compute_capability,
-                    example_pre=example_pre,
-                    example_after=example_after,
-                    language='cuda',
-                    function_name=function_name,
-                    run_idx=run_idx,
-                    run_seed=GLOBAL_SEED,
-                    width=search_cfg['width'],
-                    height=search_cfg['height'],
-                    selector=GreedySelector(beam_size=search_cfg['beam_size']),
-                    kernel_category=kernel_category,
-                    dataset=args.dataset,
-                    search_method_name=args.search_method,
-                    temperature=search_cfg['temperature'],
-                    top_p=search_cfg['top_p'],
-                    httpx_client=httpx_client,
-                )
+            await asyncio.gather(*tasks)
+            async with SAVE_LOCK:
                 save_logs(args.exp_id)
-            save_logs(args.exp_id)
 
         except Exception as e:
             print(f'Error: {e}')
