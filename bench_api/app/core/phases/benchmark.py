@@ -14,7 +14,7 @@ from app.core.phases.common import (
 )
 from app.core.phases.results import BenchmarkResult
 from app.core.utils.performance import run_performance
-from app.core.phases.common import InfraError
+from app.core.phases.common import InfraError, raise_if_infra_error
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,7 @@ def _run_timed(
         logger.error(f"Performance measurement timed out: {e}")
         return None, str(e)
     except Exception as e:
+        raise_if_infra_error(e)
         logger.error(f"Performance measurement failed: {e}", exc_info=True)
         return None, str(e)
     finally:
@@ -92,6 +93,7 @@ def run_benchmark_phase(
         del model
         backend.clear_device_memory()
     except Exception as e:
+        raise_if_infra_error(e)
         logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
 
     compile_kernel(backend, function_code, function)

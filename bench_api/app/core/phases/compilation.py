@@ -7,6 +7,7 @@ from app.core.phases.common import (
     make_timing,
     compile_kernel,
     InfraError,
+    raise_if_infra_error,
 )
 from app.core.phases.results import CompilationResult
 
@@ -27,6 +28,7 @@ def run_compilation_phase(
     except InfraError:
         raise
     except Exception as e:
+        raise_if_infra_error(e)
         return CompilationResult(
             hardware=hardware,
             compiled=False,

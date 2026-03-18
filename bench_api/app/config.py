@@ -11,6 +11,7 @@ KERNELBENCH_PATH = Path(
     os.getenv("KERNELBENCH_PATH", str(BASE_DIR.parent / "KernelBench/KernelBench"))
 )
 BASELINES_DIR = Path(os.getenv("BASELINES_DIR", str(BASE_DIR / "baselines")))
+CUDA_BUILD_ROOT = Path(os.getenv("CUDA_BUILD_ROOT", "/tmp/bench_builds"))
 REFERENCE_DIR = Path(
     os.getenv("REFERENCE_DIR", str(MULTIKERNELBENCH_PATH / "reference"))
 )

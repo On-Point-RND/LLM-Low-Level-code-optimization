@@ -167,11 +167,8 @@ def main():
             "system_error": f"Evaluation failed: {e}\n{traceback.format_exc()}",
         }
     finally:
-        try:
-            if backend:
-                backend.cleanup()
-        except Exception:
-            pass
+        if backend:
+            backend.cleanup()
 
     _write(result)
 

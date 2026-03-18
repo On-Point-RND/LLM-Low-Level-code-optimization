@@ -5,9 +5,7 @@ from pathlib import Path
 from app.core.backends.base_backend import Backend
 from app.core.backends.backend_registry import register_backend
 from app.core.utils.build_log import compact_build_log
-from app.config import ARCH_LIST
-
-CUDA_BUILD_ROOT = Path("/tmp/bench_builds")
+from app.config import ARCH_LIST, CUDA_BUILD_ROOT
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +93,15 @@ class CudaBackend(Backend):
             )
             compiled_code = compile(generated_code, fake_fname, "exec")
             exec(compiled_code, self.context)
+        except OSError as e:
+            if e.errno in (12, 28):
+                raise
+            raw = f"{type(e).__name__}: {str(e)}"
+            return False, self.parse_compile_error(raw)
         except Exception as e:
+            import torch
+            if isinstance(e, torch.cuda.OutOfMemoryError):
+                raise
             raw = f"{type(e).__name__}: {str(e)}"
             return False, self.parse_compile_error(raw)
         finally:

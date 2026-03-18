@@ -8,6 +8,7 @@ from app.core.phases.common import (
     compile_kernel,
     load_reference_code,
     InfraError,
+    raise_if_infra_error,
 )
 from app.core.utils.correctness import run_correctness
 from app.core.phases.results import ValidationResult
@@ -43,6 +44,7 @@ def run_validation_phase(
     except InfraError:
         raise
     except Exception as e:
+        raise_if_infra_error(e)
         return ValidationResult(
             hardware=hardware,
             compiled=False,
@@ -62,6 +64,7 @@ def run_validation_phase(
     except InfraError:
         raise
     except Exception as e:
+        raise_if_infra_error(e)
         return ValidationResult(
             hardware=hardware,
             compiled=True,

@@ -11,6 +11,23 @@ class InfraError(Exception):
     pass
 
 
+_INFRA_ERRNOS = {
+    12,  # ENOMEM: Cannot allocate memory (system RAM exhausted)
+    28,  # ENOSPC: No space left on device
+}
+
+
+def raise_if_infra_error(e: Exception) -> None:
+    """Re-raise as InfraError if the exception is a system-level resource problem."""
+    import torch
+    if isinstance(e, torch.cuda.OutOfMemoryError):
+        raise InfraError(f"GPU out of memory: {e}") from e
+    if isinstance(e, OSError) and e.errno in _INFRA_ERRNOS:
+        raise InfraError(f"System resource error (errno {e.errno}): {e}") from e
+    if isinstance(e, RuntimeError) and "no kernel image is available for execution on the device" in str(e):
+        raise InfraError(f"CUDA arch mismatch (check TORCH_CUDA_ARCH_LIST): {e}") from e
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -99,7 +116,11 @@ def compile_kernel(backend, function_code: str, function: str) -> Tuple[bool, st
         backend.clear_device_memory()
     except Exception as e:
         raise InfraError(f"Failed to clear device memory: {e}") from e
-    compiled, compile_info = backend.compile(generated_code, function)
+    try:
+        compiled, compile_info = backend.compile(generated_code, function)
+    except Exception as e:
+        raise_if_infra_error(e)
+        return False, f"{type(e).__name__}: {e}"
     if not compiled:
         logger.debug(f"Compilation failed for {function}: {compile_info}")
         return False, compile_info or "Compilation failed"
