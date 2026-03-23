@@ -14,6 +14,7 @@ from pathlib import Path
 import httpx
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
+import openai
 from openai import AsyncOpenAI
 
 
@@ -48,13 +49,13 @@ VLLM_SUPPORTS_N_SAMPLING: bool = False
 
 async def probe_n_sampling(client: AsyncOpenAI, model_name: str, n: int = 5) -> bool:
     """Check whether the inference server actually returns n completions when asked."""
-    response = await client.chat.completions.create(
+    response = await _api_call_with_retry(lambda: client.chat.completions.create(
         model=model_name,
         messages=[{'role': 'user', 'content': 'Hi'}],
         max_tokens=1,
         n=n,
         temperature=1.0,
-    )
+    ))
     got = len(response.choices)
     print(f'[probe] Requested n={n}, got {got} completions — {"supported" if got >= n else "NOT supported, will use parallel n=1 requests"}')
     return got >= n
@@ -66,7 +67,7 @@ async def get_hardware_info(client: httpx.AsyncClient | None = None) -> dict:
     if client:
         response = await client.post(url, json=payload)
     else:
-        async with httpx.AsyncClient(timeout=1200.0) as new_client:
+        async with httpx.AsyncClient(timeout=4800.0) as new_client:
             response = await new_client.post(url, json=payload)
     response.raise_for_status()
     data = response.json()
@@ -85,10 +86,10 @@ async def evaluate_kernel(code: str, language: str, function_name: str, client: 
         'torch_compile_baseline': True,
     }
     if client:
-        response = await client.post(url, json=payload, timeout=1200.0)
+        response = await client.post(url, json=payload, timeout=4800.0)
     else:
-        async with httpx.AsyncClient(timeout=1200.0) as new_client:
-            response = await new_client.post(url, json=payload, timeout=1200.0)
+        async with httpx.AsyncClient(timeout=4800.0) as new_client:
+            response = await new_client.post(url, json=payload, timeout=4800.0)
     response.raise_for_status()
     return response.json()
 
@@ -198,6 +199,21 @@ def extract_code_from_response(response: str) -> str:
     return trimmed
 
 
+async def _api_call_with_retry(coro_fn, max_retries: int = 10, retry_delay: float = 5.0):
+    """Retry an OpenAI API call on connection errors with constant delay."""
+    for attempt in range(max_retries):
+        try:
+            response = await coro_fn()
+            if response is None or response.choices is None:
+                raise openai.APIConnectionError(request=None)
+            return response
+        except openai.APIConnectionError as e:
+            if attempt == max_retries - 1:
+                raise
+            print(f'[retry] Connection error (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay:.0f}s: {e}')
+            await asyncio.sleep(retry_delay)
+
+
 async def _generate_code(
     client: AsyncOpenAI,
     messages: list[dict],
@@ -212,7 +228,7 @@ async def _generate_code(
         # Fall back to parallel n=1 requests; vLLM batches them via continuous batching
         async def _single(i):
             async with GEN_SEMAPHORE:
-                return await client.chat.completions.create(
+                return await _api_call_with_retry(lambda: client.chat.completions.create(
                     model=model_name,
                     messages=messages,
                     temperature=temperature,
@@ -221,7 +237,7 @@ async def _generate_code(
                     max_tokens=16384,
                     n=1,
                     extra_body=extra_body,
-                )
+                ))
         responses = await asyncio.gather(*[_single(i) for i in range(n)])
         raw_responses = [r.choices[0].message.content for r in responses]
         codes = [extract_code_from_response(r) for r in raw_responses]
@@ -230,7 +246,7 @@ async def _generate_code(
     for _ in range(n):
         await GEN_SEMAPHORE.acquire()
     try:
-        response = await client.chat.completions.create(
+        response = await _api_call_with_retry(lambda: client.chat.completions.create(
             model=model_name,
             messages=messages,
             temperature=temperature,
@@ -239,7 +255,7 @@ async def _generate_code(
             max_tokens=16384,
             n=n,
             extra_body=extra_body,
-        )
+        ))
     finally:
         for _ in range(n):
             GEN_SEMAPHORE.release()
@@ -629,7 +645,7 @@ async def main():
     example_after_path = Path('examples/cuda_new_model_add.py')
     example_after = example_after_path.read_text()
 
-    async with httpx.AsyncClient(timeout=1200.0) as httpx_client:
+    async with httpx.AsyncClient(timeout=4800.0) as httpx_client:
         print('[DEBUG] Getting hardware info...')
         hw_data = await get_hardware_info(client=httpx_client)
         hardware_info = hw_data['hardware']

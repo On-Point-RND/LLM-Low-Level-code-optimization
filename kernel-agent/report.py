@@ -71,41 +71,42 @@ def generate_report(exp_id):
             # --- Aggregation Logic ---
             # Group by Category
             cat_stats = []
-            categories = sorted(current_df['kernel_category'].unique())
+            categories = sorted(method_df['kernel_category'].unique())
 
             for cat in categories:
                 cat_kernels = current_df[current_df['kernel_category'] == cat]
-                unique_kernels = cat_kernels['kernel_name'].unique()
+                # Fix denominator to full kernel set across all iterations
+                unique_kernels = method_df[method_df['kernel_category'] == cat]['kernel_name'].unique()
                 total = len(unique_kernels)
 
                 comp_count = 0
                 pass_count = 0
                 su_count = 0
-                passing_at_k_speedups = []
+                all_best_speedups = []
 
                 for kernel in unique_kernels:
                     k_df = cat_kernels[cat_kernels['kernel_name'] == kernel]
-                    
+
                     # Cumulative stats
                     if k_df['compiled'].any():
                         comp_count += 1
-                    
+
                     if (k_df['correctness'] == True).any():
                         pass_count += 1
-                    
+
                     if (k_df['correctness'] & (k_df['speedup'] > 1.0)).any():
                         su_count += 1
 
-                    # Speedup for SPECIFIC iteration k
-                    iter_k_df = k_df[k_df['iteration'] == iter_idx]
-                    correct_at_k = iter_k_df[iter_k_df['correctness'] == True]
+                    # Best speedup over iterations 0..k;
+                    # exclude non-passing kernels and kernels with no speedup measurement
+                    correct_at_k = k_df[k_df['correctness'] == True]
                     if not correct_at_k.empty:
-                        passing_at_k_speedups.append(correct_at_k['speedup'].max())
+                        best = correct_at_k['speedup'].max()
+                        if best > 0:
+                            all_best_speedups.append(best)
 
-                # Only include positive speedups for geometric mean
-                positive_speedups = [s for s in passing_at_k_speedups if s > 0]
-                avg_su = statistics.geometric_mean(positive_speedups) if positive_speedups else 0.0
-                max_su = max(passing_at_k_speedups) if passing_at_k_speedups else 0.0
+                avg_su = statistics.geometric_mean(all_best_speedups) if all_best_speedups else 1.0
+                max_su = max(all_best_speedups) if all_best_speedups else 1.0
 
                 cat_stats.append(
                     [
@@ -125,64 +126,6 @@ def generate_report(exp_id):
                 cat_stats,
             )
 
-            # Group by Model
-            model_stats = []
-            models = sorted(current_df['model_name'].unique())
-
-            for model in models:
-                model_kernels = current_df[current_df['model_name'] == model]
-                unique_kernels = model_kernels['kernel_name'].unique()
-                total = len(unique_kernels)
-
-                comp_count = 0
-                pass_count = 0
-                su_count = 0
-                passing_at_k_speedups = []
-
-                for kernel in unique_kernels:
-                    k_df = model_kernels[model_kernels['kernel_name'] == kernel]
-                    
-                    # Cumulative stats
-                    if k_df['compiled'].any():
-                        comp_count += 1
-                    
-                    if (k_df['correctness'] == True).any():
-                        pass_count += 1
-                    
-                    if (k_df['correctness'] & (k_df['speedup'] > 1.0)).any():
-                        su_count += 1
-
-                    # Speedup for SPECIFIC iteration k
-                    iter_k_df = k_df[k_df['iteration'] == iter_idx]
-                    correct_at_k = iter_k_df[iter_k_df['correctness'] == True]
-                    if not correct_at_k.empty:
-                        passing_at_k_speedups.append(correct_at_k['speedup'].max())
-
-                # Only include positive speedups for geometric mean
-                positive_speedups = [s for s in passing_at_k_speedups if s > 0]
-                avg_su = statistics.geometric_mean(positive_speedups) if positive_speedups else 0.0
-                max_su = max(passing_at_k_speedups) if passing_at_k_speedups else 0.0
-
-                # Shorten model name for display if too long
-                display_name = (model[:15] + '..') if len(model) > 17 else model
-
-                model_stats.append(
-                    [
-                        display_name,
-                        total,
-                        f'{comp_count / total * 100:.2f}%',
-                        f'{pass_count / total * 100:.2f}%',
-                        f'{su_count / total * 100:.2f}%',
-                        f'{avg_su:.2f}x',
-                        f'{max_su:.2f}x',
-                    ]
-                )
-
-            print_table(
-                'Сводная статистика по моделям:',
-                ['Model', 'Total', f'Comp@{k}', f'Pass@{k}', f'SU1@{k}', f'AvgSU@{k}', f'MaxSU@{k}'],
-                model_stats,
-            )
 
 
 if __name__ == '__main__':
