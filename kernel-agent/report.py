@@ -105,8 +105,8 @@ def generate_report(exp_id):
                         if best > 1.0:
                             all_best_speedups.append(best)
 
-                avg_su = statistics.geometric_mean(all_best_speedups) if all_best_speedups else 1.0
-                max_su = max(all_best_speedups) if all_best_speedups else 1.0
+                avg_su = f'{statistics.geometric_mean(all_best_speedups):.2f}x' if all_best_speedups else 'N/A'
+                max_su = f'{max(all_best_speedups):.2f}x' if all_best_speedups else 'N/A'
 
                 cat_stats.append(
                     [
@@ -115,8 +115,8 @@ def generate_report(exp_id):
                         f'{comp_count / total * 100:.2f}%',
                         f'{pass_count / total * 100:.2f}%',
                         f'{su_count / total * 100:.2f}%',
-                        f'{avg_su:.2f}x',
-                        f'{max_su:.2f}x',
+                        avg_su,
+                        max_su,
                     ]
                 )
 
