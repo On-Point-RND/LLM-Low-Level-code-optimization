@@ -102,7 +102,7 @@ def generate_report(exp_id):
                     correct_at_k = k_df[k_df['correctness'] == True]
                     if not correct_at_k.empty:
                         best = correct_at_k['speedup'].max()
-                        if best > 0:
+                        if best > 1.0:
                             all_best_speedups.append(best)
 
                 avg_su = statistics.geometric_mean(all_best_speedups) if all_best_speedups else 1.0
