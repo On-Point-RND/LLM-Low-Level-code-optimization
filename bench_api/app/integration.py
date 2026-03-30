@@ -32,13 +32,18 @@ def _register_bench_dir(bench_dir: Path) -> int:
             continue
         for file in sorted(category_dir.glob("*.py")):
             func_name = file.stem
-            if func_name not in _dataset:
-                _dataset[func_name] = {
-                    "category": category_dir.name,
-                    "ref_path": str(file),
-                    "bench_dir": str(bench_dir),
-                }
-                count += 1
+            if func_name in _dataset:
+                existing = _dataset[func_name]["ref_path"]
+                raise RuntimeError(
+                    f"Function name collision: '{func_name}' defined in both "
+                    f"'{existing}' and '{file}'"
+                )
+            _dataset[func_name] = {
+                "category": category_dir.name,
+                "ref_path": str(file),
+                "bench_dir": str(bench_dir),
+            }
+            count += 1
 
     return count
 
