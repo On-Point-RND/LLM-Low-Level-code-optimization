@@ -81,3 +81,21 @@ DEVICE_IDS: list[int] = [
 BACKENDS: list[str] = [
     x.strip() for x in os.getenv("BACKENDS", "cuda").split(",") if x.strip()
 ]
+
+# Comma-separated list of benchmark directories to load at startup.
+# Each dir should contain category subdirs with .py reference files, either:
+#   - directly: {bench_dir}/{category}/{func}.py  (KernelBench-style)
+#   - or under reference/: {bench_dir}/reference/{category}/{func}.py  (MultiKernelBench-style)
+# Defaults to MultiKernelBench and KernelBench paths if not set.
+_default_bench_dirs = ",".join(
+    str(p)
+    for p in [
+        BASE_DIR.parent / "MultiKernelBench",
+        BASE_DIR.parent / "KernelBench" / "KernelBench",
+    ]
+)
+BENCH_DIRS: list[Path] = [
+    Path(p.strip())
+    for p in os.getenv("BENCH_DIRS", _default_bench_dirs).split(",")
+    if p.strip()
+]

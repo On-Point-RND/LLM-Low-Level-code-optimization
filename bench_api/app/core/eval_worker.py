@@ -66,9 +66,9 @@ def main():
     params = json.loads(sys.stdin.read())
     mode = params.get("mode", "validation")
 
-    from app.integration import register_kernelbench_dataset
+    from app.integration import register_all_bench_dirs
 
-    register_kernelbench_dataset()
+    register_all_bench_dirs()
 
     from app.core.backends.backend_registry import get_backend
 

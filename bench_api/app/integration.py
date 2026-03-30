@@ -1,85 +1,78 @@
-import sys
+import logging
+from pathlib import Path
 from typing import Optional
 
-from app.config import MULTIKERNELBENCH_PATH, KERNELBENCH_PATH, REFERENCE_DIR
+from app.config import BENCH_DIRS
+
+logger = logging.getLogger(__name__)
+
+# Unified dataset: func_name -> {"category": str, "ref_path": str, "bench_dir": str}
+_dataset: dict[str, dict] = {}
+_dataset_loaded = False
 
 
-def register_kernelbench_dataset():
-    """
-    Scans KernelBench directory and adds functions to the shared dataset.
-    """
-    if str(MULTIKERNELBENCH_PATH) not in sys.path:
-        sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
+def _get_reference_root(bench_dir: Path) -> Path:
+    """Return the root that contains category subdirs for a bench dir."""
+    reference_subdir = bench_dir / "reference"
+    if reference_subdir.is_dir():
+        return reference_subdir
+    return bench_dir
 
-    try:
-        from dataset import dataset
-    except ImportError:
-        print("[WARNING] Could not import dataset from MultiKernelBench")
-        return
 
-    # Scan KernelBench
-    if not KERNELBENCH_PATH.exists():
-        print(f"[WARNING] KernelBench path does not exist: {KERNELBENCH_PATH}")
-        return
+def _register_bench_dir(bench_dir: Path) -> int:
+    """Scan a benchmark directory and register all functions into _dataset."""
+    if not bench_dir.exists():
+        logger.warning(f"Bench dir does not exist, skipping: {bench_dir}")
+        return 0
 
+    ref_root = _get_reference_root(bench_dir)
     count = 0
-    # KernelBench has level1, level2, level3, level4
-    for level in ["level1", "level2", "level3", "level4"]:
-        level_path = KERNELBENCH_PATH / level
-        if not level_path.exists():
+    for category_dir in sorted(ref_root.iterdir()):
+        if not category_dir.is_dir():
             continue
-
-        for file in level_path.glob("*.py"):
+        for file in sorted(category_dir.glob("*.py")):
             func_name = file.stem
-            # Register in dataset if not already present
-            if func_name not in dataset:
-                dataset[func_name] = {"category": level, "source": "KernelBench"}
+            if func_name not in _dataset:
+                _dataset[func_name] = {
+                    "category": category_dir.name,
+                    "ref_path": str(file),
+                    "bench_dir": str(bench_dir),
+                }
                 count += 1
 
-    print(f"[INFO] Registered {count} functions from KernelBench")
+    return count
 
 
-def get_dataset():
-    """
-    Returns the unified dataset containing both MultiKernelBench and KernelBench tasks.
-    """
-    if str(MULTIKERNELBENCH_PATH) not in sys.path:
-        sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
+def _ensure_loaded():
+    global _dataset_loaded
+    if _dataset_loaded:
+        return
+    _dataset_loaded = True
 
-    try:
-        from dataset import dataset
+    for bench_dir in BENCH_DIRS:
+        count = _register_bench_dir(bench_dir)
+        logger.info(f"Registered {count} functions from {bench_dir}")
 
-        # Ensure KernelBench is registered
-        if not any(info.get("source") == "KernelBench" for info in dataset.values()):
-            register_kernelbench_dataset()
-        return dataset
-    except ImportError:
-        print("[WARNING] Could not import dataset from MultiKernelBench")
-        return {}
+
+def register_all_bench_dirs():
+    """Load all benchmark directories listed in BENCH_DIRS."""
+    global _dataset_loaded
+    _dataset_loaded = False  # force reload
+    _dataset.clear()
+    _ensure_loaded()
+
+
+def get_dataset() -> dict:
+    _ensure_loaded()
+    return _dataset
 
 
 def get_reference_path(function: str) -> Optional[str]:
-    """
-    Resolves the path to the reference implementation of a function.
-    Checks dataset source to determine whether to look in MultiKernelBench or KernelBench.
-    """
-    if str(MULTIKERNELBENCH_PATH) not in sys.path:
-        sys.path.insert(0, str(MULTIKERNELBENCH_PATH))
-
-    try:
-        from dataset import dataset
-    except ImportError:
+    _ensure_loaded()
+    info = _dataset.get(function)
+    if info is None:
         return None
-
-    if function not in dataset:
-        return None
-
-    info = dataset[function]
-    category = info["category"]
-
-    if info.get("source") == "KernelBench":
-        path = KERNELBENCH_PATH / category / f"{function}.py"
-    else:
-        path = REFERENCE_DIR / category / f"{function}.py"
-
-    return str(path) if path.exists() else None
+    ref_path = info.get("ref_path")
+    if ref_path and Path(ref_path).exists():
+        return ref_path
+    return None

@@ -25,7 +25,7 @@ from app.services.evaluation_service import (
 from app.services.help_service import get_help_info
 from app.services.mlflow_service import log_baseline_result
 from app.services.device_pool import DevicePool
-from app.integration import register_kernelbench_dataset
+from app.integration import register_all_bench_dirs
 from app.core.backends.backend_registry import get_backend, setup_server_env
 from app.config import DEVICE_IDS, BACKENDS
 
@@ -44,7 +44,7 @@ _device_pool: DevicePool = None
 async def startup_event():
     global _device_pool
 
-    register_kernelbench_dataset()
+    register_all_bench_dirs()
 
     workspace_tmp = os.getenv("WORKSPACE_TMP", "/workspace/tmp")
     os.makedirs(workspace_tmp, exist_ok=True)
