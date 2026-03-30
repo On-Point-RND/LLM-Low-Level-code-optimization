@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Скрипт для запуска MultiKernelBench API сервиса
+# Скрипт для запуска KernelBench API сервиса
 
 set -e
 
@@ -16,9 +16,10 @@ PORT=${PORT:-"8123"}
 WORKERS=${WORKERS:-"1"}
 RELOAD=${RELOAD:-"false"}
 LOG_LEVEL=${LOG_LEVEL:-"debug"}
+export DEVICE_IDS="0"
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}MultiKernelBench API Server${NC}"
+echo -e "${GREEN}KernelBench API Server${NC}"
 echo -e "${GREEN}========================================${NC}"
 
 # Параметры запуска
@@ -44,10 +45,11 @@ echo "  Log Level: $LOG_LEVEL"
 WORKSPACE_TMP=${WORKSPACE_TMP:-"/workspace/tmp"}
 mkdir -p "$WORKSPACE_TMP"
 mkdir -p "$WORKSPACE_TMP/cuda_cache"
+export CUDA_BUILD_ROOT="$WORKSPACE_TMP"
+export CUDA_CACHE_PATH="$WORKSPACE_TMP/cuda_cache"
 export TMPDIR="$WORKSPACE_TMP"
 export TMP="$WORKSPACE_TMP"
 export TEMP="$WORKSPACE_TMP"
-export CUDA_CACHE_PATH="$WORKSPACE_TMP/cuda_cache"
 
 echo "Environment:"
 echo "  TMPDIR: $TMPDIR"
@@ -57,4 +59,3 @@ echo ""
 
 # Запуск сервера
 exec python3 -m uvicorn $UVICORN_ARGS
-
