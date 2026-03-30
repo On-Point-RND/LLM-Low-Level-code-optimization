@@ -601,7 +601,6 @@ async def main():
     parser.add_argument(
         '--dataset',
         type=str,
-        choices=['kernelbench', 'multikernelbench'],
         default='kernelbench',
         help='Dataset to use (default: kernelbench)',
     )
@@ -666,8 +665,11 @@ async def main():
             for level_dir in sorted(base_path.glob('level*')):
                 if level_dir.is_dir():
                     all_reference_files.extend(list(level_dir.glob('*.py')))
-        else:
+        elif args.dataset == 'multikernelbench':
             base_path = Path('../MultiKernelBench/reference')
+            all_reference_files = list(base_path.glob('**/*.py'))
+        else:
+            base_path = Path(args.dataset)
             all_reference_files = list(base_path.glob('**/*.py'))
 
         reference_files = []
