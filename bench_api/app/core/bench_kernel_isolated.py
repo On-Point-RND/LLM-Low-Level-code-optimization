@@ -67,7 +67,7 @@ def _run_subprocess(
 
         stderr = proc.stderr.read().strip() if proc.stderr else ""
         return _error(
-            f"Worker produced no output (exit={proc.returncode}): {stderr[:1000]}"
+            f"Worker produced no output (exit={proc.returncode}): {stderr[-2000:]}"
         )
 
     except Exception as e:

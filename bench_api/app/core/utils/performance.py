@@ -61,12 +61,16 @@ def run_performance(
             model(*inputs)
             try:
                 backend.synchronize()
+            except TimeoutError:
+                raise
             except Exception as e:
                 raise InfraError(f"Sync failed during warmup: {e}") from e
 
         try:
             backend.synchronize()
             backend.clear_device_memory()
+        except TimeoutError:
+            raise
         except Exception as e:
             raise InfraError(f"Sync failed before timed trials: {e}") from e
 
