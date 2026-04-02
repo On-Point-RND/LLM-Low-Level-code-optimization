@@ -62,7 +62,7 @@ async def probe_n_sampling(client: AsyncOpenAI, model_name: str, n: int = 5) -> 
 
 
 async def get_hardware_info(client: httpx.AsyncClient | None = None) -> dict:
-    url = 'http://localhost:8123/baseline'
+    url = os.getenv('BENCHAPI_URL', 'http://localhost:8123') + '/baseline'
     payload = {'language': 'cuda', 'function': 'relu'}
     if client:
         response = await client.post(url, json=payload)
@@ -78,7 +78,7 @@ async def get_hardware_info(client: httpx.AsyncClient | None = None) -> dict:
 
 
 async def evaluate_kernel(code: str, language: str, function_name: str, client: httpx.AsyncClient | None = None) -> dict:
-    url = 'http://localhost:8123/evaluate'
+    url = os.getenv('BENCHAPI_URL', 'http://localhost:8123') + '/evaluate'
     payload = {
         'language': language,
         'function': function_name,
