@@ -46,7 +46,7 @@ from pathlib import Path
 import torch
 
 ROOT      = Path(__file__).resolve().parent.parent
-TASKS_DIR = ROOT / "ScientificKernelBench"
+TASKS_DIR = ROOT / "ScientificKernelBenchFunctional"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
