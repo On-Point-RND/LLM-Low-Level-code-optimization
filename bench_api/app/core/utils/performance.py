@@ -25,9 +25,10 @@ def run_performance(
     actual_warmup = num_warmup if num_warmup is not None else config.NUM_WARMUP
 
     context = backend.context
+    device = backend.get_device()
 
+    # Infra: no user code has run yet, all failures are our fault
     try:
-        device = backend.get_device()
         init_inputs = [
             x.to(device) if isinstance(x, torch.Tensor) else x
             for x in context["get_init_inputs"]()
@@ -35,10 +36,12 @@ def run_performance(
     except TimeoutError:
         raise
     except Exception as e:
-        raise InfraError(f"Failed to prepare inputs: {e}") from e
+        raise InfraError(f"Failed to prepare init inputs: {e}") from e
 
     with torch.no_grad():
+        # User code: model instantiation, then sync immediately to flush deferred errors
         model = context[eval_target](*init_inputs).to(device)
+        backend.synchronize()
 
         if torch_compile:
             try:
@@ -49,6 +52,7 @@ def run_performance(
         torch.manual_seed(config.SEED_NUM)
 
         for _ in range(actual_warmup):
+            # Infra: previous user code was fully synced, failures here are our fault
             try:
                 inputs = [
                     x.to(device) if isinstance(x, torch.Tensor) else x
@@ -58,24 +62,14 @@ def run_performance(
                 raise
             except Exception as e:
                 raise InfraError(f"Failed to prepare inputs: {e}") from e
-            model(*inputs)
-            try:
-                backend.synchronize()
-            except TimeoutError:
-                raise
-            except Exception as e:
-                raise InfraError(f"Sync failed during warmup: {e}") from e
 
-        try:
+            # User code: forward pass, then sync immediately
+            model(*inputs)
             backend.synchronize()
-            backend.clear_device_memory()
-        except TimeoutError:
-            raise
-        except Exception as e:
-            raise InfraError(f"Sync failed before timed trials: {e}") from e
 
         elapsed = []
         for _ in range(actual_trials):
+            # Infra: previous user code was fully synced (via elapsed_ms), our fault
             try:
                 inputs = [
                     x.to(device) if isinstance(x, torch.Tensor) else x
@@ -85,5 +79,8 @@ def run_performance(
                 raise
             except Exception as e:
                 raise InfraError(f"Failed to prepare inputs: {e}") from e
+
+            # User code: elapsed_ms records events, runs model, then syncs internally
             elapsed.append(backend.elapsed_ms(lambda: model(*inputs)))
+
         return elapsed
