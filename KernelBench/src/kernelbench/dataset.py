@@ -19,7 +19,7 @@ REPO_TOP_PATH = os.path.abspath(
         "../..",
     )
 )
-KERNEL_BENCH_PATH = os.path.join(REPO_TOP_PATH, "KernelBench")
+KERNEL_BENCH_PATH = os.path.join(REPO_TOP_PATH, "ScientificKernelBench")
 
 
 ################################################################################
