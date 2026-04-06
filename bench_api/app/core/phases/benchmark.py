@@ -97,7 +97,6 @@ def run_benchmark_phase(
         logger.warning(f"[Benchmark] Failed to load reference code for {function}: {e}")
 
     compile_kernel(backend, function_code, function)
-    backend.clear_device_memory()
     t0 = time.time()
 
     actual_num_trials = (
@@ -119,8 +118,6 @@ def run_benchmark_phase(
         torch_compile,
     )
     perf_time = time.time() - t
-
-    backend.clear_device_memory()
 
     return BenchmarkResult(
         hardware=hardware,
