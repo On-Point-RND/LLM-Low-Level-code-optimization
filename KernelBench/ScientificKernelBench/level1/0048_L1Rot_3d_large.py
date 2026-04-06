@@ -64,7 +64,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             jacobian = _jac(u, x)
-            rotation = torch.zeros((*(jacobian.shape[:-2]), 3))
+            rotation = torch.zeros((*(jacobian.shape[:-2]), 3), device=u.device)
             rotation[..., 0] = jacobian[..., 2, 1] - jacobian[..., 1, 2]
             rotation[..., 1] = jacobian[..., 0, 2] - jacobian[..., 2, 0]
             rotation[..., 2] = jacobian[..., 1, 0] - jacobian[..., 0, 1]
