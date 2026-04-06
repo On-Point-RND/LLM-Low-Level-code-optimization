@@ -35,7 +35,7 @@ REPO_TOP_PATH = os.path.abspath(
         "..",
     )
 )
-KERNEL_BENCH_PATH = os.path.join(REPO_TOP_PATH, "KernelBench")
+KERNEL_BENCH_PATH = os.path.join(REPO_TOP_PATH, "ScientificKernelBench")
 
 TIMING_DIR = os.path.join(REPO_TOP_PATH, "results", "timing")
 
@@ -54,7 +54,7 @@ def record_baseline_times(use_torch_compile: bool = False,
     device = torch.device("cuda:0")
     json_results = {}
     
-    for level in [1, 2, 3]:
+    for level in [1]: #, 2, 3
         dataset = construct_kernelbench_dataset(level)
         json_results[f"level{level}"] = {}
 
