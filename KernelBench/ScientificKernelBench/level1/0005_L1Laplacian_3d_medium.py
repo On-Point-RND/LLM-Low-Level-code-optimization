@@ -11,6 +11,20 @@
 import torch
 import torch.nn as nn
 
+def _laplacian(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    """\Delta u w.r.t. x via autograd (mirrors tp.utils.laplacian)."""
+    laplacian = torch.zeros((*u.shape[:-1], 1), device=u.device)
+    for vari in [x]:
+        g = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
+        if g.grad_fn is None:
+            continue
+        for i in range(vari.shape[-1]):
+            D2u = torch.autograd.grad(
+                g.narrow(-1, i, 1).sum(), vari, create_graph=True
+            )[0]
+            laplacian += D2u.narrow(-1, i, 1)
+    return laplacian
+
 
 class Model(nn.Module):
     """
@@ -49,17 +63,7 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
             # tp.laplacian (differentialoperators.py:11) 
-            laplacian = torch.zeros((*u.shape[:-1], 1), device=u.device)
-            for vari in [x]:
-                g = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
-                if g.grad_fn is None:
-                    continue
-                for i in range(vari.shape[-1]):
-                    D2u = torch.autograd.grad(
-                        g.narrow(-1, i, 1).sum(), vari, create_graph=True
-                    )[0]
-                    laplacian += D2u.narrow(-1, i, 1)
-            return laplacian           
+            return _laplacian(u, x)     
 
 
 def make_torchphysics_ref(model: Model):

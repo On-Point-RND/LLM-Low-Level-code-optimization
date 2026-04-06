@@ -58,7 +58,7 @@ class Model(nn.Module):
                 if du.grad_fn is None:
                     return torch.zeros_like(inp)
                 du = torch.autograd.grad(du.sum(), inp, create_graph=True)[0]
-            return du       
+            return du    
 
 
 def make_torchphysics_ref(model: Model):

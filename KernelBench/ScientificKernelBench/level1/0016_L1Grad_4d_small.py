@@ -11,6 +11,13 @@
 import torch
 import torch.nn as nn
 
+def _grad(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    grads = []
+    for vari in [x]:
+        new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
+        grads.append(new_grad)
+    return torch.column_stack(grads)
+
 
 class Model(nn.Module):
     """
@@ -49,11 +56,7 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
             #  tp.grad (differentialoperators.py:47) 
-            grads = []
-            for vari in [x]:
-                new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
-                grads.append(new_grad)
-            return torch.column_stack(grads)
+            return _grad(u, x)
 
 
 def make_torchphysics_ref(model: Model):

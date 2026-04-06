@@ -12,6 +12,19 @@ import torch
 import torch.nn as nn
 
 
+def _jac(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    Du_rows = []
+    for i in range(u.shape[1]):
+        Du_i = []
+        for vari in [x]:
+            Du_i.append(
+                torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
+            )
+        Du_rows.append(torch.cat(Du_i, dim=-1))
+    Du = torch.stack(Du_rows, dim=-2)
+    return Du
+
+
 class Model(nn.Module):
     """
     Rotation / curl \nabla 	imes u of a 3-dimensional vector field  (given by a network output) with respect to 
@@ -50,22 +63,13 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            jacobian = torch.stack(Du_rows, dim=-2)
-
+            jacobian = _jac(u, x)
             rotation = torch.zeros((*(jacobian.shape[:-2]), 3))
             rotation[..., 0] = jacobian[..., 2, 1] - jacobian[..., 1, 2]
             rotation[..., 1] = jacobian[..., 0, 2] - jacobian[..., 2, 0]
             rotation[..., 2] = jacobian[..., 1, 0] - jacobian[..., 0, 1]
             return rotation
-
+          
 
 def make_torchphysics_ref(model: Model):
     """Return an nn.Module that computes \nabla	imes u via torchphysics (3D)."""

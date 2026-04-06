@@ -12,6 +12,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+def _grad(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    grads = []
+    for vari in [x]:
+        new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
+        grads.append(new_grad)
+    return torch.column_stack(grads)
+
 
 class Model(nn.Module):
     """
@@ -53,14 +60,10 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
             # tp.normal_derivative (differentialoperators.py:111) which calls tp.grad
-            grads = []
-            for vari in [x]:
-                new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
-                grads.append(new_grad)
-            gradient = torch.column_stack(grads)
+            gradient = _grad(u, x)
             normal_derivatives = gradient * normals
             return normal_derivatives.sum(dim=-1, keepdim=True)
-        
+
 
 def make_torchphysics_ref(model: Model):
     """Return an nn.Module that computes \partial u/\partial n via torchphysics (4D)."""

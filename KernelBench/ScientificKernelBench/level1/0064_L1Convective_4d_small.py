@@ -12,6 +12,20 @@ import torch
 import torch.nn as nn
 
 
+
+def _jac(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    Du_rows = []
+    for i in range(u.shape[1]):
+        Du_i = []
+        for vari in [x]:
+            Du_i.append(
+                torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
+            )
+        Du_rows.append(torch.cat(Du_i, dim=-1))
+    Du = torch.stack(Du_rows, dim=-2)
+    return Du
+
+
 class Model(nn.Module):
     """
     Convective term :math:`(v \cdot \nabla)u` that appears e.g. in material derivatives via autograd (4D).
@@ -50,15 +64,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.partial (differentialoperators.py:320) 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            jac_x = torch.stack(Du_rows, dim=-2)           
+            jac_x = _jac(u, x)          
             return torch.bmm(jac_x, v.unsqueeze(dim=2)).squeeze(dim=2) 
 
 

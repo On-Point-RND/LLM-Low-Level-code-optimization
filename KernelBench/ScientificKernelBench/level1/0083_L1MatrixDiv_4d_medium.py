@@ -12,6 +12,19 @@ import torch
 import torch.nn as nn
 
 
+def _div(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
+    var_dim = 0
+    for vari in [x]:
+        for i in range(vari.shape[-1]):
+            Du = torch.autograd.grad(
+                u.narrow(-1, var_dim + i, 1).sum(), vari, create_graph=True
+            )[0]
+            divergence = divergence + Du.narrow(-1, i, 1)
+        var_dim += i + 1
+    return divergence
+
+
 class Model(nn.Module):
     """
     Matrix divergence  \nabla \cdot \sigma  via autograd (4D).
@@ -51,36 +64,13 @@ class Model(nn.Module):
             sigma = self.net(x).view(-1, 4, 4)
 
             # tp.partial (differentialoperators.py:365) 
-            '''
-            div_out = torch.zeros(x.shape[0], 4, device=x.device, dtype=x.dtype)
-            for i in range(4):
-                for j in range(4):
-                    g = torch.autograd.grad(
-                        sigma[:, i, j].sum(), x, create_graph=True
-                    )[0]
-                    div_out[:, i] = div_out[:, i] + g[:, j]
-            return div_out
-            '''
-
             div_out = torch.zeros((len(sigma), sigma.shape[1]), device=sigma.device)
             for i in range(sigma.shape[1]):
                 # compute divergence of matrix by computing the divergence
                 # for each row
                 current_row = sigma.narrow(1, i, 1).squeeze(1)
-
-                # tp.div (differentialoperators.py:137) 
-                divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
-                var_dim = 0
-                for vari in [x]:
-                    for j in range(vari.shape[-1]):
-                        Du = torch.autograd.grad(
-                            current_row.narrow(-1, var_dim + j, 1).sum(), vari, create_graph=True
-                        )[0]
-                        divergence = divergence + Du.narrow(-1, j, 1)
-                    var_dim += j + 1
-
-                div_out[:, i : i + 1] = divergence    
-            return div_out            
+                div_out[:, i : i + 1] = _div(current_row, x)  
+            return div_out         
 
 
 def make_torchphysics_ref(model: Model):

@@ -6,10 +6,10 @@ Generates Level-1 benchmark tasks that each isolate **one** torchphysics
 differential operator primitive.
 
 Tasks are written to:
-  tasks/sci_bench_torchphysics/level1/
+  KernelBench/ScientificKernelBench/level1/
 
 Run:
-    python scripts/generate_sci_bench_torchphysics_level1.py
+    python scripts/generate_scientifickernelbench_torchphysics_level1.py
 """
 
 from pathlib import Path
@@ -42,6 +42,59 @@ _NET_BLOCK = """\
         return net
 """
 
+_GRAD_BLOCK = """\
+def _grad(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    grads = []
+    for vari in [x]:
+        new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
+        grads.append(new_grad)
+    return torch.column_stack(grads)
+"""
+
+_LAPLACIAN_BLOCK = '''\
+def _laplacian(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    """\\Delta u w.r.t. x via autograd (mirrors tp.utils.laplacian)."""
+    laplacian = torch.zeros((*u.shape[:-1], 1), device=u.device)
+    for vari in [x]:
+        g = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
+        if g.grad_fn is None:
+            continue
+        for i in range(vari.shape[-1]):
+            D2u = torch.autograd.grad(
+                g.narrow(-1, i, 1).sum(), vari, create_graph=True
+            )[0]
+            laplacian += D2u.narrow(-1, i, 1)
+    return laplacian
+'''
+
+_DIV_BLOCK = '''
+def _div(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
+    var_dim = 0
+    for vari in [x]:
+        for i in range(vari.shape[-1]):
+            Du = torch.autograd.grad(
+                u.narrow(-1, var_dim + i, 1).sum(), vari, create_graph=True
+            )[0]
+            divergence = divergence + Du.narrow(-1, i, 1)
+        var_dim += i + 1
+    return divergence
+'''
+
+_JAC_BLOCK = '''
+def _jac(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    Du_rows = []
+    for i in range(u.shape[1]):
+        Du_i = []
+        for vari in [x]:
+            Du_i.append(
+                torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
+            )
+        Du_rows.append(torch.cat(Du_i, dim=-1))
+    Du = torch.stack(Du_rows, dim=-2)
+    return Du
+'''
+
 def _coord_desc(d):
     """'x,y' for d=2, 'x,y,z' for d=3, 'x1,...,xd' for d>3."""
     return ",".join("xyz"[:d]) if d <= 3 else ",".join(f"x{i+1}" for i in range(d))
@@ -64,6 +117,7 @@ def _laplacian_template(d):
 import torch
 import torch.nn as nn
 
+{_LAPLACIAN_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -90,17 +144,7 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
             # tp.laplacian (differentialoperators.py:11) 
-            laplacian = torch.zeros((*u.shape[:-1], 1), device=u.device)
-            for vari in [x]:
-                g = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
-                if g.grad_fn is None:
-                    continue
-                for i in range(vari.shape[-1]):
-                    D2u = torch.autograd.grad(
-                        g.narrow(-1, i, 1).sum(), vari, create_graph=True
-                    )[0]
-                    laplacian += D2u.narrow(-1, i, 1)
-            return laplacian           
+            return _laplacian(u, x)     
 
 
 def make_torchphysics_ref(model: Model):
@@ -153,6 +197,7 @@ def _grad_template(d):
 import torch
 import torch.nn as nn
 
+{_GRAD_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -179,11 +224,7 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
             #  tp.grad (differentialoperators.py:47) 
-            grads = []
-            for vari in [x]:
-                new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
-                grads.append(new_grad)
-            return torch.column_stack(grads)
+            return _grad(u, x)
 
 
 def make_torchphysics_ref(model: Model):
@@ -237,6 +278,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+{_GRAD_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -266,14 +308,10 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
             # tp.normal_derivative (differentialoperators.py:111) which calls tp.grad
-            grads = []
-            for vari in [x]:
-                new_grad = torch.autograd.grad(u.sum(), vari, create_graph=True)[0]
-                grads.append(new_grad)
-            gradient = torch.column_stack(grads)
+            gradient = _grad(u, x)
             normal_derivatives = gradient * normals
             return normal_derivatives.sum(dim=-1, keepdim=True)
-        
+
 
 def make_torchphysics_ref(model: Model):
     \"\"\"Return an nn.Module that computes \partial u/\partial n via torchphysics ({d}D).\"\"\"
@@ -327,6 +365,7 @@ def _div_template(d):
 import torch
 import torch.nn as nn
 
+{_DIV_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -356,16 +395,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.div (differentialoperators.py:137) 
-            divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
-            var_dim = 0
-            for vari in [x]:
-                for i in range(vari.shape[-1]):
-                    Du = torch.autograd.grad(
-                        u.narrow(-1, var_dim + i, 1).sum(), vari, create_graph=True
-                    )[0]
-                    divergence = divergence + Du.narrow(-1, i, 1)
-                var_dim += i + 1
-            return divergence
+            return _div(u, x)
 
 
 def make_torchphysics_ref(model: Model):
@@ -418,6 +448,7 @@ def _jac_template(d):
 import torch
 import torch.nn as nn
 
+{_JAC_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -443,16 +474,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.jac (differentialoperators.py:233) 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            Du = torch.stack(Du_rows, dim=-2)
-            return Du
+            return _jac(u, x)
 
 
 def make_torchphysics_ref(model: Model):
@@ -501,6 +523,7 @@ def _rot3d_template(idx, variant, N, hidden):
 import torch
 import torch.nn as nn
 
+{_JAC_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -528,22 +551,13 @@ class Model(nn.Module):
             x = x.requires_grad_(True)
             u = self.net(x)
 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            jacobian = torch.stack(Du_rows, dim=-2)
-
+            jacobian = _jac(u, x)
             rotation = torch.zeros((*(jacobian.shape[:-2]), 3))
             rotation[..., 0] = jacobian[..., 2, 1] - jacobian[..., 1, 2]
             rotation[..., 1] = jacobian[..., 0, 2] - jacobian[..., 2, 0]
             rotation[..., 2] = jacobian[..., 1, 0] - jacobian[..., 0, 1]
             return rotation
-
+          
 
 def make_torchphysics_ref(model: Model):
     \"\"\"Return an nn.Module that computes \\nabla\times u via torchphysics (3D).\"\"\"
@@ -627,7 +641,7 @@ class Model(nn.Module):
                 if du.grad_fn is None:
                     return torch.zeros_like(inp)
                 du = torch.autograd.grad(du.sum(), inp, create_graph=True)[0]
-            return du       
+            return du    
 
 
 def make_torchphysics_ref(model: Model):
@@ -683,6 +697,8 @@ import torch
 import torch.nn as nn
 
 
+{_JAC_BLOCK}
+
 class Model(nn.Module):
     \"\"\"
     Convective term :math:`(v \\cdot \\nabla)u` that appears e.g. in material derivatives via autograd ({d}D).
@@ -709,15 +725,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.partial (differentialoperators.py:320) 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            jac_x = torch.stack(Du_rows, dim=-2)           
+            jac_x = _jac(u, x)          
             return torch.bmm(jac_x, v.unsqueeze(dim=2)).squeeze(dim=2) 
 
 
@@ -771,6 +779,7 @@ def _sym_grad_template(d):
 import torch
 import torch.nn as nn
 
+{_JAC_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -798,15 +807,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.partial (differentialoperators.py:345) 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            jac_matrix = torch.stack(Du_rows, dim=-2)           
+            jac_matrix = _jac(u, x)
             return 0.5 * (jac_matrix + torch.transpose(jac_matrix, -2, -1)) 
 
 
@@ -860,6 +861,7 @@ def _matrix_div_template(d):
 import torch
 import torch.nn as nn
 
+{_DIV_BLOCK}
 
 class Model(nn.Module):
     \"\"\"
@@ -888,36 +890,13 @@ class Model(nn.Module):
             sigma = self.net(x).view(-1, {d}, {d})
 
             # tp.partial (differentialoperators.py:365) 
-            '''
-            div_out = torch.zeros(x.shape[0], {d}, device=x.device, dtype=x.dtype)
-            for i in range({d}):
-                for j in range({d}):
-                    g = torch.autograd.grad(
-                        sigma[:, i, j].sum(), x, create_graph=True
-                    )[0]
-                    div_out[:, i] = div_out[:, i] + g[:, j]
-            return div_out
-            '''
-
             div_out = torch.zeros((len(sigma), sigma.shape[1]), device=sigma.device)
             for i in range(sigma.shape[1]):
                 # compute divergence of matrix by computing the divergence
                 # for each row
                 current_row = sigma.narrow(1, i, 1).squeeze(1)
-
-                # tp.div (differentialoperators.py:137) 
-                divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
-                var_dim = 0
-                for vari in [x]:
-                    for j in range(vari.shape[-1]):
-                        Du = torch.autograd.grad(
-                            current_row.narrow(-1, var_dim + j, 1).sum(), vari, create_graph=True
-                        )[0]
-                        divergence = divergence + Du.narrow(-1, j, 1)
-                    var_dim += j + 1
-
-                div_out[:, i : i + 1] = divergence    
-            return div_out            
+                div_out[:, i : i + 1] = _div(current_row, x)  
+            return div_out         
 
 
 def make_torchphysics_ref(model: Model):

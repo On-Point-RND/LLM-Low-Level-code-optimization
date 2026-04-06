@@ -12,6 +12,19 @@ import torch
 import torch.nn as nn
 
 
+def _jac(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    Du_rows = []
+    for i in range(u.shape[1]):
+        Du_i = []
+        for vari in [x]:
+            Du_i.append(
+                torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
+            )
+        Du_rows.append(torch.cat(Du_i, dim=-1))
+    Du = torch.stack(Du_rows, dim=-2)
+    return Du
+
+
 class Model(nn.Module):
     """
     Symmetric gradient  :math:`0.5(\nabla u + \nabla u^T)  via autograd (3D).
@@ -50,15 +63,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.partial (differentialoperators.py:345) 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            jac_matrix = torch.stack(Du_rows, dim=-2)           
+            jac_matrix = _jac(u, x)
             return 0.5 * (jac_matrix + torch.transpose(jac_matrix, -2, -1)) 
 
 

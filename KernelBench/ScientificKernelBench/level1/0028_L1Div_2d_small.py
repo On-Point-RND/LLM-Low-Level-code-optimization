@@ -12,6 +12,19 @@ import torch
 import torch.nn as nn
 
 
+def _div(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
+    var_dim = 0
+    for vari in [x]:
+        for i in range(vari.shape[-1]):
+            Du = torch.autograd.grad(
+                u.narrow(-1, var_dim + i, 1).sum(), vari, create_graph=True
+            )[0]
+            divergence = divergence + Du.narrow(-1, i, 1)
+        var_dim += i + 1
+    return divergence
+
+
 class Model(nn.Module):
     """
     Divergence of a network with respect to the given variable. Only for vector valued inputs, 
@@ -52,16 +65,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.div (differentialoperators.py:137) 
-            divergence = torch.zeros((*x.shape[:-1], 1), device=x.device)
-            var_dim = 0
-            for vari in [x]:
-                for i in range(vari.shape[-1]):
-                    Du = torch.autograd.grad(
-                        u.narrow(-1, var_dim + i, 1).sum(), vari, create_graph=True
-                    )[0]
-                    divergence = divergence + Du.narrow(-1, i, 1)
-                var_dim += i + 1
-            return divergence
+            return _div(u, x)
 
 
 def make_torchphysics_ref(model: Model):

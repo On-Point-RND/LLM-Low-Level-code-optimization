@@ -12,6 +12,19 @@ import torch
 import torch.nn as nn
 
 
+def _jac(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    Du_rows = []
+    for i in range(u.shape[1]):
+        Du_i = []
+        for vari in [x]:
+            Du_i.append(
+                torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
+            )
+        Du_rows.append(torch.cat(Du_i, dim=-1))
+    Du = torch.stack(Du_rows, dim=-2)
+    return Du
+
+
 class Model(nn.Module):
     """
     Jacobian  J(u) of a network output with respect to the given input via autograd (4D).
@@ -48,16 +61,7 @@ class Model(nn.Module):
             u = self.net(x)
 
             # tp.jac (differentialoperators.py:233) 
-            Du_rows = []
-            for i in range(u.shape[1]):
-                Du_i = []
-                for vari in [x]:
-                    Du_i.append(
-                        torch.autograd.grad(u[..., i].sum(), vari, create_graph=True)[0]
-                    )
-                Du_rows.append(torch.cat(Du_i, dim=-1))
-            Du = torch.stack(Du_rows, dim=-2)
-            return Du
+            return _jac(u, x)
 
 
 def make_torchphysics_ref(model: Model):
