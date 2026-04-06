@@ -168,7 +168,19 @@ def main():
         }
     finally:
         if backend:
-            backend.cleanup()
+            try:
+                backend.cleanup()
+            except Exception as e:
+                if "illegal memory access" in str(e).lower():
+                    from dataclasses import is_dataclass, asdict
+                    if is_dataclass(result):
+                        result = asdict(result)
+                    # Only override if not already captured as a user error
+                    if not result.get("system_error") and result.get("correctness") is not False:
+                        result["correctness"] = False
+                        result["correctness_info"] = (
+                            "CUDA illegal memory access detected in user kernel"
+                        )
 
     _write(result)
 
