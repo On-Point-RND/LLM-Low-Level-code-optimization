@@ -12,10 +12,11 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
     def forward(self, predictions, targets):
-        return torch.mean(torch.clamp(1 - predictions * targets, min=0))
+        targets_expanded = targets.unsqueeze(0)
+        return torch.mean(torch.clamp(1 - predictions * targets_expanded, min=0))
 
-batch_size = 32768
-input_shape = (32768,)
+batch_size = 64
+input_shape = (64,)
 dim = 1
 
 def get_inputs():

@@ -1,0 +1,22 @@
+{
+  "9_Tall_skinny_matrix_multiplication_": {
+    "mean": 5.06,
+    "std": 0.0259,
+    "min": 5.03,
+    "max": 5.14,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB",
+    "compute_capability": "8.0",
+    "torch_compile": true
+  },
+  "2_Standard_matrix_multiplication_": {
+    "mean": 9.76,
+    "std": 1.78,
+    "min": 9.16,
+    "max": 17.4,
+    "num_trials": 100,
+    "device": "NVIDIA A100-SXM4-80GB",
+    "compute_capability": "8.0",
+    "torch_compile": true
+  }
+}

@@ -1,0 +1,31 @@
+name: bench_api
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - fastapi>=0.104.0
+    - uvicorn[standard]>=0.24.0
+    - pydantic>=2.0.0
+    - requests>=2.31.0
+    - numpy==1.26.4
+    - mlflow>=2.0.0
+    - openai
+    - packaging
+    - decorator
+    - scipy
+    - psutil
+    - protobuf
+    - tqdm
+    - datasets
+    - transformers
+    - pytest
+    - ninja
+    - einops
+    - pyyaml
+    - setuptools
+    # Install PyTorch separately to match your CUDA version:
+    #   CUDA 12.1: pip install torch==2.2.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+    #   CPU only:  pip install torch==2.2.1
