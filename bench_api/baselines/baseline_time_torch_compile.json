@@ -1,0 +1,3516 @@
+{
+  "gpu": 1,
+  "torch_compile": true,
+  "samples": [
+    {
+      "path": "level1/100_HingeLoss.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.339105796813965,
+        "std_ms": 0.007061495980778477,
+        "min_ms": 2.3363993835449217,
+        "max_ms": 2.369822692871094,
+        "median_ms": 2.3375974273681637,
+        "p95_ms": 2.3398020782470703,
+        "p99_ms": 2.363818569946289
+      }
+    },
+    {
+      "path": "level1/10_3D_tensor_matrix_multiplication.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.807719940185547,
+        "std_ms": 0.001052412029290691,
+        "min_ms": 2.8071322631835938,
+        "max_ms": 2.8121292114257814,
+        "median_ms": 2.807429046630859,
+        "p95_ms": 2.8086661529541015,
+        "p99_ms": 2.8114365997314454
+      }
+    },
+    {
+      "path": "level1/11_4D_tensor_matrix_multiplication.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 21.778170776367187,
+        "std_ms": 0.008017502513719481,
+        "min_ms": 21.7721435546875,
+        "max_ms": 21.80567138671875,
+        "median_ms": 21.775062255859375,
+        "p95_ms": 21.79572839355469,
+        "p99_ms": 21.803682788085936
+      }
+    },
+    {
+      "path": "level1/12_Matmul_with_diagonal_matrices_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 0.08284057426452637,
+        "std_ms": 0.00010670808209309775,
+        "min_ms": 0.08261631965637208,
+        "max_ms": 0.0830463981628418,
+        "median_ms": 0.08284159660339356,
+        "p95_ms": 0.08302694654464722,
+        "p99_ms": 0.08304250783920289
+      }
+    },
+    {
+      "path": "level1/13_Matmul_for_symmetric_matrices.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.240778778076172,
+        "std_ms": 0.008247078882521195,
+        "min_ms": 7.226654663085937,
+        "max_ms": 7.254998779296875,
+        "median_ms": 7.242342529296875,
+        "p95_ms": 7.252780914306641,
+        "p99_ms": 7.254555206298828
+      }
+    },
+    {
+      "path": "level1/14_Matmul_for_upper_triangular_matrices.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.3131899108886715,
+        "std_ms": 0.006607508637298143,
+        "min_ms": 7.2988671875,
+        "max_ms": 7.325470581054687,
+        "median_ms": 7.313837890625001,
+        "p95_ms": 7.320743194580078,
+        "p99_ms": 7.324525103759766
+      }
+    },
+    {
+      "path": "level1/15_Matmul_for_lower_triangular_matrices.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.299334136962891,
+        "std_ms": 0.006712441769502969,
+        "min_ms": 7.2894873046875,
+        "max_ms": 7.315599365234375,
+        "median_ms": 7.297658996582031,
+        "p95_ms": 7.310618591308594,
+        "p99_ms": 7.314603210449219
+      }
+    },
+    {
+      "path": "level1/16_Matmul_with_transposed_A.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.28827847290039,
+        "std_ms": 0.025041611781561564,
+        "min_ms": 8.232898559570312,
+        "max_ms": 8.341483764648437,
+        "median_ms": 8.287446899414062,
+        "p95_ms": 8.325159698486328,
+        "p99_ms": 8.338218951416016
+      }
+    },
+    {
+      "path": "level1/17_Matmul_with_transposed_B.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.655889984130859,
+        "std_ms": 0.005736527057542055,
+        "min_ms": 7.650509033203125,
+        "max_ms": 7.668428955078125,
+        "median_ms": 7.652126770019532,
+        "p95_ms": 7.663467315673828,
+        "p99_ms": 7.667436627197265
+      }
+    },
+    {
+      "path": "level1/18_Matmul_with_transposed_both.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.45172589111328,
+        "std_ms": 0.0011983215364828102,
+        "min_ms": 7.449948120117187,
+        "max_ms": 7.454576416015625,
+        "median_ms": 7.451504516601562,
+        "p95_ms": 7.453954254150391,
+        "p99_ms": 7.454451983642578
+      }
+    },
+    {
+      "path": "level1/19_ReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.307243530273437,
+        "std_ms": 0.0011468497511296564,
+        "min_ms": 7.305482177734375,
+        "max_ms": 7.310581665039063,
+        "median_ms": 7.307018432617188,
+        "p95_ms": 7.309103088378906,
+        "p99_ms": 7.310285949707032
+      }
+    },
+    {
+      "path": "level1/1_Square_matrix_multiplication_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.225346038818358,
+        "std_ms": 0.004395826854348388,
+        "min_ms": 7.22165771484375,
+        "max_ms": 7.236423950195313,
+        "median_ms": 7.223183288574219,
+        "p95_ms": 7.233699890136719,
+        "p99_ms": 7.235879138183594
+      }
+    },
+    {
+      "path": "level1/20_LeakyReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.3066434631347645,
+        "std_ms": 0.0012235752538949215,
+        "min_ms": 7.305420532226562,
+        "max_ms": 7.3104791259765625,
+        "median_ms": 7.306199035644531,
+        "p95_ms": 7.309136810302735,
+        "p99_ms": 7.310210662841797
+      }
+    },
+    {
+      "path": "level1/21_Sigmoid.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.29299966430664,
+        "std_ms": 0.0018161867509009523,
+        "min_ms": 7.290614013671875,
+        "max_ms": 7.2972900390625,
+        "median_ms": 7.292395324707032,
+        "p95_ms": 7.296045135498047,
+        "p99_ms": 7.29704105834961
+      }
+    },
+    {
+      "path": "level1/22_Tanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.292343292236327,
+        "std_ms": 0.0010277147724561796,
+        "min_ms": 7.291064453125,
+        "max_ms": 7.295938720703125,
+        "median_ms": 7.292006530761719,
+        "p95_ms": 7.293564880371094,
+        "p99_ms": 7.295463952636719
+      }
+    },
+    {
+      "path": "level1/23_Softmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 14.881395629882812,
+        "std_ms": 0.002097230321026222,
+        "min_ms": 14.87730712890625,
+        "max_ms": 14.886768798828125,
+        "median_ms": 14.881505737304687,
+        "p95_ms": 14.884880859375,
+        "p99_ms": 14.8863912109375
+      }
+    },
+    {
+      "path": "level1/24_LogSoftmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 14.934013916015624,
+        "std_ms": 0.003640320138896256,
+        "min_ms": 14.92590576171875,
+        "max_ms": 14.939954833984375,
+        "median_ms": 14.934476928710938,
+        "p95_ms": 14.938904174804687,
+        "p99_ms": 14.939744702148438
+      }
+    },
+    {
+      "path": "level1/25_Swish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.303233612060548,
+        "std_ms": 0.0009337963912818684,
+        "min_ms": 7.301693725585937,
+        "max_ms": 7.305256958007813,
+        "median_ms": 7.303178405761718,
+        "p95_ms": 7.305140411376954,
+        "p99_ms": 7.305233648681641
+      }
+    },
+    {
+      "path": "level1/26_GELU_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.381917724609375,
+        "std_ms": 0.0009199599928359738,
+        "min_ms": 7.38060302734375,
+        "max_ms": 7.384002685546875,
+        "median_ms": 7.381842041015625,
+        "p95_ms": 7.383691314697266,
+        "p99_ms": 7.383940411376953
+      }
+    },
+    {
+      "path": "level1/27_SELU_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.383577545166017,
+        "std_ms": 0.0012602689088876567,
+        "min_ms": 7.380991821289062,
+        "max_ms": 7.386419067382812,
+        "median_ms": 7.3833984375,
+        "p95_ms": 7.38638021850586,
+        "p99_ms": 7.386411297607422
+      }
+    },
+    {
+      "path": "level1/28_HardSigmoid.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.3082173156738275,
+        "std_ms": 0.000882918922689784,
+        "min_ms": 7.3059326171875,
+        "max_ms": 7.31062255859375,
+        "median_ms": 7.3080319213867195,
+        "p95_ms": 7.309435638427734,
+        "p99_ms": 7.3103851745605475
+      }
+    },
+    {
+      "path": "level1/29_Softplus.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.371833343505858,
+        "std_ms": 0.0006311609732704784,
+        "min_ms": 7.370404052734375,
+        "max_ms": 7.372882080078125,
+        "median_ms": 7.3719091796875,
+        "p95_ms": 7.372764953613281,
+        "p99_ms": 7.372858654785157
+      }
+    },
+    {
+      "path": "level1/2_Standard_matrix_multiplication_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.275008972167969,
+        "std_ms": 0.003329378150132317,
+        "min_ms": 7.271014404296875,
+        "max_ms": 7.28453125,
+        "median_ms": 7.274219360351562,
+        "p95_ms": 7.282138275146485,
+        "p99_ms": 7.2840526550292966
+      }
+    },
+    {
+      "path": "level1/30_Softsign.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.3130464782714855,
+        "std_ms": 0.0015148261471430375,
+        "min_ms": 7.311237182617187,
+        "max_ms": 7.316541137695313,
+        "median_ms": 7.31251708984375,
+        "p95_ms": 7.315801849365235,
+        "p99_ms": 7.316393280029297
+      }
+    },
+    {
+      "path": "level1/31_ELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.367369781494141,
+        "std_ms": 0.0009824422124157471,
+        "min_ms": 7.365488891601562,
+        "max_ms": 7.3693389892578125,
+        "median_ms": 7.367147521972656,
+        "p95_ms": 7.369319274902344,
+        "p99_ms": 7.369335046386719
+      }
+    },
+    {
+      "path": "level1/32_HardTanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.308782623291016,
+        "std_ms": 0.0012057524464541864,
+        "min_ms": 7.30724365234375,
+        "max_ms": 7.311216430664063,
+        "median_ms": 7.308349609375,
+        "p95_ms": 7.310788513183594,
+        "p99_ms": 7.311130847167969
+      }
+    },
+    {
+      "path": "level1/33_BatchNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.88748956298828,
+        "std_ms": 0.0011608916947479294,
+        "min_ms": 4.885565490722656,
+        "max_ms": 4.8892724609375,
+        "median_ms": 4.8876133728027344,
+        "p95_ms": 4.889116775512695,
+        "p99_ms": 4.889241323852539
+      }
+    },
+    {
+      "path": "level1/34_InstanceNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 13.420055480957032,
+        "std_ms": 0.002270973157059654,
+        "min_ms": 13.416099853515625,
+        "max_ms": 13.42488525390625,
+        "median_ms": 13.419857788085938,
+        "p95_ms": 13.424359924316407,
+        "p99_ms": 13.424780187988281
+      }
+    },
+    {
+      "path": "level1/35_GroupNorm_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 13.085094848632815,
+        "std_ms": 0.001759422035842182,
+        "min_ms": 13.082275390625,
+        "max_ms": 13.08837890625,
+        "median_ms": 13.0846826171875,
+        "p95_ms": 13.087756164550783,
+        "p99_ms": 13.088254357910156
+      }
+    },
+    {
+      "path": "level1/36_RMSNorm_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 13.896440795898437,
+        "std_ms": 0.0019533347246103185,
+        "min_ms": 13.892362060546875,
+        "max_ms": 13.8994482421875,
+        "median_ms": 13.896611938476564,
+        "p95_ms": 13.899175720214844,
+        "p99_ms": 13.899393737792968
+      }
+    },
+    {
+      "path": "level1/37_FrobeniusNorm_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 12.559207275390627,
+        "std_ms": 0.001422350657204358,
+        "min_ms": 12.555919189453125,
+        "max_ms": 12.561920166015625,
+        "median_ms": 12.55931884765625,
+        "p95_ms": 12.561142028808593,
+        "p99_ms": 12.561764538574218
+      }
+    },
+    {
+      "path": "level1/38_L1Norm_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.44981091308594,
+        "std_ms": 0.0019211828528394698,
+        "min_ms": 17.445826416015624,
+        "max_ms": 17.4538134765625,
+        "median_ms": 17.44957458496094,
+        "p95_ms": 17.453347290039062,
+        "p99_ms": 17.453720239257812
+      }
+    },
+    {
+      "path": "level1/39_L2Norm_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 16.95936920166016,
+        "std_ms": 0.002258392163051418,
+        "min_ms": 16.95172607421875,
+        "max_ms": 16.962559814453126,
+        "median_ms": 16.959140014648437,
+        "p95_ms": 16.962249023437497,
+        "p99_ms": 16.96249765625
+      }
+    },
+    {
+      "path": "level1/3_Batched_matrix_multiplication.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 14.40850225830078,
+        "std_ms": 0.0021402219432909396,
+        "min_ms": 14.4062255859375,
+        "max_ms": 14.4161376953125,
+        "median_ms": 14.407720947265625,
+        "p95_ms": 14.41111865234375,
+        "p99_ms": 14.41513388671875
+      }
+    },
+    {
+      "path": "level1/40_LayerNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 0.8051066894531251,
+        "std_ms": 0.0011554677342682956,
+        "min_ms": 0.8039014434814453,
+        "max_ms": 0.8076083374023437,
+        "median_ms": 0.8045977783203124,
+        "p95_ms": 0.8074915733337402,
+        "p99_ms": 0.807584984588623
+      }
+    },
+    {
+      "path": "level1/41_Max_Pooling_1D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 16.67546221923828,
+        "std_ms": 0.0015476420299812496,
+        "min_ms": 16.673607177734375,
+        "max_ms": 16.67946533203125,
+        "median_ms": 16.675031127929685,
+        "p95_ms": 16.678336975097658,
+        "p99_ms": 16.67923966064453
+      }
+    },
+    {
+      "path": "level1/42_Max_Pooling_2D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.435150848388673,
+        "std_ms": 0.0037179837302665493,
+        "min_ms": 8.432783203125,
+        "max_ms": 8.444395751953126,
+        "median_ms": 8.433715209960937,
+        "p95_ms": 8.444356903076171,
+        "p99_ms": 8.444387982177735
+      }
+    },
+    {
+      "path": "level1/43_Max_Pooling_3D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.967689239501953,
+        "std_ms": 0.001310593606695563,
+        "min_ms": 6.965473022460937,
+        "max_ms": 6.970982666015625,
+        "median_ms": 6.967367553710938,
+        "p95_ms": 6.97088525390625,
+        "p99_ms": 6.97096318359375
+      }
+    },
+    {
+      "path": "level1/44_Average_Pooling_1D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.289614349365234,
+        "std_ms": 0.020759027809793166,
+        "min_ms": 3.2560128784179687,
+        "max_ms": 3.339632568359375,
+        "median_ms": 3.2965119934082034,
+        "p95_ms": 3.32616911315918,
+        "p99_ms": 3.336939877319336
+      }
+    },
+    {
+      "path": "level1/45_Average_Pooling_2D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 10.791792785644532,
+        "std_ms": 0.0023414834594660933,
+        "min_ms": 10.78792236328125,
+        "max_ms": 10.79609375,
+        "median_ms": 10.791710815429688,
+        "p95_ms": 10.795918640136719,
+        "p99_ms": 10.796058728027344
+      }
+    },
+    {
+      "path": "level1/46_Average_Pooling_3D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 14.942416870117185,
+        "std_ms": 0.0014014688860315735,
+        "min_ms": 14.94087646484375,
+        "max_ms": 14.94560791015625,
+        "median_ms": 14.94202392578125,
+        "p95_ms": 14.945277404785157,
+        "p99_ms": 14.945541809082032
+      }
+    },
+    {
+      "path": "level1/47_Sum_reduction_over_a_dimension.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.502491638183594,
+        "std_ms": 0.0021619199628488896,
+        "min_ms": 5.49939208984375,
+        "max_ms": 5.5075225830078125,
+        "median_ms": 5.502975769042969,
+        "p95_ms": 5.505791198730469,
+        "p99_ms": 5.507176306152344
+      }
+    },
+    {
+      "path": "level1/48_Mean_reduction_over_a_dimension.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.507263519287109,
+        "std_ms": 0.002794889499702146,
+        "min_ms": 5.498880004882812,
+        "max_ms": 5.5108404541015625,
+        "median_ms": 5.507153930664062,
+        "p95_ms": 5.510820739746094,
+        "p99_ms": 5.510836511230469
+      }
+    },
+    {
+      "path": "level1/49_Max_reduction_over_a_dimension.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.572720611572264,
+        "std_ms": 0.00213757073325628,
+        "min_ms": 5.56943359375,
+        "max_ms": 5.577031860351562,
+        "median_ms": 5.572413330078126,
+        "p95_ms": 5.576234008789062,
+        "p99_ms": 5.576872290039062
+      }
+    },
+    {
+      "path": "level1/4_Matrix_vector_multiplication_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.9511311187744145,
+        "std_ms": 0.0006529962114601037,
+        "min_ms": 4.94983154296875,
+        "max_ms": 4.9525759887695315,
+        "median_ms": 4.9509785461425775,
+        "p95_ms": 4.951894973754882,
+        "p99_ms": 4.952439785766602
+      }
+    },
+    {
+      "path": "level1/50_conv_standard_2D__square_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.5561426010131836,
+        "std_ms": 0.001578365866763842,
+        "min_ms": 2.5541836547851564,
+        "max_ms": 2.5597337341308593,
+        "median_ms": 2.555299835205078,
+        "p95_ms": 2.5585469589233396,
+        "p99_ms": 2.5594963790893552
+      }
+    },
+    {
+      "path": "level1/51_Argmax_over_a_dimension.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.405310516357422,
+        "std_ms": 0.0006436076012248979,
+        "min_ms": 6.40421875,
+        "max_ms": 6.406881103515625,
+        "median_ms": 6.405150756835937,
+        "p95_ms": 6.406258941650391,
+        "p99_ms": 6.406756671142578
+      }
+    },
+    {
+      "path": "level1/52_Argmin_over_a_dimension.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.403258331298828,
+        "std_ms": 0.000650109097691086,
+        "min_ms": 6.401802368164063,
+        "max_ms": 6.4044647216796875,
+        "median_ms": 6.403123168945313,
+        "p95_ms": 6.404231048583984,
+        "p99_ms": 6.404417987060547
+      }
+    },
+    {
+      "path": "level1/53_Min_reduction_over_a_dimension.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.719145446777343,
+        "std_ms": 0.007938525965467935,
+        "min_ms": 5.709537353515625,
+        "max_ms": 5.737246704101563,
+        "median_ms": 5.717227478027343,
+        "p95_ms": 5.733296875,
+        "p99_ms": 5.73645673828125
+      }
+    },
+    {
+      "path": "level1/54_conv_standard_3D__square_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.046710266113282,
+        "std_ms": 0.0036910756515629493,
+        "min_ms": 5.041377258300781,
+        "max_ms": 5.054033813476562,
+        "median_ms": 5.045913543701172,
+        "p95_ms": 5.053255676269531,
+        "p99_ms": 5.053878186035156
+      }
+    },
+    {
+      "path": "level1/55_conv_standard_2D__asymmetric_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 10.56796563720703,
+        "std_ms": 0.00970373110233466,
+        "min_ms": 10.55215576171875,
+        "max_ms": 10.58713623046875,
+        "median_ms": 10.566911621093752,
+        "p95_ms": 10.585735351562501,
+        "p99_ms": 10.586856054687502
+      }
+    },
+    {
+      "path": "level1/56_conv_standard_2D__asymmetric_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.669915618896484,
+        "std_ms": 0.021151112771495433,
+        "min_ms": 5.646130981445313,
+        "max_ms": 5.72442626953125,
+        "median_ms": 5.6668157958984375,
+        "p95_ms": 5.69559228515625,
+        "p99_ms": 5.71865947265625
+      }
+    },
+    {
+      "path": "level1/57_conv_transposed_2D__square_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 15.209294921875,
+        "std_ms": 0.012493118802509633,
+        "min_ms": 15.176785888671875,
+        "max_ms": 15.228662109375,
+        "median_ms": 15.209994506835937,
+        "p95_ms": 15.222533264160157,
+        "p99_ms": 15.227436340332032
+      }
+    },
+    {
+      "path": "level1/58_conv_transposed_3D__asymmetric_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.080463897705076,
+        "std_ms": 0.0014647029742307419,
+        "min_ms": 8.079114379882812,
+        "max_ms": 8.083189697265626,
+        "median_ms": 8.079554748535156,
+        "p95_ms": 8.082936889648437,
+        "p99_ms": 8.083139135742188
+      }
+    },
+    {
+      "path": "level1/59_conv_standard_3D__asymmetric_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.6267841796875,
+        "std_ms": 0.001768918657686422,
+        "min_ms": 8.62160888671875,
+        "max_ms": 8.6293505859375,
+        "median_ms": 8.627199707031249,
+        "p95_ms": 8.628922088623048,
+        "p99_ms": 8.62926488647461
+      }
+    },
+    {
+      "path": "level1/5_Matrix_scalar_multiplication.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.872628219604492,
+        "std_ms": 0.0014235278647445418,
+        "min_ms": 4.871004028320312,
+        "max_ms": 4.875714416503906,
+        "median_ms": 4.8722431945800775,
+        "p95_ms": 4.875656143188476,
+        "p99_ms": 4.87570276184082
+      }
+    },
+    {
+      "path": "level1/60_conv_standard_3D__square_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.5690741577148435,
+        "std_ms": 0.003969387114535147,
+        "min_ms": 5.563084716796875,
+        "max_ms": 5.576048583984375,
+        "median_ms": 5.570631713867188,
+        "p95_ms": 5.5738498535156245,
+        "p99_ms": 5.575608837890624
+      }
+    },
+    {
+      "path": "level1/61_conv_transposed_3D__square_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.895948272705079,
+        "std_ms": 0.01641753584567046,
+        "min_ms": 5.858324584960937,
+        "max_ms": 5.933936767578125,
+        "median_ms": 5.899458618164062,
+        "p95_ms": 5.909032897949219,
+        "p99_ms": 5.928955993652344
+      }
+    },
+    {
+      "path": "level1/62_conv_standard_2D__square_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.826281997680665,
+        "std_ms": 0.019776417612859233,
+        "min_ms": 4.79236083984375,
+        "max_ms": 4.8898046875,
+        "median_ms": 4.822323150634766,
+        "p95_ms": 4.847838333129883,
+        "p99_ms": 4.881411416625976
+      }
+    },
+    {
+      "path": "level1/63_conv_standard_2D__square_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 36.33267895507813,
+        "std_ms": 0.0028419227283828065,
+        "min_ms": 36.32734130859375,
+        "max_ms": 36.33919921875,
+        "median_ms": 36.33305541992188,
+        "p95_ms": 36.33702136230469,
+        "p99_ms": 36.33876364746094
+      }
+    },
+    {
+      "path": "level1/64_conv_transposed_1D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 9.217930267333983,
+        "std_ms": 0.00967632947799135,
+        "min_ms": 9.1856689453125,
+        "max_ms": 9.233735961914062,
+        "median_ms": 9.220208740234375,
+        "p95_ms": 9.226128540039062,
+        "p99_ms": 9.232214477539062
+      }
+    },
+    {
+      "path": "level1/65_conv_transposed_2D__square_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.749664733886719,
+        "std_ms": 0.01215170881423749,
+        "min_ms": 5.701529541015625,
+        "max_ms": 5.75963134765625,
+        "median_ms": 5.752698974609375,
+        "p95_ms": 5.758094207763672,
+        "p99_ms": 5.759323919677734
+      }
+    },
+    {
+      "path": "level1/66_conv_standard_3D__asymmetric_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.7426938934326173,
+        "std_ms": 0.002262658961195071,
+        "min_ms": 2.740469665527344,
+        "max_ms": 2.7483340454101564,
+        "median_ms": 2.7416064453124998,
+        "p95_ms": 2.747302810668945,
+        "p99_ms": 2.748127798461914
+      }
+    },
+    {
+      "path": "level1/67_conv_standard_1D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.151612442016602,
+        "std_ms": 0.01179120072746464,
+        "min_ms": 4.127621154785157,
+        "max_ms": 4.181299133300781,
+        "median_ms": 4.147742767333984,
+        "p95_ms": 4.170637435913086,
+        "p99_ms": 4.179166793823242
+      }
+    },
+    {
+      "path": "level1/68_conv_transposed_3D__square_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 18.32827917480469,
+        "std_ms": 0.013666489282032509,
+        "min_ms": 18.297037353515623,
+        "max_ms": 18.351513671875,
+        "median_ms": 18.32951843261719,
+        "p95_ms": 18.346708007812502,
+        "p99_ms": 18.3505525390625
+      }
+    },
+    {
+      "path": "level1/69_conv_transposed_2D__asymmetric_input__asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.86383612060547,
+        "std_ms": 0.019998460222274285,
+        "min_ms": 6.821744384765625,
+        "max_ms": 6.9198846435546875,
+        "median_ms": 6.863124389648437,
+        "p95_ms": 6.896751586914062,
+        "p99_ms": 6.915258032226562
+      }
+    },
+    {
+      "path": "level1/6_Matmul_with_large_K_dimension_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.649958908081055,
+        "std_ms": 0.0037141694027884075,
+        "min_ms": 3.6439450073242186,
+        "max_ms": 3.655065612792969,
+        "median_ms": 3.6505087280273436,
+        "p95_ms": 3.6544820098876953,
+        "p99_ms": 3.654948892211914
+      }
+    },
+    {
+      "path": "level1/70_conv_transposed_3D__asymmetric_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 18.162284545898437,
+        "std_ms": 0.007910555440931532,
+        "min_ms": 18.14767578125,
+        "max_ms": 18.174156494140625,
+        "median_ms": 18.163189697265622,
+        "p95_ms": 18.173533752441408,
+        "p99_ms": 18.17403194580078
+      }
+    },
+    {
+      "path": "level1/71_conv_transposed_2D__asymmetric_input__square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.95477507019043,
+        "std_ms": 0.0020774678913088374,
+        "min_ms": 3.9515545654296873,
+        "max_ms": 3.9586407470703127,
+        "median_ms": 3.95472900390625,
+        "p95_ms": 3.95834880065918,
+        "p99_ms": 3.958582357788086
+      }
+    },
+    {
+      "path": "level1/72_conv_transposed_3D_asymmetric_input_asymmetric_kernel___strided_padded_grouped_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.301022338867186,
+        "std_ms": 0.0013609368043705728,
+        "min_ms": 4.298625793457031,
+        "max_ms": 4.304139404296875,
+        "median_ms": 4.300633697509765,
+        "p95_ms": 4.303311981201172,
+        "p99_ms": 4.303973919677735
+      }
+    },
+    {
+      "path": "level1/73_conv_transposed_3D_asymmetric_input_square_kernel__strided_padded__grouped.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.9918018798828125,
+        "std_ms": 0.0019439848329446706,
+        "min_ms": 5.986427001953125,
+        "max_ms": 5.994495849609375,
+        "median_ms": 5.991557006835937,
+        "p95_ms": 5.994437866210938,
+        "p99_ms": 5.994484252929688
+      }
+    },
+    {
+      "path": "level1/74_conv_transposed_1D_dilated.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.427443710327148,
+        "std_ms": 0.009398538796172994,
+        "min_ms": 3.414220886230469,
+        "max_ms": 3.4522930908203127,
+        "median_ms": 3.427604522705078,
+        "p95_ms": 3.4432850799560546,
+        "p99_ms": 3.450491488647461
+      }
+    },
+    {
+      "path": "level1/75_conv_transposed_2D_asymmetric_input_asymmetric_kernel_strided__grouped____padded____dilated__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.258770385742188,
+        "std_ms": 0.0017601207561105299,
+        "min_ms": 5.25707275390625,
+        "max_ms": 5.263482666015625,
+        "median_ms": 5.258291320800781,
+        "p95_ms": 5.2620429382324225,
+        "p99_ms": 5.263194720458984
+      }
+    },
+    {
+      "path": "level1/76_conv_standard_1D_dilated_strided__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 19.96575128173828,
+        "std_ms": 0.02554720134840181,
+        "min_ms": 19.924869384765625,
+        "max_ms": 20.001689453125,
+        "median_ms": 19.96348388671875,
+        "p95_ms": 20.000871887207033,
+        "p99_ms": 20.001525939941406
+      }
+    },
+    {
+      "path": "level1/77_conv_transposed_3D_square_input_square_kernel___padded____dilated____strided__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.7267916717529297,
+        "std_ms": 0.001441010791864674,
+        "min_ms": 1.7230642700195313,
+        "max_ms": 1.729740753173828,
+        "median_ms": 1.72653564453125,
+        "p95_ms": 1.7293905334472657,
+        "p99_ms": 1.7296707092285155
+      }
+    },
+    {
+      "path": "level1/78_conv_transposed_2D_asymmetric_input_asymmetric_kernel___padded__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.681826721191406,
+        "std_ms": 0.004270279624612084,
+        "min_ms": 5.67816162109375,
+        "max_ms": 5.69776123046875,
+        "median_ms": 5.6801278686523435,
+        "p95_ms": 5.686437652587891,
+        "p99_ms": 5.695496514892578
+      }
+    },
+    {
+      "path": "level1/79_conv_transposed_1D_asymmetric_input_square_kernel___padded____strided____dilated__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.3242173156738284,
+        "std_ms": 0.0016648555165026347,
+        "min_ms": 3.3215896606445314,
+        "max_ms": 3.3287371826171874,
+        "median_ms": 3.3237298583984374,
+        "p95_ms": 3.3262662200927733,
+        "p99_ms": 3.3282429901123045
+      }
+    },
+    {
+      "path": "level1/7_Matmul_with_small_K_dimension_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.658201110839843,
+        "std_ms": 0.033459625228817944,
+        "min_ms": 7.59816162109375,
+        "max_ms": 7.722127075195313,
+        "median_ms": 7.6523828125,
+        "p95_ms": 7.711212280273437,
+        "p99_ms": 7.719944116210938
+      }
+    },
+    {
+      "path": "level1/80_conv_standard_2D_square_input_asymmetric_kernel___dilated____padded__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.753509353637696,
+        "std_ms": 0.012738862070431832,
+        "min_ms": 4.727254943847656,
+        "max_ms": 4.782407531738281,
+        "median_ms": 4.749066162109375,
+        "p95_ms": 4.776843154907227,
+        "p99_ms": 4.78129465637207
+      }
+    },
+    {
+      "path": "level1/81_conv_transposed_2D_asymmetric_input_square_kernel___dilated____padded____strided__.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.026285064697266,
+        "std_ms": 0.0014444344869320063,
+        "min_ms": 2.0248371887207033,
+        "max_ms": 2.0291789245605467,
+        "median_ms": 2.0257177734375,
+        "p95_ms": 2.0290816574096677,
+        "p99_ms": 2.029159471130371
+      }
+    },
+    {
+      "path": "level1/82_conv_depthwise_2D_square_input_square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.9811072235107425,
+        "std_ms": 0.0021635847340545356,
+        "min_ms": 3.978096618652344,
+        "max_ms": 3.9863092041015626,
+        "median_ms": 3.980421142578125,
+        "p95_ms": 3.9851417083740235,
+        "p99_ms": 3.986075704956055
+      }
+    },
+    {
+      "path": "level1/83_conv_depthwise_2D_square_input_asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 11.810903076171877,
+        "std_ms": 0.0017455321225851533,
+        "min_ms": 11.8046923828125,
+        "max_ms": 11.813929443359376,
+        "median_ms": 11.811051025390626,
+        "p95_ms": 11.813326416015624,
+        "p99_ms": 11.813808837890626
+      }
+    },
+    {
+      "path": "level1/84_conv_depthwise_2D_asymmetric_input_square_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 16.06505987548828,
+        "std_ms": 0.002152826904893037,
+        "min_ms": 16.06277099609375,
+        "max_ms": 16.069488525390625,
+        "median_ms": 16.0641845703125,
+        "p95_ms": 16.06937139892578,
+        "p99_ms": 16.069465100097656
+      }
+    },
+    {
+      "path": "level1/85_conv_depthwise_2D_asymmetric_input_asymmetric_kernel.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.06928332519531,
+        "std_ms": 0.019244282788055626,
+        "min_ms": 23.04534423828125,
+        "max_ms": 23.1081982421875,
+        "median_ms": 23.068333740234376,
+        "p95_ms": 23.1041904296875,
+        "p99_ms": 23.107396679687497
+      }
+    },
+    {
+      "path": "level1/86_conv_depthwise_separable_2D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.2782355957031255,
+        "std_ms": 0.0023272399147997998,
+        "min_ms": 7.275294799804687,
+        "max_ms": 7.283650512695313,
+        "median_ms": 7.277793273925781,
+        "p95_ms": 7.282541290283203,
+        "p99_ms": 7.283428668212891
+      }
+    },
+    {
+      "path": "level1/87_conv_pointwise_2D.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.545380981445312,
+        "std_ms": 0.0016291221411548578,
+        "min_ms": 23.542109375,
+        "max_ms": 23.54927734375,
+        "median_ms": 23.54503662109375,
+        "p95_ms": 23.547837036132815,
+        "p99_ms": 23.54898928222656
+      }
+    },
+    {
+      "path": "level1/88_MinGPTNewGelu.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 0.3129610233306884,
+        "std_ms": 0.0005078923209987457,
+        "min_ms": 0.31238143920898437,
+        "max_ms": 0.31467519760131835,
+        "median_ms": 0.3128115177154541,
+        "p95_ms": 0.31409152221679687,
+        "p99_ms": 0.31455846252441405
+      }
+    },
+    {
+      "path": "level1/89_cumsum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.344215026855469,
+        "std_ms": 0.001234676220211596,
+        "min_ms": 5.34235107421875,
+        "max_ms": 5.3469390869140625,
+        "median_ms": 5.344143371582032,
+        "p95_ms": 5.346705413818359,
+        "p99_ms": 5.346892352294922
+      }
+    },
+    {
+      "path": "level1/8_Matmul_with_irregular_shapes_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 15.503133666992184,
+        "std_ms": 0.005354757898957117,
+        "min_ms": 15.482408447265625,
+        "max_ms": 15.50825439453125,
+        "median_ms": 15.504209594726563,
+        "p95_ms": 15.507846191406252,
+        "p99_ms": 15.50817275390625
+      }
+    },
+    {
+      "path": "level1/90_cumprod.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.34356069946289,
+        "std_ms": 0.0009839720066674108,
+        "min_ms": 5.341531982421875,
+        "max_ms": 5.345812377929687,
+        "median_ms": 5.343426818847656,
+        "p95_ms": 5.345073089599609,
+        "p99_ms": 5.3456645202636714
+      }
+    },
+    {
+      "path": "level1/91_cumsum_reverse.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 12.040068176269532,
+        "std_ms": 0.0011619173596529953,
+        "min_ms": 12.03857421875,
+        "max_ms": 12.044390869140624,
+        "median_ms": 12.039946289062499,
+        "p95_ms": 12.041219177246093,
+        "p99_ms": 12.043756530761717
+      }
+    },
+    {
+      "path": "level1/92_cumsum_exclusive.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.7352642211914056,
+        "std_ms": 0.0017735508166253967,
+        "min_ms": 5.732843627929688,
+        "max_ms": 5.740175170898437,
+        "median_ms": 5.735106506347656,
+        "p95_ms": 5.7384826354980465,
+        "p99_ms": 5.739836663818359
+      }
+    },
+    {
+      "path": "level1/93_masked_cumsum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.9915499572753905,
+        "std_ms": 0.0025212399541921205,
+        "min_ms": 5.988331298828125,
+        "max_ms": 5.998981323242187,
+        "median_ms": 5.990911865234375,
+        "p95_ms": 5.996607482910156,
+        "p99_ms": 5.998506555175781
+      }
+    },
+    {
+      "path": "level1/94_MSELoss.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.608399337768554,
+        "std_ms": 0.0014275067661835507,
+        "min_ms": 4.605931396484375,
+        "max_ms": 4.610641784667969,
+        "median_ms": 4.6080921936035155,
+        "p95_ms": 4.610525238037109,
+        "p99_ms": 4.610618475341797
+      }
+    },
+    {
+      "path": "level1/95_CrossEntropyLoss.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 0.3300280303955078,
+        "std_ms": 0.0005944905682687069,
+        "min_ms": 0.32958465576171875,
+        "max_ms": 0.33247230529785154,
+        "median_ms": 0.3299020957946777,
+        "p95_ms": 0.3305072479248047,
+        "p99_ms": 0.3320792938232422
+      }
+    },
+    {
+      "path": "level1/96_HuberLoss.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.584066055297852,
+        "std_ms": 0.0009886184354412212,
+        "min_ms": 4.5821337890625,
+        "max_ms": 4.58598388671875,
+        "median_ms": 4.583731079101563,
+        "p95_ms": 4.585653381347656,
+        "p99_ms": 4.585917785644531
+      }
+    },
+    {
+      "path": "level1/97_ScaledDotProductAttention.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 43.567708984374995,
+        "std_ms": 0.15141301492984324,
+        "min_ms": 43.2406298828125,
+        "max_ms": 43.7226513671875,
+        "median_ms": 43.6481640625,
+        "p95_ms": 43.70405029296875,
+        "p99_ms": 43.71893115234375
+      }
+    },
+    {
+      "path": "level1/98_KLDivLoss.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.2350976066589356,
+        "std_ms": 0.026582943640108728,
+        "min_ms": 1.2171469116210938,
+        "max_ms": 1.3396786499023436,
+        "median_ms": 1.224826889038086,
+        "p95_ms": 1.2656292114257812,
+        "p99_ms": 1.324868762207031
+      }
+    },
+    {
+      "path": "level1/99_TripletMarginLoss.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.7293762512207032,
+        "std_ms": 0.0004004128804650844,
+        "min_ms": 1.7285939025878907,
+        "max_ms": 1.729945526123047,
+        "median_ms": 1.7294847869873047,
+        "p95_ms": 1.7298872528076172,
+        "p99_ms": 1.729933871459961
+      }
+    },
+    {
+      "path": "level1/9_Tall_skinny_matrix_multiplication_.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.242927612304688,
+        "std_ms": 0.01024041264178925,
+        "min_ms": 4.223324279785157,
+        "max_ms": 4.2631988525390625,
+        "median_ms": 4.238469085693359,
+        "p95_ms": 4.2611558074951175,
+        "p99_ms": 4.262790243530273
+      }
+    },
+    {
+      "path": "level2/100_ConvTranspose3d_Clamp_Min_Divide.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 16.05220355224609,
+        "std_ms": 0.0017188989954006397,
+        "min_ms": 16.048782958984376,
+        "max_ms": 16.0553369140625,
+        "median_ms": 16.052101440429688,
+        "p95_ms": 16.055142089843752,
+        "p99_ms": 16.05529794921875
+      }
+    },
+    {
+      "path": "level2/10_ConvTranspose2d_MaxPool_Hardtanh_Mean_Tanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 16.223570861816405,
+        "std_ms": 0.02156541332616882,
+        "min_ms": 16.18556884765625,
+        "max_ms": 16.30951416015625,
+        "median_ms": 16.22177795410156,
+        "p95_ms": 16.23338311767578,
+        "p99_ms": 16.294287951660156
+      }
+    },
+    {
+      "path": "level2/11_ConvTranspose2d_BatchNorm_Tanh_MaxPool_GroupNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.4541076354980476,
+        "std_ms": 0.011559543736683381,
+        "min_ms": 3.4365438842773437,
+        "max_ms": 3.483115539550781,
+        "median_ms": 3.453194122314453,
+        "p95_ms": 3.471091812133789,
+        "p99_ms": 3.4807107940673827
+      }
+    },
+    {
+      "path": "level2/12_Gemm_Multiply_LeakyReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.925477325439452,
+        "std_ms": 0.035851111707367274,
+        "min_ms": 7.849144287109375,
+        "max_ms": 7.9837799072265625,
+        "median_ms": 7.924920349121093,
+        "p95_ms": 7.974304840087891,
+        "p99_ms": 7.981884893798828
+      }
+    },
+    {
+      "path": "level2/13_ConvTranspose3d_Mean_Add_Softmax_Tanh_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 13.205509155273438,
+        "std_ms": 0.009516262221806501,
+        "min_ms": 13.1787158203125,
+        "max_ms": 13.2282373046875,
+        "median_ms": 13.205545043945312,
+        "p95_ms": 13.218819641113281,
+        "p99_ms": 13.226353771972656
+      }
+    },
+    {
+      "path": "level2/14_Gemm_Divide_Sum_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.9295641174316405,
+        "std_ms": 0.04197773574248562,
+        "min_ms": 7.870361328125,
+        "max_ms": 8.005857543945313,
+        "median_ms": 7.923077087402344,
+        "p95_ms": 7.989592041015625,
+        "p99_ms": 8.002604443359376
+      }
+    },
+    {
+      "path": "level2/15_ConvTranspose3d_BatchNorm_Subtract.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.115182586669922,
+        "std_ms": 0.0013528732508382444,
+        "min_ms": 2.1133517456054687,
+        "max_ms": 2.118799285888672,
+        "median_ms": 2.1147852325439453,
+        "p95_ms": 2.11726229095459,
+        "p99_ms": 2.1184918869018556
+      }
+    },
+    {
+      "path": "level2/16_ConvTranspose2d_Mish_Add_Hardtanh_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.4876272583007815,
+        "std_ms": 0.01077299917970502,
+        "min_ms": 7.463424072265625,
+        "max_ms": 7.509544677734375,
+        "median_ms": 7.486085205078124,
+        "p95_ms": 7.503299285888672,
+        "p99_ms": 7.508295599365234
+      }
+    },
+    {
+      "path": "level2/17_Conv2d_InstanceNorm_Divide.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.429791229248046,
+        "std_ms": 0.006216684017646127,
+        "min_ms": 6.4106494140625,
+        "max_ms": 6.4412469482421875,
+        "median_ms": 6.430443420410156,
+        "p95_ms": 6.436324157714844,
+        "p99_ms": 6.440262390136719
+      }
+    },
+    {
+      "path": "level2/18_Matmul_Sum_Max_AvgPool_LogSumExp_LogSumExp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.951511566162109,
+        "std_ms": 0.039076137639986075,
+        "min_ms": 7.896555786132812,
+        "max_ms": 8.0106494140625,
+        "median_ms": 7.939870910644531,
+        "p95_ms": 8.006563903808594,
+        "p99_ms": 8.009832312011719
+      }
+    },
+    {
+      "path": "level2/19_ConvTranspose2d_GELU_GroupNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 18.445033569335937,
+        "std_ms": 0.017570802407412458,
+        "min_ms": 18.40654296875,
+        "max_ms": 18.471240234375,
+        "median_ms": 18.449879150390625,
+        "p95_ms": 18.469489135742187,
+        "p99_ms": 18.470890014648436
+      }
+    },
+    {
+      "path": "level2/1_Conv2D_ReLU_BiasAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.229782012939454,
+        "std_ms": 0.011699551613065524,
+        "min_ms": 5.209169921875,
+        "max_ms": 5.256253662109375,
+        "median_ms": 5.229721679687501,
+        "p95_ms": 5.244209930419922,
+        "p99_ms": 5.253844915771484
+      }
+    },
+    {
+      "path": "level2/20_ConvTranspose3d_Sum_ResidualAdd_Multiply_ResidualAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.221489151000976,
+        "std_ms": 0.001787949492346648,
+        "min_ms": 2.2186802673339843,
+        "max_ms": 2.2253158569335936,
+        "median_ms": 2.2206464385986324,
+        "p95_ms": 2.2245375747680662,
+        "p99_ms": 2.225160200500488
+      }
+    },
+    {
+      "path": "level2/21_Conv2d_Add_Scale_Sigmoid_GroupNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.550877182006836,
+        "std_ms": 0.011412466089758586,
+        "min_ms": 4.535213928222657,
+        "max_ms": 4.569374694824218,
+        "median_ms": 4.547092437744141,
+        "p95_ms": 4.567993240356445,
+        "p99_ms": 4.5690984039306635
+      }
+    },
+    {
+      "path": "level2/22_Matmul_Scale_ResidualAdd_Clamp_LogSumExp_Mish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.933147155761719,
+        "std_ms": 0.038721595945852505,
+        "min_ms": 7.873740844726562,
+        "max_ms": 7.99383544921875,
+        "median_ms": 7.922360229492187,
+        "p95_ms": 7.988387908935547,
+        "p99_ms": 7.992745941162109
+      }
+    },
+    {
+      "path": "level2/23_Conv3d_GroupNorm_Mean.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.7675714569091798,
+        "std_ms": 0.0021749078129739063,
+        "min_ms": 1.7659494018554687,
+        "max_ms": 1.7742848205566406,
+        "median_ms": 1.7665945434570314,
+        "p95_ms": 1.7719501190185547,
+        "p99_ms": 1.7738178802490234
+      }
+    },
+    {
+      "path": "level2/24_Conv3d_Min_Softmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.6234639205932617,
+        "std_ms": 0.04222759938346225,
+        "min_ms": 1.6116940307617187,
+        "max_ms": 1.8073805236816407,
+        "median_ms": 1.613496322631836,
+        "p95_ms": 1.6269066162109376,
+        "p99_ms": 1.7712857421875
+      }
+    },
+    {
+      "path": "level2/25_Conv2d_Min_Tanh_Tanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.371296295166015,
+        "std_ms": 0.002098085411709233,
+        "min_ms": 8.368558349609375,
+        "max_ms": 8.377159423828125,
+        "median_ms": 8.371138610839843,
+        "p95_ms": 8.375700561523438,
+        "p99_ms": 8.376867651367188
+      }
+    },
+    {
+      "path": "level2/26_ConvTranspose3d_Add_HardSwish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.765022186279296,
+        "std_ms": 0.0019031623960271862,
+        "min_ms": 4.762787780761719,
+        "max_ms": 4.770775146484375,
+        "median_ms": 4.764374999999999,
+        "p95_ms": 4.767662017822266,
+        "p99_ms": 4.770152520751953
+      }
+    },
+    {
+      "path": "level2/27_Conv3d_HardSwish_GroupNorm_Mean.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.854889434814451,
+        "std_ms": 0.0015284312671080859,
+        "min_ms": 6.8522186279296875,
+        "max_ms": 6.85791259765625,
+        "median_ms": 6.8544921875,
+        "p95_ms": 6.857270141601563,
+        "p99_ms": 6.857784106445313
+      }
+    },
+    {
+      "path": "level2/28_BMM_InstanceNorm_Sum_ResidualAdd_Multiply.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.067198944091796,
+        "std_ms": 0.02440547661288227,
+        "min_ms": 8.025006103515626,
+        "max_ms": 8.110018310546875,
+        "median_ms": 8.067747802734374,
+        "p95_ms": 8.098403076171875,
+        "p99_ms": 8.107695263671875
+      }
+    },
+    {
+      "path": "level2/29_Matmul_Mish_Mish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.967339508056641,
+        "std_ms": 0.02940918621325684,
+        "min_ms": 7.92057861328125,
+        "max_ms": 8.023469848632812,
+        "median_ms": 7.969577026367187,
+        "p95_ms": 8.010823669433593,
+        "p99_ms": 8.020940612792968
+      }
+    },
+    {
+      "path": "level2/2_ConvTranspose2d_BiasAdd_Clamp_Scaling_Clamp_Divide.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.327474670410156,
+        "std_ms": 0.0016098786452544743,
+        "min_ms": 7.32452880859375,
+        "max_ms": 7.331163940429687,
+        "median_ms": 7.327139892578125,
+        "p95_ms": 7.329938171386718,
+        "p99_ms": 7.330918786621093
+      }
+    },
+    {
+      "path": "level2/30_Gemm_GroupNorm_Hardtanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.9859579467773445,
+        "std_ms": 0.03935126527459476,
+        "min_ms": 7.9145166015625,
+        "max_ms": 8.0418408203125,
+        "median_ms": 7.971563415527344,
+        "p95_ms": 8.033377563476563,
+        "p99_ms": 8.040148168945311
+      }
+    },
+    {
+      "path": "level2/31_Conv2d_Min_Add_Multiply.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.233852355957032,
+        "std_ms": 0.013923362642416904,
+        "min_ms": 5.201039428710938,
+        "max_ms": 5.26761962890625,
+        "median_ms": 5.231083374023438,
+        "p95_ms": 5.2549931640625,
+        "p99_ms": 5.2650943359374995
+      }
+    },
+    {
+      "path": "level2/32_Conv2d_Scaling_Min.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 9.318755279541014,
+        "std_ms": 0.006644147497627285,
+        "min_ms": 9.30746337890625,
+        "max_ms": 9.331712036132812,
+        "median_ms": 9.318574218750001,
+        "p95_ms": 9.33099188232422,
+        "p99_ms": 9.331568005371093
+      }
+    },
+    {
+      "path": "level2/33_Gemm_Scale_BatchNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.940221984863281,
+        "std_ms": 0.021766831917121282,
+        "min_ms": 7.8921728515625,
+        "max_ms": 7.9785986328125,
+        "median_ms": 7.940863952636719,
+        "p95_ms": 7.969123565673828,
+        "p99_ms": 7.976703619384765
+      }
+    },
+    {
+      "path": "level2/34_ConvTranspose3d_LayerNorm_GELU_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.070642166137696,
+        "std_ms": 0.016195419012970218,
+        "min_ms": 5.054402465820313,
+        "max_ms": 5.112749938964844,
+        "median_ms": 5.066895446777344,
+        "p95_ms": 5.098294387817383,
+        "p99_ms": 5.1098588287353515
+      }
+    },
+    {
+      "path": "level2/35_Conv2d_Subtract_HardSwish_MaxPool_Mish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.86787579345703,
+        "std_ms": 0.009765486853766851,
+        "min_ms": 6.8503759765625,
+        "max_ms": 6.88627685546875,
+        "median_ms": 6.869288940429687,
+        "p95_ms": 6.879292175292969,
+        "p99_ms": 6.884879919433594
+      }
+    },
+    {
+      "path": "level2/36_ConvTranspose2d_Min_Sum_GELU_Add.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.0882759857177735,
+        "std_ms": 0.0024372289246377414,
+        "min_ms": 2.084126739501953,
+        "max_ms": 2.093158416748047,
+        "median_ms": 2.0887245178222655,
+        "p95_ms": 2.0923607101440433,
+        "p99_ms": 2.0929988754272464
+      }
+    },
+    {
+      "path": "level2/37_Matmul_Swish_Sum_GroupNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 15.41415539550781,
+        "std_ms": 0.009026197217054813,
+        "min_ms": 15.404810791015626,
+        "max_ms": 15.438909912109375,
+        "median_ms": 15.4092138671875,
+        "p95_ms": 15.428791809082032,
+        "p99_ms": 15.436886291503907
+      }
+    },
+    {
+      "path": "level2/38_ConvTranspose3d_AvgPool_Clamp_Softmax_Multiply.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.970870269775391,
+        "std_ms": 0.0021207013186481105,
+        "min_ms": 5.966868286132812,
+        "max_ms": 5.9770880126953125,
+        "median_ms": 5.970821228027344,
+        "p95_ms": 5.9735666809082035,
+        "p99_ms": 5.97638374633789
+      }
+    },
+    {
+      "path": "level2/39_Gemm_Scale_BatchNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 29.30407006835938,
+        "std_ms": 0.015168774668119896,
+        "min_ms": 29.28572509765625,
+        "max_ms": 29.3426171875,
+        "median_ms": 29.30102294921875,
+        "p95_ms": 29.33746130371094,
+        "p99_ms": 29.341586010742187
+      }
+    },
+    {
+      "path": "level2/3_ConvTranspose3d_Sum_LayerNorm_AvgPool_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.019308090209961,
+        "std_ms": 0.002655247516433692,
+        "min_ms": 5.015326843261719,
+        "max_ms": 5.025321044921875,
+        "median_ms": 5.01855239868164,
+        "p95_ms": 5.02290835571289,
+        "p99_ms": 5.024838507080078
+      }
+    },
+    {
+      "path": "level2/40_Matmul_Scaling_ResidualAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 29.300859863281254,
+        "std_ms": 0.014890217150039162,
+        "min_ms": 29.2826123046875,
+        "max_ms": 29.33381103515625,
+        "median_ms": 29.29438720703125,
+        "p95_ms": 29.330893310546877,
+        "p99_ms": 29.333227490234375
+      }
+    },
+    {
+      "path": "level2/41_Gemm_BatchNorm_GELU_ReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 29.301749633789065,
+        "std_ms": 0.010604507831997853,
+        "min_ms": 29.2910498046875,
+        "max_ms": 29.327236328125,
+        "median_ms": 29.2988818359375,
+        "p95_ms": 29.323755004882813,
+        "p99_ms": 29.326540063476564
+      }
+    },
+    {
+      "path": "level2/42_ConvTranspose2d_GlobalAvgPool_BiasAdd_LogSumExp_Sum_Multiply.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 9.51771032714844,
+        "std_ms": 0.012670419572076111,
+        "min_ms": 9.475645141601563,
+        "max_ms": 9.536962280273437,
+        "median_ms": 9.518500061035157,
+        "p95_ms": 9.533090728759767,
+        "p99_ms": 9.536187969970703
+      }
+    },
+    {
+      "path": "level2/43_Conv3d_Max_LogSumExp_ReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.8659523010253904,
+        "std_ms": 0.00884796921411255,
+        "min_ms": 3.828326416015625,
+        "max_ms": 3.8736691284179687,
+        "median_ms": 3.8672999572753906,
+        "p95_ms": 3.871470687866211,
+        "p99_ms": 3.8732294403076173
+      }
+    },
+    {
+      "path": "level2/44_ConvTranspose2d_Multiply_GlobalAvgPool_GlobalAvgPool_Mean.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.0826920928955075,
+        "std_ms": 0.0020570668170517728,
+        "min_ms": 2.079989776611328,
+        "max_ms": 2.086993865966797,
+        "median_ms": 2.082519073486328,
+        "p95_ms": 2.0865853729248047,
+        "p99_ms": 2.0869121673583986
+      }
+    },
+    {
+      "path": "level2/45_Gemm_Sigmoid_LogSumExp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 22.016212036132817,
+        "std_ms": 0.017977693728133105,
+        "min_ms": 21.9974658203125,
+        "max_ms": 22.04999755859375,
+        "median_ms": 22.006917724609373,
+        "p95_ms": 22.049276245117184,
+        "p99_ms": 22.049853295898437
+      }
+    },
+    {
+      "path": "level2/46_Conv2d_Subtract_Tanh_Subtract_AvgPool.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.857594909667968,
+        "std_ms": 0.010582529403554433,
+        "min_ms": 6.832824096679688,
+        "max_ms": 6.8769384765625,
+        "median_ms": 6.856919250488281,
+        "p95_ms": 6.8716654663085945,
+        "p99_ms": 6.875883874511719
+      }
+    },
+    {
+      "path": "level2/47_Conv3d_Mish_Tanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.1162644500732424,
+        "std_ms": 0.027378577155016088,
+        "min_ms": 3.0900222778320314,
+        "max_ms": 3.1748504638671875,
+        "median_ms": 3.104532470703125,
+        "p95_ms": 3.1556863708496095,
+        "p99_ms": 3.171017645263672
+      }
+    },
+    {
+      "path": "level2/48_Conv3d_Scaling_Tanh_Multiply_Sigmoid.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.000786926269531,
+        "std_ms": 0.003519153794096644,
+        "min_ms": 4.991488037109375,
+        "max_ms": 5.0086297607421875,
+        "median_ms": 5.000099945068359,
+        "p95_ms": 5.007151184082031,
+        "p99_ms": 5.008334045410156
+      }
+    },
+    {
+      "path": "level2/49_ConvTranspose3d_Softmax_Sigmoid.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.8760955200195317,
+        "std_ms": 0.002122989191396415,
+        "min_ms": 2.8728729248046876,
+        "max_ms": 2.8801025390625,
+        "median_ms": 2.875811920166016,
+        "p95_ms": 2.880005126953125,
+        "p99_ms": 2.880083056640625
+      }
+    },
+    {
+      "path": "level2/4_Conv2d_Mish_Mish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 12.227134521484373,
+        "std_ms": 0.018647456288343404,
+        "min_ms": 12.166881103515625,
+        "max_ms": 12.25385986328125,
+        "median_ms": 12.232898559570312,
+        "p95_ms": 12.250299682617188,
+        "p99_ms": 12.253147827148437
+      }
+    },
+    {
+      "path": "level2/50_ConvTranspose3d_Scaling_AvgPool_BiasAdd_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 19.55290618896484,
+        "std_ms": 0.0029256329740785392,
+        "min_ms": 19.548016357421876,
+        "max_ms": 19.5584814453125,
+        "median_ms": 19.553710327148437,
+        "p95_ms": 19.55628387451172,
+        "p99_ms": 19.558041931152342
+      }
+    },
+    {
+      "path": "level2/51_Gemm_Subtract_GlobalAvgPool_LogSumExp_GELU_ResidualAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 14.60033837890625,
+        "std_ms": 0.006075830749823949,
+        "min_ms": 14.590279541015626,
+        "max_ms": 14.617333984375,
+        "median_ms": 14.599721069335938,
+        "p95_ms": 14.609512023925781,
+        "p99_ms": 14.615769592285156
+      }
+    },
+    {
+      "path": "level2/52_Conv2d_Activation_BatchNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.685648895263672,
+        "std_ms": 0.010995129026345068,
+        "min_ms": 2.6605157470703125,
+        "max_ms": 2.7175936889648438,
+        "median_ms": 2.6825010681152346,
+        "p95_ms": 2.704694412231445,
+        "p99_ms": 2.715013833618164
+      }
+    },
+    {
+      "path": "level2/53_Gemm_Scaling_Hardtanh_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 14.553111511230469,
+        "std_ms": 0.008100962187828378,
+        "min_ms": 14.5343896484375,
+        "max_ms": 14.567198486328126,
+        "median_ms": 14.551521606445313,
+        "p95_ms": 14.5668876953125,
+        "p99_ms": 14.567136328125
+      }
+    },
+    {
+      "path": "level2/54_Conv2d_Multiply_LeakyReLU_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.231763336181641,
+        "std_ms": 0.00929750162199721,
+        "min_ms": 7.198617553710937,
+        "max_ms": 7.243468627929688,
+        "median_ms": 7.233402709960938,
+        "p95_ms": 7.242535095214844,
+        "p99_ms": 7.243281921386719
+      }
+    },
+    {
+      "path": "level2/55_Matmul_MaxPool_Sum_Scale.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 16.020721740722657,
+        "std_ms": 0.003195068272511942,
+        "min_ms": 16.015155029296874,
+        "max_ms": 16.02840576171875,
+        "median_ms": 16.020081176757813,
+        "p95_ms": 16.025584289550782,
+        "p99_ms": 16.027841467285157
+      }
+    },
+    {
+      "path": "level2/56_Matmul_Sigmoid_Sum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.779829711914065,
+        "std_ms": 0.006507156104269885,
+        "min_ms": 17.762774658203124,
+        "max_ms": 17.788846435546876,
+        "median_ms": 17.781094360351563,
+        "p95_ms": 17.78637518310547,
+        "p99_ms": 17.788352185058596
+      }
+    },
+    {
+      "path": "level2/57_Conv2d_ReLU_HardSwish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.5492024230957033,
+        "std_ms": 0.0017226954490014437,
+        "min_ms": 1.5476121520996093,
+        "max_ms": 1.5533670043945313,
+        "median_ms": 1.5482470703125,
+        "p95_ms": 1.5533475799560545,
+        "p99_ms": 1.553363119506836
+      }
+    },
+    {
+      "path": "level2/58_ConvTranspose3d_LogSumExp_HardSwish_Subtract_Clamp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 18.39877423095703,
+        "std_ms": 0.0024168035961521076,
+        "min_ms": 18.3950341796875,
+        "max_ms": 18.403348388671876,
+        "median_ms": 18.397870483398435,
+        "p95_ms": 18.402705932617188,
+        "p99_ms": 18.40321989746094
+      }
+    },
+    {
+      "path": "level2/59_Matmul_Swish_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.780313110351564,
+        "std_ms": 0.012579272534760419,
+        "min_ms": 17.75394775390625,
+        "max_ms": 17.7953173828125,
+        "median_ms": 17.786265869140625,
+        "p95_ms": 17.79267218017578,
+        "p99_ms": 17.794788342285155
+      }
+    },
+    {
+      "path": "level2/5_ConvTranspose2d_Subtract_Tanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.901221374511719,
+        "std_ms": 0.010889266051601208,
+        "min_ms": 8.877875366210937,
+        "max_ms": 8.91525146484375,
+        "median_ms": 8.900618286132811,
+        "p95_ms": 8.914822967529297,
+        "p99_ms": 8.91516576538086
+      }
+    },
+    {
+      "path": "level2/60_ConvTranspose3d_Swish_GroupNorm_HardSwish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 19.968788330078123,
+        "std_ms": 0.002762060643336609,
+        "min_ms": 19.964559326171877,
+        "max_ms": 19.97580322265625,
+        "median_ms": 19.9680712890625,
+        "p95_ms": 19.97374017333984,
+        "p99_ms": 19.975390612792967
+      }
+    },
+    {
+      "path": "level2/61_ConvTranspose3d_ReLU_GroupNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.263284255981445,
+        "std_ms": 0.013515217479061868,
+        "min_ms": 3.229696044921875,
+        "max_ms": 3.2970343017578125,
+        "median_ms": 3.2640307617187503,
+        "p95_ms": 3.278959716796875,
+        "p99_ms": 3.293419384765625
+      }
+    },
+    {
+      "path": "level2/62_Matmul_GroupNorm_LeakyReLU_Sum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.971179565429688,
+        "std_ms": 0.02276119793262825,
+        "min_ms": 7.942758178710937,
+        "max_ms": 8.018677978515624,
+        "median_ms": 7.965122680664063,
+        "p95_ms": 8.009961334228516,
+        "p99_ms": 8.016934649658202
+      }
+    },
+    {
+      "path": "level2/63_Gemm_ReLU_Divide.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.922166778564453,
+        "std_ms": 0.029007231264531984,
+        "min_ms": 7.882731323242187,
+        "max_ms": 7.967600708007812,
+        "median_ms": 7.920650329589844,
+        "p95_ms": 7.962911590576172,
+        "p99_ms": 7.966662884521484
+      }
+    },
+    {
+      "path": "level2/64_Gemm_LogSumExp_LeakyReLU_LeakyReLU_GELU_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.949444061279296,
+        "std_ms": 0.019474079476341558,
+        "min_ms": 7.917854614257813,
+        "max_ms": 7.976939697265625,
+        "median_ms": 7.9485235595703125,
+        "p95_ms": 7.975168884277344,
+        "p99_ms": 7.976585534667969
+      }
+    },
+    {
+      "path": "level2/65_Conv2d_AvgPool_Sigmoid_Sum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.69464416503906,
+        "std_ms": 0.0016797105876315028,
+        "min_ms": 17.692611083984374,
+        "max_ms": 17.699532470703126,
+        "median_ms": 17.694279174804688,
+        "p95_ms": 17.697470581054688,
+        "p99_ms": 17.699120092773438
+      }
+    },
+    {
+      "path": "level2/66_Matmul_Dropout_Softmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.4265922241210935,
+        "std_ms": 0.018793371616337737,
+        "min_ms": 4.3931646728515625,
+        "max_ms": 4.4649267578125,
+        "median_ms": 4.429434967041016,
+        "p95_ms": 4.450898834228515,
+        "p99_ms": 4.462121173095703
+      }
+    },
+    {
+      "path": "level2/67_Conv2d_GELU_GlobalAvgPool.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.605973022460937,
+        "std_ms": 0.008092483859648584,
+        "min_ms": 5.59562744140625,
+        "max_ms": 5.629010009765625,
+        "median_ms": 5.6055810546875,
+        "p95_ms": 5.6164606628417975,
+        "p99_ms": 5.626500140380859
+      }
+    },
+    {
+      "path": "level2/68_Matmul_Min_Subtract.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.40894155883789,
+        "std_ms": 0.019574191790435524,
+        "min_ms": 4.3793408203125,
+        "max_ms": 4.45765625,
+        "median_ms": 4.411023406982422,
+        "p95_ms": 4.433122314453125,
+        "p99_ms": 4.452749462890625
+      }
+    },
+    {
+      "path": "level2/69_Conv2d_HardSwish_ReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.5555901489257813,
+        "std_ms": 0.0020636883261187563,
+        "min_ms": 1.5536537170410156,
+        "max_ms": 1.5605964660644531,
+        "median_ms": 1.5547801971435549,
+        "p95_ms": 1.5596626434326173,
+        "p99_ms": 1.560409701538086
+      }
+    },
+    {
+      "path": "level2/6_Conv3d_Softmax_MaxPool_MaxPool.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.1979898872375485,
+        "std_ms": 0.0021972978678927346,
+        "min_ms": 1.1956018829345703,
+        "max_ms": 1.2033229064941406,
+        "median_ms": 1.1979980850219727,
+        "p95_ms": 1.201396770477295,
+        "p99_ms": 1.2029376792907716
+      }
+    },
+    {
+      "path": "level2/70_Gemm_Sigmoid_Scaling_ResidualAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.9244769592285165,
+        "std_ms": 0.02222315941594438,
+        "min_ms": 7.875850219726562,
+        "max_ms": 7.956746215820313,
+        "median_ms": 7.926354064941406,
+        "p95_ms": 7.955676422119141,
+        "p99_ms": 7.956532257080078
+      }
+    },
+    {
+      "path": "level2/71_Conv2d_Divide_LeakyReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.5552491607666017,
+        "std_ms": 0.0016849836069858114,
+        "min_ms": 1.5533465576171874,
+        "max_ms": 1.56084228515625,
+        "median_ms": 1.5550669097900391,
+        "p95_ms": 1.5577877197265626,
+        "p99_ms": 1.5602313720703125
+      }
+    },
+    {
+      "path": "level2/72_ConvTranspose3d_BatchNorm_AvgPool_AvgPool.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 20.439656494140625,
+        "std_ms": 0.003528186553776231,
+        "min_ms": 20.43461669921875,
+        "max_ms": 20.44895263671875,
+        "median_ms": 20.439111328125,
+        "p95_ms": 20.445605834960936,
+        "p99_ms": 20.44828327636719
+      }
+    },
+    {
+      "path": "level2/73_Conv2d_BatchNorm_Scaling.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.5509790649414061,
+        "std_ms": 0.002224534089762897,
+        "min_ms": 1.5469772338867187,
+        "max_ms": 1.5564390563964843,
+        "median_ms": 1.5504076385498047,
+        "p95_ms": 1.5554662399291992,
+        "p99_ms": 1.5562444931030273
+      }
+    },
+    {
+      "path": "level2/74_ConvTranspose3d_LeakyReLU_Multiply_LeakyReLU_Max.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.7918054580688476,
+        "std_ms": 0.0014768668610963477,
+        "min_ms": 1.7883135986328125,
+        "max_ms": 1.7944166564941406,
+        "median_ms": 1.7916825866699218,
+        "p95_ms": 1.7941248550415039,
+        "p99_ms": 1.7943582962036133
+      }
+    },
+    {
+      "path": "level2/75_Gemm_GroupNorm_Min_BiasAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.995549652099609,
+        "std_ms": 0.02022483841254301,
+        "min_ms": 7.95199462890625,
+        "max_ms": 8.025333862304688,
+        "median_ms": 7.991060485839844,
+        "p95_ms": 8.025158752441406,
+        "p99_ms": 8.025298840332031
+      }
+    },
+    {
+      "path": "level2/76_Gemm_Add_ReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.921441802978515,
+        "std_ms": 0.023489988677709732,
+        "min_ms": 7.882772216796875,
+        "max_ms": 7.960821533203125,
+        "median_ms": 7.917322387695313,
+        "p95_ms": 7.9553351440429685,
+        "p99_ms": 7.959724255371094
+      }
+    },
+    {
+      "path": "level2/77_ConvTranspose3d_Scale_BatchNorm_GlobalAvgPool.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.3779543762207025,
+        "std_ms": 0.018583312764137275,
+        "min_ms": 6.353899536132812,
+        "max_ms": 6.40927734375,
+        "median_ms": 6.375864562988281,
+        "p95_ms": 6.403829803466796,
+        "p99_ms": 6.40818783569336
+      }
+    },
+    {
+      "path": "level2/78_ConvTranspose3d_Max_Max_Sum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.72836199951172,
+        "std_ms": 0.0044137530138172055,
+        "min_ms": 8.719359741210937,
+        "max_ms": 8.735457153320313,
+        "median_ms": 8.72910858154297,
+        "p95_ms": 8.735301757812499,
+        "p99_ms": 8.73542607421875
+      }
+    },
+    {
+      "path": "level2/79_Conv3d_Multiply_InstanceNorm_Clamp_Multiply_Max.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 0.7014522895812989,
+        "std_ms": 0.001752481823657824,
+        "min_ms": 0.7000064086914063,
+        "max_ms": 0.70582275390625,
+        "median_ms": 0.7003033447265625,
+        "p95_ms": 0.7045386390686035,
+        "p99_ms": 0.7055659309387208
+      }
+    },
+    {
+      "path": "level2/7_Conv3d_ReLU_LeakyReLU_GELU_Sigmoid_BiasAdd.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.032585235595704,
+        "std_ms": 0.0016361859163839159,
+        "min_ms": 5.029396362304688,
+        "max_ms": 5.035704345703125,
+        "median_ms": 5.0324787902832036,
+        "p95_ms": 5.0349650573730464,
+        "p99_ms": 5.035556488037109
+      }
+    },
+    {
+      "path": "level2/80_Gemm_Max_Subtract_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.951074310302734,
+        "std_ms": 0.024138877790204637,
+        "min_ms": 7.909990234375,
+        "max_ms": 7.998197631835938,
+        "median_ms": 7.953786926269531,
+        "p95_ms": 7.986699523925781,
+        "p99_ms": 7.995898010253907
+      }
+    },
+    {
+      "path": "level2/81_Gemm_Swish_Divide_Clamp_Tanh_Clamp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.940362243652343,
+        "std_ms": 0.03709228230721608,
+        "min_ms": 7.8883428955078125,
+        "max_ms": 8.012164916992187,
+        "median_ms": 7.9371163940429685,
+        "p95_ms": 7.996230499267578,
+        "p99_ms": 8.008978033447265
+      }
+    },
+    {
+      "path": "level2/82_Conv2d_Tanh_Scaling_BiasAdd_Max.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.7197475891113285,
+        "std_ms": 0.0020381003780520542,
+        "min_ms": 7.716597900390625,
+        "max_ms": 7.723458862304687,
+        "median_ms": 7.719382934570312,
+        "p95_ms": 7.723302886962891,
+        "p99_ms": 7.723427667236328
+      }
+    },
+    {
+      "path": "level2/83_Conv3d_GroupNorm_Min_Clamp_Dropout.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.394500640869142,
+        "std_ms": 0.003961374391706376,
+        "min_ms": 5.385687255859375,
+        "max_ms": 5.400248413085937,
+        "median_ms": 5.394452514648437,
+        "p95_ms": 5.400248413085937,
+        "p99_ms": 5.400248413085937
+      }
+    },
+    {
+      "path": "level2/84_Gemm_BatchNorm_Scaling_Softmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.955842102050783,
+        "std_ms": 0.037146723736353346,
+        "min_ms": 7.89917724609375,
+        "max_ms": 8.014356689453125,
+        "median_ms": 7.9479806518554685,
+        "p95_ms": 8.012878112792968,
+        "p99_ms": 8.014060974121094
+      }
+    },
+    {
+      "path": "level2/85_Conv2d_GroupNorm_Scale_MaxPool_Clamp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.396673027038574,
+        "std_ms": 0.0030491249305628714,
+        "min_ms": 2.3917362976074217,
+        "max_ms": 2.402652130126953,
+        "median_ms": 2.3968358612060547,
+        "p95_ms": 2.4018349990844725,
+        "p99_ms": 2.402488703918457
+      }
+    },
+    {
+      "path": "level2/86_Matmul_Divide_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.934612457275392,
+        "std_ms": 0.03990286585245195,
+        "min_ms": 7.884329223632813,
+        "max_ms": 8.002990112304687,
+        "median_ms": 7.919052734375001,
+        "p95_ms": 7.989546081542969,
+        "p99_ms": 8.000301306152343
+      }
+    },
+    {
+      "path": "level2/87_Conv2d_Subtract_Subtract_Mish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.3193599853515625,
+        "std_ms": 0.010659197486027283,
+        "min_ms": 6.2906982421875,
+        "max_ms": 6.333193969726563,
+        "median_ms": 6.320158691406251,
+        "p95_ms": 6.332454681396484,
+        "p99_ms": 6.333046112060547
+      }
+    },
+    {
+      "path": "level2/88_Gemm_GroupNorm_Swish_Multiply_Swish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.992669158935547,
+        "std_ms": 0.01806606118906259,
+        "min_ms": 7.94439697265625,
+        "max_ms": 8.025415649414063,
+        "median_ms": 7.993272399902343,
+        "p95_ms": 8.019306518554687,
+        "p99_ms": 8.024193823242188
+      }
+    },
+    {
+      "path": "level2/89_ConvTranspose3d_MaxPool_Softmax_Subtract_Swish_Max.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.979446350097653,
+        "std_ms": 0.0027465049759967,
+        "min_ms": 17.974599609375,
+        "max_ms": 17.985946044921874,
+        "median_ms": 17.979464111328127,
+        "p95_ms": 17.984310913085935,
+        "p99_ms": 17.985619018554686
+      }
+    },
+    {
+      "path": "level2/8_Conv3d_Divide_Max_GlobalAvgPool_BiasAdd_Sum.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.96620899963379,
+        "std_ms": 0.0015791993912234504,
+        "min_ms": 3.963576354980469,
+        "max_ms": 3.9683685302734375,
+        "median_ms": 3.9664332580566404,
+        "p95_ms": 3.9682714080810544,
+        "p99_ms": 3.9683491058349607
+      }
+    },
+    {
+      "path": "level2/90_Conv3d_LeakyReLU_Sum_Clamp_GELU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.887443420410156,
+        "std_ms": 0.0018749538068247474,
+        "min_ms": 8.884777221679688,
+        "max_ms": 8.891351318359375,
+        "median_ms": 8.886978454589844,
+        "p95_ms": 8.890922821044922,
+        "p99_ms": 8.891265618896485
+      }
+    },
+    {
+      "path": "level2/91_ConvTranspose2d_Softmax_BiasAdd_Scaling_Sigmoid.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.175748107910157,
+        "std_ms": 0.02038799611620834,
+        "min_ms": 4.148551635742187,
+        "max_ms": 4.233830261230469,
+        "median_ms": 4.164556884765625,
+        "p95_ms": 4.200638534545899,
+        "p99_ms": 4.227191915893554
+      }
+    },
+    {
+      "path": "level2/92_Conv2d_GroupNorm_Tanh_HardSwish_ResidualAdd_LogSumExp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.1173186492919926,
+        "std_ms": 0.016308642284490995,
+        "min_ms": 2.100305938720703,
+        "max_ms": 2.158407745361328,
+        "median_ms": 2.113187789916992,
+        "p95_ms": 2.154205253601074,
+        "p99_ms": 2.1575672470092773
+      }
+    },
+    {
+      "path": "level2/93_ConvTranspose2d_Add_Min_GELU_Multiply.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.463379959106445,
+        "std_ms": 0.006932254259230624,
+        "min_ms": 3.438919677734375,
+        "max_ms": 3.4781182861328124,
+        "median_ms": 3.464314880371094,
+        "p95_ms": 3.467826232910156,
+        "p99_ms": 3.476059875488281
+      }
+    },
+    {
+      "path": "level2/94_Gemm_BiasAdd_Hardtanh_Mish_GroupNorm.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.996412963867188,
+        "std_ms": 0.042973670607503525,
+        "min_ms": 7.926456298828125,
+        "max_ms": 8.061931762695313,
+        "median_ms": 7.995648193359374,
+        "p95_ms": 8.061756652832033,
+        "p99_ms": 8.061896740722657
+      }
+    },
+    {
+      "path": "level2/95_Matmul_Add_Swish_Tanh_GELU_Hardtanh.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.949216766357422,
+        "std_ms": 0.03273146119548263,
+        "min_ms": 7.900037231445313,
+        "max_ms": 8.0057958984375,
+        "median_ms": 7.949230041503906,
+        "p95_ms": 7.992526977539062,
+        "p99_ms": 8.003142114257813
+      }
+    },
+    {
+      "path": "level2/96_ConvTranspose3d_Multiply_Max_GlobalAvgPool_Clamp.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 21.217937377929687,
+        "std_ms": 0.0031080391544681123,
+        "min_ms": 21.2127734375,
+        "max_ms": 21.22631103515625,
+        "median_ms": 21.218262939453126,
+        "p95_ms": 21.22113659667969,
+        "p99_ms": 21.22527614746094
+      }
+    },
+    {
+      "path": "level2/97_Matmul_BatchNorm_BiasAdd_Divide_Swish.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.924256744384763,
+        "std_ms": 0.033386381967748235,
+        "min_ms": 7.846441040039062,
+        "max_ms": 7.972659301757813,
+        "median_ms": 7.924643859863281,
+        "p95_ms": 7.97260073852539,
+        "p99_ms": 7.972647589111328
+      }
+    },
+    {
+      "path": "level2/98_Matmul_AvgPool_GELU_Scale_Max.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.953800201416016,
+        "std_ms": 0.02963075143533743,
+        "min_ms": 7.889613037109375,
+        "max_ms": 8.00100341796875,
+        "median_ms": 7.95298828125,
+        "p95_ms": 7.999563690185547,
+        "p99_ms": 8.000715472412109
+      }
+    },
+    {
+      "path": "level2/99_Matmul_GELU_Softmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.978210235595704,
+        "std_ms": 0.030698598358914884,
+        "min_ms": 7.935836181640625,
+        "max_ms": 8.028364868164063,
+        "median_ms": 7.976478576660156,
+        "p95_ms": 8.021224212646484,
+        "p99_ms": 8.026936737060547
+      }
+    },
+    {
+      "path": "level2/9_Matmul_Subtract_Multiply_ReLU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 7.929264068603517,
+        "std_ms": 0.02291243382884639,
+        "min_ms": 7.88527099609375,
+        "max_ms": 7.975690307617188,
+        "median_ms": 7.9244287109375,
+        "p95_ms": 7.95973617553711,
+        "p99_ms": 7.972499481201172
+      }
+    },
+    {
+      "path": "level3/10_ResNet101.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.801262115478515,
+        "std_ms": 0.07018811816853306,
+        "min_ms": 5.67056396484375,
+        "max_ms": 5.894553833007812,
+        "median_ms": 5.83225341796875,
+        "p95_ms": 5.866420288085937,
+        "p99_ms": 5.8889271240234375
+      }
+    },
+    {
+      "path": "level3/11_VGG16.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.918423553466797,
+        "std_ms": 0.00802556190826669,
+        "min_ms": 4.9063525390625,
+        "max_ms": 4.935475158691406,
+        "median_ms": 4.917995452880859,
+        "p95_ms": 4.92973567199707,
+        "p99_ms": 4.934327261352539
+      }
+    },
+    {
+      "path": "level3/12_VGG19.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.83060791015625,
+        "std_ms": 0.014384270140899397,
+        "min_ms": 5.795614624023438,
+        "max_ms": 5.846077270507813,
+        "median_ms": 5.833687133789063,
+        "p95_ms": 5.845765899658203,
+        "p99_ms": 5.846014996337891
+      }
+    },
+    {
+      "path": "level3/13_DenseNet121TransitionLayer.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.735999969482423,
+        "std_ms": 0.0013116569965867047,
+        "min_ms": 4.734054260253906,
+        "max_ms": 4.7387646484375,
+        "median_ms": 4.73570297241211,
+        "p95_ms": 4.738122772216797,
+        "p99_ms": 4.738636273193359
+      }
+    },
+    {
+      "path": "level3/14_DenseNet121DenseBlock.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.440321014404297,
+        "std_ms": 0.0037870080504209718,
+        "min_ms": 8.431288452148438,
+        "max_ms": 8.447037353515626,
+        "median_ms": 8.440504150390623,
+        "p95_ms": 8.44524740600586,
+        "p99_ms": 8.446679364013672
+      }
+    },
+    {
+      "path": "level3/15_DenseNet121.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 6.48568423461914,
+        "std_ms": 0.06156185813495228,
+        "min_ms": 6.38834716796875,
+        "max_ms": 6.581309204101562,
+        "median_ms": 6.462187500000001,
+        "p95_ms": 6.5653359375,
+        "p99_ms": 6.57811455078125
+      }
+    },
+    {
+      "path": "level3/16_DenseNet201.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 15.637291076660157,
+        "std_ms": 0.09099765421986174,
+        "min_ms": 15.49322265625,
+        "max_ms": 15.812669677734375,
+        "median_ms": 15.627734985351562,
+        "p95_ms": 15.81198895263672,
+        "p99_ms": 15.812533532714843
+      }
+    },
+    {
+      "path": "level3/17_SqueezeNetFireModule.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.88437902832031,
+        "std_ms": 0.0025154404987187988,
+        "min_ms": 17.8806787109375,
+        "max_ms": 17.890672607421877,
+        "median_ms": 17.883883666992187,
+        "p95_ms": 17.888221069335938,
+        "p99_ms": 17.89018229980469
+      }
+    },
+    {
+      "path": "level3/18_SqueezeNet.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 26.01918237304688,
+        "std_ms": 0.006479524747167264,
+        "min_ms": 26.00585205078125,
+        "max_ms": 26.03044921875,
+        "median_ms": 26.020361328125,
+        "p95_ms": 26.027471191406253,
+        "p99_ms": 26.02985361328125
+      }
+    },
+    {
+      "path": "level3/19_MobileNetV1.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.3613537216186524,
+        "std_ms": 0.015417194121252658,
+        "min_ms": 1.3319168090820312,
+        "max_ms": 1.3860044860839844,
+        "median_ms": 1.3601484680175782,
+        "p95_ms": 1.3826775436401366,
+        "p99_ms": 1.385339097595215
+      }
+    },
+    {
+      "path": "level3/1_MLP.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 10.64595556640625,
+        "std_ms": 0.011761286552442102,
+        "min_ms": 10.63415771484375,
+        "max_ms": 10.691358642578125,
+        "median_ms": 10.6444287109375,
+        "p95_ms": 10.65680517578125,
+        "p99_ms": 10.68444794921875
+      }
+    },
+    {
+      "path": "level3/20_MobileNetV2.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.5238599700927735,
+        "std_ms": 0.01932939311941586,
+        "min_ms": 2.486394805908203,
+        "max_ms": 2.557337646484375,
+        "median_ms": 2.525644760131836,
+        "p95_ms": 2.546734077453613,
+        "p99_ms": 2.5552169326782224
+      }
+    },
+    {
+      "path": "level3/21_EfficientNetMBConv.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.67389077758789,
+        "std_ms": 0.0031232823495737695,
+        "min_ms": 5.670133666992188,
+        "max_ms": 5.682810668945312,
+        "median_ms": 5.672580871582031,
+        "p95_ms": 5.680028625488282,
+        "p99_ms": 5.682254260253906
+      }
+    },
+    {
+      "path": "level3/22_EfficientNetB0.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.9726274642944333,
+        "std_ms": 0.02079196490801567,
+        "min_ms": 1.9371417236328126,
+        "max_ms": 2.0076953125,
+        "median_ms": 1.976647720336914,
+        "p95_ms": 1.9964302978515625,
+        "p99_ms": 2.0054423095703124
+      }
+    },
+    {
+      "path": "level3/23_EfficientNetB1.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.1901204452514649,
+        "std_ms": 0.010062041306256082,
+        "min_ms": 1.161871337890625,
+        "max_ms": 1.202135009765625,
+        "median_ms": 1.191014404296875,
+        "p95_ms": 1.2020377426147462,
+        "p99_ms": 1.202115556335449
+      }
+    },
+    {
+      "path": "level3/24_EfficientNetB2.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.3588889617919924,
+        "std_ms": 0.012134830771224453,
+        "min_ms": 1.3342720031738282,
+        "max_ms": 1.372999725341797,
+        "median_ms": 1.364715576171875,
+        "p95_ms": 1.3719490661621092,
+        "p99_ms": 1.3727895935058594
+      }
+    },
+    {
+      "path": "level3/25_ShuffleNetUnit.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 9.722451904296873,
+        "std_ms": 0.02222953452166707,
+        "min_ms": 9.711533813476562,
+        "max_ms": 9.818460083007812,
+        "median_ms": 9.71741180419922,
+        "p95_ms": 9.727367004394532,
+        "p99_ms": 9.800241467285156
+      }
+    },
+    {
+      "path": "level3/26_ShuffleNet.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 9.337337890625,
+        "std_ms": 0.0418193382709653,
+        "min_ms": 9.3237451171875,
+        "max_ms": 9.519288330078124,
+        "median_ms": 9.327974243164062,
+        "p95_ms": 9.343367279052734,
+        "p99_ms": 9.484104119873047
+      }
+    },
+    {
+      "path": "level3/27_RegNet.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.071435272216797,
+        "std_ms": 0.005092056958609386,
+        "min_ms": 2.06413818359375,
+        "max_ms": 2.083573760986328,
+        "median_ms": 2.0705587005615236,
+        "p95_ms": 2.0827372055053712,
+        "p99_ms": 2.083406449890137
+      }
+    },
+    {
+      "path": "level3/28_VisionTransformer.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.4103362503051757,
+        "std_ms": 0.0036834446345144775,
+        "min_ms": 2.40500732421875,
+        "max_ms": 2.4211865234375,
+        "median_ms": 2.410321884155273,
+        "p95_ms": 2.414571487426758,
+        "p99_ms": 2.4198635162353517
+      }
+    },
+    {
+      "path": "level3/29_SwinMLP.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 5.816110076904296,
+        "std_ms": 0.06630537883113258,
+        "min_ms": 5.655306396484375,
+        "max_ms": 5.939896240234375,
+        "median_ms": 5.816709289550781,
+        "p95_ms": 5.936336059570313,
+        "p99_ms": 5.939184204101562
+      }
+    },
+    {
+      "path": "level3/2_ShallowWideMLP.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 35.95896093750001,
+        "std_ms": 0.05434290298911817,
+        "min_ms": 35.85894287109375,
+        "max_ms": 36.02659423828125,
+        "median_ms": 35.9811474609375,
+        "p95_ms": 36.01846032714843,
+        "p99_ms": 36.02496745605468
+      }
+    },
+    {
+      "path": "level3/30_SwinTransformerV2.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.573399047851563,
+        "std_ms": 0.009391570810444132,
+        "min_ms": 8.557854614257813,
+        "max_ms": 8.59093017578125,
+        "median_ms": 8.573450317382813,
+        "p95_ms": 8.589179077148438,
+        "p99_ms": 8.590579956054688
+      }
+    },
+    {
+      "path": "level3/31_VisionAttention.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 21.968034057617185,
+        "std_ms": 0.021652370692702053,
+        "min_ms": 21.9298828125,
+        "max_ms": 21.9942919921875,
+        "median_ms": 21.97380126953125,
+        "p95_ms": 21.99329931640625,
+        "p99_ms": 21.994093457031248
+      }
+    },
+    {
+      "path": "level3/32_ConvolutionalVisionTransformer.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.3153106079101562,
+        "std_ms": 0.01108307782421289,
+        "min_ms": 1.2928614807128906,
+        "max_ms": 1.3333299255371094,
+        "median_ms": 1.3143040466308595,
+        "p95_ms": 1.3305671615600587,
+        "p99_ms": 1.3327773727416992
+      }
+    },
+    {
+      "path": "level3/33_VanillaRNN.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 21.82868981933594,
+        "std_ms": 0.017101103839239077,
+        "min_ms": 21.795859375,
+        "max_ms": 21.8556201171875,
+        "median_ms": 21.834290771484376,
+        "p95_ms": 21.8495712890625,
+        "p99_ms": 21.8544103515625
+      }
+    },
+    {
+      "path": "level3/34_VanillaRNNHidden.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 15.443749816894533,
+        "std_ms": 0.12823090612960833,
+        "min_ms": 15.25960693359375,
+        "max_ms": 15.673343505859375,
+        "median_ms": 15.4220849609375,
+        "p95_ms": 15.664744567871095,
+        "p99_ms": 15.671623718261719
+      }
+    },
+    {
+      "path": "level3/35_LSTM.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.827296142578124,
+        "std_ms": 0.3750339114547909,
+        "min_ms": 22.92387939453125,
+        "max_ms": 24.40140869140625,
+        "median_ms": 23.908638916015626,
+        "p95_ms": 24.314108886718753,
+        "p99_ms": 24.38394873046875
+      }
+    },
+    {
+      "path": "level3/36_LSTMHn.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.69755126953125,
+        "std_ms": 0.13086386949934123,
+        "min_ms": 23.516201171875,
+        "max_ms": 24.03084228515625,
+        "median_ms": 23.6805224609375,
+        "p95_ms": 23.900954833984375,
+        "p99_ms": 24.004864794921875
+      }
+    },
+    {
+      "path": "level3/37_LSTMCn.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.687174072265627,
+        "std_ms": 0.5297275774405725,
+        "min_ms": 22.58892822265625,
+        "max_ms": 24.71125,
+        "median_ms": 23.744082031250002,
+        "p95_ms": 24.370497802734377,
+        "p99_ms": 24.643099560546876
+      }
+    },
+    {
+      "path": "level3/38_LSTMBidirectional.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 46.702580078124996,
+        "std_ms": 0.15708641351400177,
+        "min_ms": 46.3415283203125,
+        "max_ms": 47.1001904296875,
+        "median_ms": 46.684365234375,
+        "p95_ms": 46.97108227539063,
+        "p99_ms": 47.074368798828125
+      }
+    },
+    {
+      "path": "level3/39_GRU.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.5099462890625,
+        "std_ms": 0.34624891521614426,
+        "min_ms": 22.58978759765625,
+        "max_ms": 23.93126953125,
+        "median_ms": 23.582945556640624,
+        "p95_ms": 23.85618798828125,
+        "p99_ms": 23.91625322265625
+      }
+    },
+    {
+      "path": "level3/3_DeepNarrowMLP.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4.014563293457031,
+        "std_ms": 0.004351440642215704,
+        "min_ms": 4.007874450683594,
+        "max_ms": 4.026654663085938,
+        "median_ms": 4.014469146728516,
+        "p95_ms": 4.022841384887696,
+        "p99_ms": 4.02589200744629
+      }
+    },
+    {
+      "path": "level3/40_GRUHidden.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 23.843159912109375,
+        "std_ms": 0.34564665314473114,
+        "min_ms": 23.21754150390625,
+        "max_ms": 24.39278564453125,
+        "median_ms": 23.868856201171873,
+        "p95_ms": 24.261652709960938,
+        "p99_ms": 24.366559057617188
+      }
+    },
+    {
+      "path": "level3/41_GRUBidirectional.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 46.685447265624994,
+        "std_ms": 0.14609811652201202,
+        "min_ms": 46.37845703125,
+        "max_ms": 46.9541064453125,
+        "median_ms": 46.67786376953125,
+        "p95_ms": 46.88981909179687,
+        "p99_ms": 46.94124897460937
+      }
+    },
+    {
+      "path": "level3/42_GRUBidirectionalHidden.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 46.722839843749995,
+        "std_ms": 0.1339505480215059,
+        "min_ms": 46.518310546875,
+        "max_ms": 47.0666259765625,
+        "median_ms": 46.6788916015625,
+        "p95_ms": 46.95351196289063,
+        "p99_ms": 47.04400317382812
+      }
+    },
+    {
+      "path": "level3/43_MinGPTCausalAttention.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 25.01952941894531,
+        "std_ms": 0.03695063647445807,
+        "min_ms": 24.95875,
+        "max_ms": 25.0880810546875,
+        "median_ms": 25.01927001953125,
+        "p95_ms": 25.078198364257812,
+        "p99_ms": 25.086104516601562
+      }
+    },
+    {
+      "path": "level3/44_MiniGPTBlock.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 59.4650283203125,
+        "std_ms": 0.04132051984475579,
+        "min_ms": 59.3828466796875,
+        "max_ms": 59.5318603515625,
+        "median_ms": 59.4694970703125,
+        "p95_ms": 59.517090820312504,
+        "p99_ms": 59.5289064453125
+      }
+    },
+    {
+      "path": "level3/45_UNetSoftmax.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 9.450212371826172,
+        "std_ms": 0.09207057206402415,
+        "min_ms": 9.42213134765625,
+        "max_ms": 9.851309814453124,
+        "median_ms": 9.429544982910157,
+        "p95_ms": 9.455458312988283,
+        "p99_ms": 9.772139514160155
+      }
+    },
+    {
+      "path": "level3/46_NetVladWithGhostClusters.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 3.127376922607422,
+        "std_ms": 0.001787238106234181,
+        "min_ms": 3.121868896484375,
+        "max_ms": 3.1302859497070314,
+        "median_ms": 3.1275724792480473,
+        "p95_ms": 3.129468963623047,
+        "p99_ms": 3.1301225524902345
+      }
+    },
+    {
+      "path": "level3/47_NetVladNoGhostClusters.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.761846786499023,
+        "std_ms": 0.002271597648829877,
+        "min_ms": 2.75746826171875,
+        "max_ms": 2.767728576660156,
+        "median_ms": 2.76136962890625,
+        "p95_ms": 2.76484912109375,
+        "p99_ms": 2.7671526855468747
+      }
+    },
+    {
+      "path": "level3/48_Mamba2ReturnY.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.377062408447264,
+        "std_ms": 0.0034897086931570424,
+        "min_ms": 8.369930419921875,
+        "max_ms": 8.382648315429687,
+        "median_ms": 8.377344055175783,
+        "p95_ms": 8.382045288085937,
+        "p99_ms": 8.382527709960938
+      }
+    },
+    {
+      "path": "level3/49_Mamba2ReturnFinalState.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.884475875854492,
+        "std_ms": 0.0016648329958972162,
+        "min_ms": 2.88247802734375,
+        "max_ms": 2.8889291381835935,
+        "median_ms": 2.8840959167480467,
+        "p95_ms": 2.887100341796875,
+        "p99_ms": 2.88856337890625
+      }
+    },
+    {
+      "path": "level3/4_LeNet5.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 0.9325250625610352,
+        "std_ms": 0.0016440315448879809,
+        "min_ms": 0.9307955169677734,
+        "max_ms": 0.9361612701416016,
+        "median_ms": 0.9319014358520508,
+        "p95_ms": 0.9347604637145995,
+        "p99_ms": 0.9358811088562011
+      }
+    },
+    {
+      "path": "level3/50_ReLUSelfAttention.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 8.636653594970703,
+        "std_ms": 0.0022394018736181876,
+        "min_ms": 8.63404052734375,
+        "max_ms": 8.641802368164063,
+        "median_ms": 8.636344299316406,
+        "p95_ms": 8.640323791503906,
+        "p99_ms": 8.641506652832032
+      }
+    },
+    {
+      "path": "level3/5_AlexNet.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 36.14721520996093,
+        "std_ms": 0.040452112454656027,
+        "min_ms": 36.0479541015625,
+        "max_ms": 36.2326416015625,
+        "median_ms": 36.15636474609375,
+        "p95_ms": 36.1853642578125,
+        "p99_ms": 36.2231861328125
+      }
+    },
+    {
+      "path": "level3/6_GoogleNetInceptionModule.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 13.019640930175783,
+        "std_ms": 0.007203810318671165,
+        "min_ms": 12.998328857421875,
+        "max_ms": 13.03066650390625,
+        "median_ms": 13.020364990234375,
+        "p95_ms": 13.029556701660155,
+        "p99_ms": 13.030444543457032
+      }
+    },
+    {
+      "path": "level3/7_GoogleNetInceptionV1.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.8474480590820317,
+        "std_ms": 0.014923536815590902,
+        "min_ms": 2.8072344970703127,
+        "max_ms": 2.878914489746094,
+        "median_ms": 2.849300537109375,
+        "p95_ms": 2.864867431640625,
+        "p99_ms": 2.876105078125
+      }
+    },
+    {
+      "path": "level3/8_ResNetBasicBlock.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.3318420486450198,
+        "std_ms": 0.002019657341058792,
+        "min_ms": 1.328721923828125,
+        "max_ms": 1.3349888610839844,
+        "median_ms": 1.3321727752685546,
+        "p95_ms": 1.3349692916870117,
+        "p99_ms": 1.3349849472045898
+      }
+    },
+    {
+      "path": "level3/9_ResNet18.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1.373634552001953,
+        "std_ms": 0.017776197815852962,
+        "min_ms": 1.3271244812011718,
+        "max_ms": 1.3958554077148437,
+        "median_ms": 1.3787033843994139,
+        "p95_ms": 1.38912353515625,
+        "p99_ms": 1.394509033203125
+      }
+    },
+    {
+      "path": "level4/10_google-bigbird-roberta-base_bs1024_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 453.14276757812496,
+        "std_ms": 0.34692791911292853,
+        "min_ms": 452.61453125,
+        "max_ms": 453.86,
+        "median_ms": 453.139140625,
+        "p95_ms": 453.7731640625,
+        "p99_ms": 453.8426328125
+      }
+    },
+    {
+      "path": "level4/11_google-electra-small-discriminator_bs1_seq511.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2.849923065185547,
+        "std_ms": 0.14533916685330797,
+        "min_ms": 2.80268798828125,
+        "max_ms": 3.4641510009765626,
+        "median_ms": 2.809671630859375,
+        "p95_ms": 2.996253677368164,
+        "p99_ms": 3.3705715362548823
+      }
+    },
+    {
+      "path": "level4/12_google-electra-small-discriminator_bs1024_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 61.231543457031236,
+        "std_ms": 0.011674677858258063,
+        "min_ms": 61.209990234375,
+        "max_ms": 61.24943359375,
+        "median_ms": 61.23220947265625,
+        "p95_ms": 61.24560205078125,
+        "p99_ms": 61.24866728515625
+      }
+    },
+    {
+      "path": "level4/13_google-reformer-enwik8_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 148.7449365234375,
+        "std_ms": 0.10328740751115906,
+        "min_ms": 148.54544921875,
+        "max_ms": 148.95607421875,
+        "median_ms": 148.7657568359375,
+        "p95_ms": 148.88093701171874,
+        "p99_ms": 148.94104677734373
+      }
+    },
+    {
+      "path": "level4/14_google-electra-small-discriminator_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 17.73443994140625,
+        "std_ms": 0.028931789787956942,
+        "min_ms": 17.70639404296875,
+        "max_ms": 17.8496923828125,
+        "median_ms": 17.7257373046875,
+        "p95_ms": 17.75519451904297,
+        "p99_ms": 17.830792810058593
+      }
+    },
+    {
+      "path": "level4/15_google-reformer-enwik8_bs1024_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 568.736958984375,
+        "std_ms": 0.579309831498494,
+        "min_ms": 568.04703125,
+        "max_ms": 569.809921875,
+        "median_ms": 568.6791210937499,
+        "p95_ms": 569.78268359375,
+        "p99_ms": 569.80447421875
+      }
+    },
+    {
+      "path": "level4/16_gpt2_bs1_seq1023.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 18.140185607910155,
+        "std_ms": 0.012042609341968968,
+        "min_ms": 18.120130615234373,
+        "max_ms": 18.178375244140625,
+        "median_ms": 18.139268798828127,
+        "p95_ms": 18.155144775390625,
+        "p99_ms": 18.173729150390624
+      }
+    },
+    {
+      "path": "level4/17_facebook-bart-large_bs1024_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 727.30527734375,
+        "std_ms": 0.3311796813951904,
+        "min_ms": 726.783203125,
+        "max_ms": 727.95453125,
+        "median_ms": 727.3460156250001,
+        "p95_ms": 727.8184882812501,
+        "p99_ms": 727.92732265625
+      }
+    },
+    {
+      "path": "level4/18_EleutherAI-gpt-neo-2p7B_bs512_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 4747.681703125,
+        "std_ms": 3.4246139430505194,
+        "min_ms": 4741.7534375,
+        "max_ms": 4754.0959375,
+        "median_ms": 4747.67390625,
+        "p95_ms": 4753.3976875,
+        "p99_ms": 4753.9562875
+      }
+    },
+    {
+      "path": "level4/19_gpt2_bs1024_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 450.53947460937496,
+        "std_ms": 0.1536026105713576,
+        "min_ms": 450.3883984375,
+        "max_ms": 451.0421875,
+        "median_ms": 450.488671875,
+        "p95_ms": 450.771697265625,
+        "p99_ms": 450.988089453125
+      }
+    },
+    {
+      "path": "level4/1_EleutherAI-gpt-neo-2p7B_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2376.612765625,
+        "std_ms": 2.1182659413748235,
+        "min_ms": 2373.0275,
+        "max_ms": 2380.205625,
+        "median_ms": 2376.94140625,
+        "p95_ms": 2379.5035156249996,
+        "p99_ms": 2380.065203125
+      }
+    },
+    {
+      "path": "level4/20_facebook-bart-large_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 191.88098144531253,
+        "std_ms": 0.12156795536538843,
+        "min_ms": 191.65890625,
+        "max_ms": 192.17859375,
+        "median_ms": 191.868349609375,
+        "p95_ms": 192.0214541015625,
+        "p99_ms": 192.1471658203125
+      }
+    },
+    {
+      "path": "level4/2_facebook-opt-1p3b_bs1_seq2047.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 346.214,
+        "std_ms": 0.19693198944198476,
+        "min_ms": 345.750546875,
+        "max_ms": 346.648828125,
+        "median_ms": 346.1966796875,
+        "p95_ms": 346.43411328125,
+        "p99_ms": 346.60588515625
+      }
+    },
+    {
+      "path": "level4/3_EleutherAI-gpt-neo-2p7B_bs1_seq2047.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 679.7080546875001,
+        "std_ms": 0.529192338558451,
+        "min_ms": 678.4784375,
+        "max_ms": 680.496484375,
+        "median_ms": 679.7715234375,
+        "p95_ms": 680.4610078125,
+        "p99_ms": 680.4893890625
+      }
+    },
+    {
+      "path": "level4/4_facebook-opt-1p3b_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 1176.1629843750002,
+        "std_ms": 1.2004791782135065,
+        "min_ms": 1174.32828125,
+        "max_ms": 1179.2865625,
+        "median_ms": 1175.9140625,
+        "p95_ms": 1178.38228125,
+        "p99_ms": 1179.10570625
+      }
+    },
+    {
+      "path": "level4/5_google-bigbird-roberta-base_bs1_seq4095.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 101.0737919921875,
+        "std_ms": 0.07712529562301412,
+        "min_ms": 100.926650390625,
+        "max_ms": 101.223857421875,
+        "median_ms": 101.0676953125,
+        "p95_ms": 101.1958955078125,
+        "p99_ms": 101.2182650390625
+      }
+    },
+    {
+      "path": "level4/6_facebook-bart-large_bs1_seq1023.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 28.70234533691406,
+        "std_ms": 0.030220336979642267,
+        "min_ms": 28.6432666015625,
+        "max_ms": 28.75134033203125,
+        "median_ms": 28.70960205078125,
+        "p95_ms": 28.742039794921876,
+        "p99_ms": 28.749480224609375
+      }
+    },
+    {
+      "path": "level4/7_gpt2_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 119.08250781250001,
+        "std_ms": 0.047241188135895985,
+        "min_ms": 119.0362890625,
+        "max_ms": 119.22341796875,
+        "median_ms": 119.06407714843749,
+        "p95_ms": 119.1721328125,
+        "p99_ms": 119.21316093749999
+      }
+    },
+    {
+      "path": "level4/8_facebook-opt-1p3b_bs512_seq32.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 2313.6487890625,
+        "std_ms": 1.9596602033229424,
+        "min_ms": 2311.180625,
+        "max_ms": 2317.76796875,
+        "median_ms": 2313.87546875,
+        "p95_ms": 2317.0323125,
+        "p99_ms": 2317.6208375
+      }
+    },
+    {
+      "path": "level4/9_google-bigbird-roberta-base_bs32_seq256.py",
+      "mode": "torch.compile",
+      "stats": {
+        "mean_ms": 120.3984931640625,
+        "std_ms": 0.06402636474471628,
+        "min_ms": 120.336162109375,
+        "max_ms": 120.5395703125,
+        "median_ms": 120.36637695312501,
+        "p95_ms": 120.52604394531251,
+        "p99_ms": 120.5368650390625
+      }
+    }
+  ]
+}
