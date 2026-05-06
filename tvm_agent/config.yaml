@@ -1,0 +1,99 @@
+save_onnx: true
+save_relax_ir: true
+save_relax_json: false  
+save_tir_ir: true
+save_tir_json: false     
+profile_before_optimization: true
+profile_after_relax: true
+profile_after_tir: true
+
+gpu_id: 3  # default CUDA device index; can be overridden by --gpu CLI flag
+
+# Root directory with baseline .py tasks (KernelBench layout). Absolute path or relative to run_benchmark.py directory.
+kernelbench_root: /path/to/KernelBench
+
+skip_prof_report: true
+
+
+profile:
+  warmup_iters: 2
+  number: 3
+  repeat: 3
+  baseline_multiplier: 5  # abort full profiling if quick run > n * baseline_mean_ms
+  verbose: true
+
+check_correctness: true
+
+transform_tir_mode: llm_transform_tir
+
+# LLM TIR strategy when transform_tir_mode is llm_transform_tir:
+#   feedback  — multi-step loop (analysis -> code -> summary), uses llm_tir_max_steps
+#   sampling  — single-round: 5 parallel samples + diagnosis + final generation (uses llm_logs_tir cache)
+# Invalid values fall back to feedback (warning printed).
+llm_tir_strategy: sampling
+
+meta_schedule_max_trials_global: 256
+
+meta_schedule_builder_workers: -1
+
+# Max steps for llm_tir_strategy: feedback. Ignored by sampling (fixed pipeline).
+llm_tir_max_steps: 5
+
+agents:
+  tir_code:
+    api_key: "EMPTY"
+    base_url: "http://localhost:8000/v1"
+    model: "openai/gpt-oss-120b"
+    temperature: 0.1
+    max_tokens: null
+    top_p: null
+    top_k: null
+    timeout: 5000.0
+
+  tir_analysis:
+    api_key: "EMPTY"
+    base_url: "http://localhost:8000/v1"
+    model: "openai/gpt-oss-120b"
+    temperature: 0.3
+    max_tokens: null
+    top_p: null
+    top_k: null
+    timeout: 5000.0
+
+  tir_summary:
+    api_key: "EMPTY"
+    base_url: "http://localhost:8000/v1"
+    model: "openai/gpt-oss-120b"
+    temperature: 0.2
+    max_tokens: null
+    top_p: null
+    top_k: null
+    timeout: 5000.0
+
+relax_transforms:
+  # - "FuseTransposeMatmul"    # слить transpose+matmul ДО LegalizeOps (иначе no-op)
+  # - "DecomposeOpsForInference" # упростить batch_norm, attention и др. для inference
+  # - "LegalizeOps"            # перевести ops во внутренние примитивы TVM
+  # - "FoldConstant"           # свернуть константы
+  # - "CanonicalizeBindings"   # упростить биндинги
+  # - "Normalize"              # нормализация выражений
+  # - "AnnotateTIROpPattern"   # аннотировать TIR-блоки для schedule rules (MetaSchedule)
+  # - "RemoveRedundantReshape" # убрать лишние reshape
+  # - "EliminateCommonSubexpr" # CSE — убрать повторяющиеся подвыражения
+  # - "ExpandMatmulOfSum"      # matmul(x,A+B) → matmul(x,A)+matmul(x,B) для CombineParallelMatmul
+  # - "CombineParallelMatmul"  # объединить параллельные matmul (attention и др.)
+  # - "AdjustMatmulOrder"      # x*(A*B) → (x*A)*B — лучший порядок для fusion
+  # - "ReorderTakeAfterMatmul" # matmul(x,take(W,i)) → take(matmul(x,W),i) — embedding-паттерны
+  # - "ReorderPermuteDimsAfterConcat" # переупорядочить permute_dims после concat
+  # - "OptimizeLayoutTransform" # упростить layout_transform
+  # - "FuseOps"                # слить блоки ops
+  # - "FuseTIR"                # вынести слитые ops в TIR
+  # - "DeadCodeElimination"    # выкинуть мёртвый код
+
+  - "LegalizeOps"           # перевести ops во внутренние примитивы TVM
+  - "FoldConstant"          # свернуть константы
+  - "CanonicalizeBindings"  # упростить биндинги
+  - "Normalize"             # нормализация выражений
+  - "FuseOps"               # слить блоки ops
+  - "FuseTIR"               # вынести слитые ops в TIR
+  - "DeadCodeElimination"   # выкинуть мёртвый код

@@ -1,0 +1,287 @@
+# Base TIR/TVMScript syntax reference (included in tir_code and tir_analysis)
+syntax: |
+  ## TVM TIR / TVMScript syntax reference
+
+  1. Imports and module structure
+     - from tvm.script import ir as I, relax as R, tir as T
+     - @I.ir_module class contains @R.function and @T.prim_func
+     - Do NOT modify @R.function or R.call_tir; only optimize @T.prim_func bodies
+     - Layout: @I.ir_module class Module: @R.function def main(...): ... @T.prim_func private def helper(...): ...
+     - Cross-reference: R.call_tir(cls.helper, (x,y), out_sinfo=R.Tensor(...)) — cls = class name, (x,y) = args matching PrimFunc params
+
+  2. Relax layer (DO NOT MODIFY — only for understanding)
+     - R.call_tir(cls.func_name, (arg1, arg2, ...), out_sinfo=R.Tensor((shape), dtype="float32"), tir_vars=None)
+     - PrimFunc param order and types must match R.call_tir args exactly
+     - R.dataflow(): lv0=...; lv1=...; R.output(gv); — intermediate vars; do not touch
+     - R.Tensor((n,m), dtype="float32"), R.Shape((n,)), R.Tuple([...]) — StructInfo types
+
+  3. PrimFunc
+     - @T.prim_func(private=True), def name(...) -> None
+     - T.func_attr({"tir.noalias": True, "op_pattern": 0})
+     - op_pattern: 0=elemwise, 1=broadcast, 2=injective, 3=reduction, 4=matmul-like, 7=tuple, 8=opaque
+     - Return type -> None
+
+  4. Buffers
+     - T.Buffer((shape...), dtype): A: T.Buffer((128, 128), "float32")
+     - T.handle + T.match_buffer for dynamic: def f(a:T.handle): n=T.int64(); A=T.match_buffer(a,(n,m),"float32")
+     - T.match_buffer(param, shape, dtype="float32", scope="global")
+     - T.alloc_buffer((shape), dtype="float32", scope="global"|"shared"|"local")
+     - Use scope= param, NOT .attach_scope()
+     - dtypes: "float32","float16","float64","int8","int16","int32","int64","uint8","bool"
+     - scope "shared" = GPU block shared memory; scope "local" = per-thread
+
+  5. Loops
+     - T.grid(n,m): nested loops, for i,j in T.grid(128,128)
+     - T.serial(n): for i in T.serial(n). Only 1 or 2 args: T.serial(extent) or T.serial(start, extent)
+     - range(n): for i in range(n) — valid
+     - T.parallel(n), T.unroll(n)
+     - T.vectorized: LOOP only — for v in T.vectorized(extent): or for v in T.vectorized(start, extent):
+     - NEVER use with T.vectorized(): — invalid; T.vectorized is a loop iterator, not context manager
+     - T.thread_binding(0, extent, thread="..."): for i in T.thread_binding(0, n, thread="blockIdx.x")
+     - Alternative: T.thread_binding(extent, thread="blockIdx.x") — extent only
+     - Thread tags: blockIdx.x/y/z, threadIdx.x/y/z
+
+  6. Block (T.sblock)
+     - Order inside block: T.axis.remap first, then T.reads, T.writes, then with T.init(): (if reduction), then body. Block vars (vi,vj) used in reads/writes must be defined by remap before use.
+     - Use T.sblock, NOT T.block. Block name unique per prim_func
+     - vi, vj, vk = T.axis.remap("SSR", [i, j, k]) — S=spatial, R=reduce, O=opaque
+     - Alternative: vi=T.axis.spatial(extent,i), vk=T.axis.reduce(extent,k)
+     - T.reads(...), T.writes(...) — use block vars (vi,vj), NOT loop vars (i,j). ND buffer needs N indices: input_0[()] for 2D → "Buffer is 2-dimensional, cannot be indexed with 0-dimensional indices".
+     - with T.init(): for reduction blocks. Only ONE T.init() per block — "Duplicate block init declaration" if two.
+     - T.sblock_attr({"schedule_rule": "..."}) — optional block hints
+     - T.where(cond): optional predicate — block executes only when cond true. cond must use vars from remap or enclosing loops; "Invalid use of undefined variable v_ax1" if v_ax1 not in remap.
+
+  7. Expressions
+     - Literals: T.float32(0), T.float16(1), T.int64(42), T.int32(0)
+     - T.Cast("float32", x), T.Cast("int64", x)
+     - Arithmetic: +, -, *, /, //, %
+     - T.min(a,b), T.max(a,b), T.abs(x), T.floor(x), T.ceil(x). T.max takes exactly 2 args — for N values use nested T.max(T.max(a,b),T.max(c,d)) or reduce loop.
+     - T.exp(x), T.log(x), T.sqrt(x), T.rsqrt(x)
+     - T.sin(x), T.cos(x), T.tanh(x), T.sigmoid(x), T.erf(x)
+     - T.if_then_else(cond, then_val, else_val)
+     - Symbolic: n = T.int64(), m = T.int32() — for T.match_buffer and loop bounds
+
+  8. Memory and sync
+     - T.alloc_buffer((n,m), dtype="float32", scope="shared")
+     - T.tvm_storage_sync("shared") — barrier after writing shared, before reading
+     - T.allocate(extents, dtype, scope="shared", condition=...)
+
+  9. CRITICAL — T.axis.remap (most errors come from here)
+     - MUST receive only loop iterator Var. NO constants, NO expressions, NO ForFrame.
+     - WRONG: T.axis.remap("SS", [i0, T.int64(0)]) → "Only Var is supported"
+     - WRONG: T.axis.remap("SS", [i0, i1_outer*T.int64(1024)+i1_inner]) → expressions forbidden
+     - WRONG: T.axis.remap("SSSSR", [ax0, ax1, ax2_outer*T.int64(256)+ax2_inner, ax3, l]) → use loop vars (ax2_outer, ax2_inner), NOT computed expr
+     - WRONG: T.axis.remap("SSR", [bx, tx, T.serial(8192)]) → "Expected Array<ir.PrimExpr> but got ForFrame"; pass loop Var (k), NOT T.serial(...)
+     - WRONG: T.axis.remap("SS", [bx, outer_tx*1024+tx]) → expressions forbidden; use loop vars
+     - WRONG: T.axis.remap("SS", [bx, k*1024]) → expressions forbidden
+     - WRONG: T.axis.remap("SS", [i0, i1]) when loops are for i0, for i1_outer, for i1_inner → "Variable is not in the loop: i1" — use i1_outer, i1_inner
+     - WRONG: T.axis.remap("SSSSRR", [ax0, ax1, ax2, ax3, rv0, rv1]) when ax2 not in loop — "Variable is not in the loop: ax0/ax2/yy/d/b/j"; remap must use actual loop iterator vars.
+     - WRONG: T.axis.remap("SSSOR", [i0, i1, i2, k_outer, k_inner]) → "Unknown axis kind: O" — O (opaque) not supported; use S and R only.
+     - WRONG: T.axis.remap("SSS", [bx, by, T.int64(0)]) → constants/expressions forbidden; use loop var.
+     - WRONG: T.axis.remap("SSR", [i0, i1_outer, k]) when there is no for k in ... → "Undefined variable: k" — add for k in T.serial(...)
+     - WRONG: T.axis.remap("SS", [i0, i1]) but block uses v_k in reads → "Undefined variable: v_k" — remap must define all block vars used
+     - WRONG: i0 = bx; T.axis.remap("SS", [i0, i1]) → "Variable is not in the loop"
+     - WRONG: T.axis.remap("SS", [v_ax0, v_ax1]) → pass loop vars (i,j), NOT block vars (vi,vj) from remap
+     - "kinds.size() == bindings.size()" / String length must match bindings count: "SSR" → 3 loop vars, "SSSSRR" → 6 loop vars.
+     - CORRECT: for i0 in T.thread_binding(...): for i1 in T.thread_binding(...): T.axis.remap("SS", [i0, i1])
+     - After split: pass both loop vars, e.g. T.axis.remap("SSS", [i0, i1_outer, i1_inner]) — never combine them into expr
+     - Reduction axis (R) must be loop var: for k in T.serial(...): T.axis.remap("SSR", [i, j, k])
+     - T.axis.remap, T.reads, T.writes MUST be inside with T.sblock("name"): — else "The last frame is not SBlockFrame"
+
+  10. CRITICAL — R.function / R.call_tir (DO NOT MODIFY)
+     - Do NOT modify @R.function body. Do NOT change R.call_tir arguments or out_sinfo.
+     - metadata[...] is INVALID to invent in new code — R.call_tir receives inputs by name from R.function params.
+     - If the ORIGINAL script contains a top-level `metadata = {...}` dict and uses `metadata["relax.expr.Constant"][i]` in R.call_tir:
+         * Either COPY the entire `metadata = {...}` definition from the original script unchanged (keep it before any functions that use it), OR
+         * Remove all uses of `metadata[...]` and instead pass / inline constants in a way that does NOT require a `metadata` dict.
+     - NEVER leave a reference like `metadata["relax.expr.Constant"][0]` without a matching `metadata = {...}` definition earlier in the same script — this causes `Undefined variable: metadata` during tvm.script parsing.
+     - Do NOT replace inputs with B, kernel, or invented names — causes "Undefined variable: B", "Invoking function expects 2 arguments but 1 provided".
+     - Do NOT use R.const(...).reshape(...) or other Relax ops — "Constant object has no attribute reshape".
+     - PrimFunc signature must match R.call_tir: do not add/remove params or change output shapes.
+     - Do NOT change PrimFunc to return Tuple if R.call_tir expects single Tensor — "out_sinfo must be compatible with PrimFunc"; "PrimFunc's signature implies output should be R.Tuple(...) but out_sinfo was R.Tensor(...)".
+     - Do NOT remove args from R.call_tir — "Invoking function main expects N arguments (input_0, B, C), but 1 provided"; pass all original params.
+     - Do NOT use cls.B or cls.Constant — use the same arg names as in original R.call_tir; "Cannot find the function B".
+
+  11. CRITICAL — Do NOT use
+     - metadata[...] in new code — do NOT invent your own metadata dict. The ONLY allowed use is to copy an existing top-level `metadata = {...}` definition from the original script unchanged when the original code already uses it.
+     - T.block — use T.sblock (T.block → "module has no attribute 'block'")
+     - .attach_scope() — use scope= in T.alloc_buffer
+     - with T.vectorized(): — INVALID; T.vectorized is a loop: for v in T.vectorized(extent):
+     - T.alloc_buffer outside T.sblock/prim_func — "Block frame or PrimFunc frame not find". T.alloc_buffer inside a for-loop (without sblock) fails; must be at prim_func top or inside with T.sblock(): body.
+     - T.alloc_buffer(..., scope="global") when targeting CUDA — "Cannot allocate global memory"; pass as input
+     - T.serial(a, b, c) — only 1 or 2 args: T.serial(extent) or T.serial(start, extent). WRONG: T.serial(0, 65535, 256).
+     - Reassigning loop vars: remaining = remaining % ..., stride = stride ... → "Variable X already defined in current scope"
+     - T.texpr — invalid; use T.Cast or numeric literals
+     - T.block_attr — invalid.
+     - T.range — invalid; use range(...) or T.serial(...).
+     - T.Tuple — invalid in TIR; PrimFunc returns single value.
+     - for x in [a, b, c] — invalid; "Expect the for loop to be one of..." use T.serial/range/T.grid, NOT Python list.
+     - 2**step when step is Var — "unsupported operand for **"; use constants or T.if_then_else, not Var in exponent.
+     - min(1024, expr) in T.thread_binding — use T.if_then_else or fixed extent; no Python min/and.
+     - T.axis.reduce(extent) — needs binding: T.axis.reduce(dom, loop_var); prefer T.axis.remap("R", [k]) with for k in T.serial(...).
+     - T.axis.remap(...)[0] — "'Var' object is not subscriptable"; use vi, vj = T.axis.remap("SS", [i, j]) directly.
+     - R.call_tir(bare_name, ...) — use cls.prim_func_name; "Undefined variable: cumprod_axis1".
+     - "Cannot add loops on top of the root block" — loops must wrap blocks; do not add orphan loops.
+     - Loop var (tx, k, i1_inner) "defined outside of any block" — each for-in loop must directly wrap the T.sblock that uses its var. Nested: for i0: for i1_outer: for i1_inner: with T.sblock(...): remap [i0,i1_outer,i1_inner].
+     - undefined tx/k/T_add/v_dh/pool_sum — use only func params, loop iterators, block vars from remap; ensure loops enclose blocks.
+     - "unexpected indent" / "invalid syntax" / "Perhaps you forgot a comma?" — valid Python/TVMScript syntax and indentation.
+     - T.zeros — "module 'tvm.script.parser.tir' has no attribute 'zeros'"; do NOT use T.zeros or R.const(T.zeros(...)).
+     - R.call_tir(cls.f, arg1, arg2, out_sinfo=...) — use tuple: R.call_tir(cls.f, (arg1, arg2), out_sinfo=...); "multiple values for argument 'out_sinfo'" otherwise.
+     - T.axis.remap outside T.sblock — "The last frame is not SBlockFrame"; remap/reads/writes must be inside with T.sblock("name"):.
+     - Python if in TIR body: if v_ax1_inner < stride — use T.if_then_else(cond, then_val, else_val); no bare Python if.
+     - In T.reads/T.writes: v_k1_outer*256+v_k1_inner — block vars from remap only; if split, remap defines v_k1_outer,v_k1_inner; indexing A[v_ax0, v_k1] needs v_k1 from remap.
+
+  12. GPU limits and buffer indexing
+     - max_threads_per_block = 1024. threadIdx.x × threadIdx.y × threadIdx.z MUST ≤ 1024.
+     - block=(8192,1,1) → CUDALaunch CUDA_ERROR_INVALID_VALUE; split so threadIdx dim ≤ 1024.
+     - For dim > 1024: split loop or flattened index.
+     - "Buffer X is N-dimensional, cannot be indexed with M-dimensional indices" — use N indices for N-dim buffer.
+     - Buffer indices count must match buffer rank: B[5D] needs 5 indices, lv[1D] needs 1; lv[()] for scalar is wrong for 1D.
+     - "Cannot convert type float32x2048 to CUDA type" — limit T.vectorized extent to 4, 8, 16, or 32; 2048 is too large.
+     - v_ax2:int64 -> 0:int32 dtype mismatch: use T.int64(0) when loop var is int64, not raw 0.
+     - "mismatched types int32 vs int64" in conditions: use T.Cast or match dtypes in comparisons.
+     - block=(62,62,1): 62×62=3844 > 1024 — threadIdx product MUST ≤ 1024.
+     - "uses too much shared data" / "0x3fffc bytes, 0x29000 max" — reduce shared buffer size.
+     - "Duplicated block name" — each T.sblock must have unique name per prim_func.
+     - "Argument expected R.Tensor(...), given R.Tensor((), dtype=...)" — don't pass scalar where tensor expected; preserve R.call_tir arg shapes.
+     - "Cannot insert syncs inside condition" — T.tvm_storage_sync outside if/where.
+     - "Program is not well-formed" / check_well_formed — usually loop/block nesting or undefined vars; fix structure.
+     - block=(64,64,1)=4096 or block=(16384,1,1) — CUDALaunch CUDA_ERROR_INVALID_VALUE; product MUST ≤ 1024.
+     - block=(1024,64,1)=65536 — threadIdx.y*threadIdx.x must be ≤ 1024.
+
+  13. Operation classification (CRITICAL for optimization)
+     - Elementwise: out[i,j]=f(in[i,j]); NO sum over axis. Examples: add, relu, sigmoid.
+     - Reduction: out has fewer dims due to sum/max/min. Examples: matmul (sum over k), global sum.
+     - NEVER suggest tree reduction or shared-memory partial sums for elementwise.
+     - Elementwise: thread binding + direct write. Reduction: tree reduction, shared memory, partials.
+
+  14. Schedule-like transformations (rewrite loops manually)
+     - Split: for i in range(n) -> for i_o in range(n//f): for i_i in range(f): i = i_o*f + i_i
+     - Tile: split two dims -> four loops (i_o, j_o, i_i, j_i)
+     - Reorder: put reduction innermost; put contiguous access innermost
+     - Bind: for i in T.serial(n) -> for i in T.thread_binding(0, n, thread="blockIdx.x")
+     - Vectorize: for v in T.vectorized(16) innermost when stride 1
+
+  15. Loop nesting rule (CRITICAL — "defined outside of any block")
+     - The block must be nested inside ALL loops whose vars appear in remap.
+     - Put block as innermost: for i0: for i1_outer: for i1_inner: for k: with T.sblock: remap [i0,i1_outer,i1_inner,k]
+     - WRONG: for i1_outer: for i1_inner: ...; with T.sblock: remap [i1_outer,i1_inner] — block is sibling of i1_inner, not child.
+     - CORRECT: for i1_outer: for i1_inner: with T.sblock: remap [i1_outer,i1_inner] — block is direct child of both loops.
+     - "Loop iterator var i1_outer/i1_inner/k_outer defined outside of any block" — that loop does not wrap the block; fix nesting.
+     - In T.init() and block body: use block vars (vi, vj), NOT loop vars (i, j) — "Invalid use of undefined variable j" in block.init.indices.
+
+  16. Minimal complete PrimFunc
+     @T.prim_func(private=True)
+     def add(A: T.Buffer((128,128),"float32"), B: T.Buffer((128,128),"float32"), C: T.Buffer((128,128),"float32")) -> None:
+         T.func_attr({"tir.noalias": True})
+         for i, j in T.grid(128, 128):
+             with T.sblock("compute"):
+                 vi, vj = T.axis.remap("SS", [i, j])
+                 T.reads(A[vi,vj], B[vi,vj])
+                 T.writes(C[vi,vj])
+                 C[vi,vj] = A[vi,vj] + B[vi,vj]
+
+  ---
+
+  ## Example 1: Elementwise — naive vs optimized
+
+  Naive (T.grid):
+    for i, j in T.grid(128, 128):
+        with T.sblock("compute"):
+            vi, vj = T.axis.remap("SS", [i, j])
+            T.reads(A[vi, vj], B[vi, vj])
+            T.writes(C[vi, vj])
+            C[vi, vj] = A[vi, vj] + B[vi, vj]
+
+  Optimized (thread binding):
+    for i in T.thread_binding(0, 128, thread="blockIdx.x"):
+        for j in T.thread_binding(0, 128, thread="threadIdx.x"):
+            with T.sblock("compute"):
+                vi, vj = T.axis.remap("SS", [i, j])
+                T.reads(A[vi, vj], B[vi, vj])
+                T.writes(C[vi, vj])
+                C[vi, vj] = A[vi, vj] + B[vi, vj]
+
+  ---
+
+  ## Example 2: Matmul — naive vs optimized (thread binding)
+
+  Naive (T.grid):
+    for i, j, k in T.grid(128, 128, 128):
+        with T.sblock("C"):
+            vi, vj, vk = T.axis.remap("SSR", [i, j, k])
+            with T.init():
+                C[vi, vj] = T.float32(0)
+            T.reads(A[vi, vk], B[vk, vj])
+            T.writes(C[vi, vj])
+            C[vi, vj] = C[vi, vj] + A[vi, vk] * B[vk, vj]
+
+  Optimized (thread binding on i,j; k stays reduction):
+    for i in T.thread_binding(0, 128, thread="blockIdx.x"):
+        for j in T.thread_binding(0, 128, thread="threadIdx.x"):
+            for k in T.serial(128):
+                with T.sblock("C"):
+                    vi, vj, vk = T.axis.remap("SSR", [i, j, k])
+                    with T.init():
+                        C[vi, vj] = T.float32(0)
+                    T.reads(A[vi, vk], B[vk, vj])
+                    T.writes(C[vi, vj])
+                    C[vi, vj] = C[vi, vj] + A[vi, vk] * B[vk, vj]
+
+  For 128×128, blockIdx covers 128, threadIdx 128 → 1 block. For larger: split i,j or use 2D grid.
+
+  ---
+
+  ## Example 2b: Matmul + ReLU (two blocks)
+    Y = T.alloc_buffer((128,128), dtype="float32")
+    for i,j,k in T.grid(128,128,128):
+        with T.sblock("Y"):
+            vi,vj,vk = T.axis.remap("SSR",[i,j,k])
+            with T.init(): Y[vi,vj] = T.float32(0)
+            T.reads(A[vi,vk], B[vk,vj]); T.writes(Y[vi,vj])
+            Y[vi,vj] = Y[vi,vj] + A[vi,vk]*B[vk,vj]
+    for i,j in T.grid(128,128):
+        with T.sblock("C"):
+            vi,vj = T.axis.remap("SS",[i,j])
+            T.reads(Y[vi,vj]); T.writes(C[vi,vj])
+            C[vi,vj] = T.max(Y[vi,vj], T.float32(0))
+
+  ---
+
+  ## Example 3: Global sum reduction (HingeLoss-style) — naive vs two-stage GPU
+
+  Task: sum over B×N elements → one scalar. Naive T.grid is slow.
+
+  Naive:
+    lv = T.alloc_buffer((B, N), "float32")
+    for i, j in T.grid(B, N):
+        with T.sblock("compute"):
+            vi, vj = T.axis.remap("SS", [i, j])
+            lv[vi, vj] = T.max(margin, T.float32(0.0))
+    for i, j in T.grid(B, N):
+        with T.sblock("sum"):
+            vi, vj = T.axis.remap("RR", [i, j])
+            with T.init():
+                out[0] = T.float32(0.0)
+            out[0] = out[0] + lv[vi, vj]
+    out[0] = out[0] / T.float32(B * N)
+
+  Optimized (two-stage: stage1 partials per block, stage2 reduce partials):
+    stage1: sh = T.alloc_buffer((256,), "float32", scope="shared")
+            for bx in T.thread_binding(4096, thread="blockIdx.x"):
+                for tx in T.thread_binding(256, thread="threadIdx.x"):
+                    sh[tx] = T.float32(0.0)
+                    for it in T.serial(0, num_iters):
+                        idx = bx * 256 + tx + it * (4096 * 256)
+                        if idx < B * N:
+                            sh[tx] = sh[tx] + ...
+                    T.tvm_storage_sync("shared")
+                    # tree reduction 256→128→64→32→16→8→4→2→1
+                    if tx < 128: sh[tx] = sh[tx] + sh[tx + 128]
+                    T.tvm_storage_sync("shared")
+                    if tx < 64:  sh[tx] = sh[tx] + sh[tx + 64]
+                    # ... down to 1
+                    if tx == 0: partials[bx] = sh[0]
+    stage2: one block reduces partials[0..4095] to scalar.
+
+  Key: T.tvm_storage_sync("shared") before reading shared after writes.

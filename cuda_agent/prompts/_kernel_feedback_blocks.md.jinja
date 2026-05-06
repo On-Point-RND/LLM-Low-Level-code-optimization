@@ -1,0 +1,81 @@
+{% if hardware_info %}
+**Target Hardware:**
+{{ hardware_info }}{% if compute_capability %} (Compute Capability: {{ compute_capability }}){% endif %}
+{% endif %}
+
+<reference>
+{{ reference_code }}
+</reference>
+
+{% if history %}
+**Previous attempts (oldest first):**
+{% for entry in history %}
+{% if entry.advisor_text %}
+- **Prior advisor plan:** {{ entry.advisor_text[:1200] }}{% if entry.advisor_text|length > 1200 %}…{% endif %}
+
+{% endif %}
+- **Hypothesis:** {{ entry.hypothesis or '(none)' }}
+
+  **Result:** {% if not entry.result.compiled %}Compilation failed: {{ (entry.result.compilation_error or '')[:500] }}{% elif not entry.result.valid %}Incorrect: {{ (entry.result.correctness_info or '')[:500] }}{% elif entry.result.performance and entry.result.performance.mean %}Correct, mean time: {{ "%.3g"|format(entry.result.performance.mean) }}ms{% if entry.result.performance.std %} (± {{ "%.3g"|format(entry.result.performance.std) }}ms){% endif %}{% elif entry.result.performance_info %}Correct but perf failed: {{ entry.result.performance_info[:100] }}{% else %}Correct (no perf measurement){% endif %}
+
+  {% if entry.result.valid and entry.result.cuda_profile %}**Hottest kernel:** `{{ entry.result.cuda_profile[0].name }}` ({{ "%.2f"|format(entry.result.cuda_profile[0].self_cuda_us / 1000.0) }}ms){% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if best_code and best_result %}
+**Best attempt so far:**
+<best_attempt>
+{{ best_code }}
+</best_attempt>
+
+**Best Result:**
+{% if not best_result.compiled %}
+Compilation failed: {{ (best_result.compilation_error or '')[:500] }}
+{% elif not best_result.valid %}
+Incorrect: {{ (best_result.correctness_info or '')[:500] }}
+{% elif best_result.performance and best_result.performance.mean %}
+Correct, mean time: {{ "%.3g"|format(best_result.performance.mean) }}ms{% if best_result.performance.std %} (± {{ "%.3g"|format(best_result.performance.std) }}ms){% endif %}
+{% elif best_result.performance_info %}
+Correct but perf failed: {{ best_result.performance_info[:200] }}
+{% else %}
+Correct (no perf measurement)
+{% endif %}
+
+{% if best_result.valid and best_result.cuda_profile %}
+**Best Kernel Profile ({{ best_result.profiling_mode or 'full' }} mode):**
+{% for k in best_result.cuda_profile %}
+- `{{ k.name }}`: {{ "%.2f"|format(k.self_cuda_us / 1000.0) }}ms, {{ k.count }}x calls{% if k.flops %}, ~{{ k.flops }} FLOPs{% endif %}
+{% endfor %}
+Focus optimization efforts on the slowest kernels.
+{% endif %}
+{% endif %}
+
+{% if last_code and (not best_code or last_code != best_code) %}
+**Latest attempt:**
+<latest_attempt>
+{{ last_code }}
+</latest_attempt>
+
+**Latest Result:**
+{% if not last_result.compiled %}
+Compilation failed:
+{{ (last_result.compilation_error or '')[:4000] }}{% if last_result.compilation_error and last_result.compilation_error|length > 4000 %} ... (truncated){% endif %}
+{% elif not last_result.valid %}
+Incorrect results:
+{{ (last_result.correctness_info or '')[:4000] }}{% if last_result.correctness_info and last_result.correctness_info|length > 4000 %} ... (truncated){% endif %}
+{% elif last_result.performance and last_result.performance.mean %}
+Correct, mean time: {{ "%.3g"|format(last_result.performance.mean) }}ms{% if last_result.performance.std %} (± {{ "%.3g"|format(last_result.performance.std) }}ms){% endif %}{% if last_result.performance.num_trials %}, {{ last_result.performance.num_trials }} trials{% endif %}
+{% elif last_result.performance_info %}
+Correct but performance measurement failed or timed out: {{ last_result.performance_info }}
+{% else %}
+Correct (no perf measurement)
+{% endif %}
+
+{% if last_result.valid and last_result.cuda_profile %}
+**Latest Kernel Profile ({{ last_result.profiling_mode or 'full' }} mode):**
+{% for k in last_result.cuda_profile %}
+- `{{ k.name }}`: {{ "%.2f"|format(k.self_cuda_us / 1000.0) }}ms, {{ k.count }}x calls{% if k.flops %}, ~{{ k.flops }} FLOPs{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}

@@ -1,0 +1,91 @@
+{% if advisor_text %}
+**Advisor plan (follow this; align your `# Hypothesis` line and implementation with it):**
+{{ advisor_text }}
+
+---
+
+{% endif %}
+Your task is to implement an optimized version of the kernel provided in the `<reference>` section below.
+Maximize the kernel's performance using various optimization strategies, ensure that the output remains numerically identical to the provided reference and avoid memory errors.
+
+
+Strictly adhere to these requirements:
+
+Requirements **10–14** describe the **behavior** of the final `ModelNew` after the harness wraps your answer. You do **not** output a Python file, imports, or `load_inline` — the runtime builds that layer from your two blocks. Your reply must be only `# Hypothesis:` plus `<cuda_source>` and `<forward_body>` (no markdown code fences, no extra prose).
+
+**Compilation contract:** Put all CUDA/C++ (kernels and `torch::Tensor` host bindings) inside `<cuda_source>`. Put only the `forward` method body (calls to `self._ext.…`) inside `<forward_body>`. Use the **default CUDA stream** in host code; do **not** use `at::cuda::CUDAGuard`, `at::cuda::getCurrentCUDAStream`, or other `at::cuda::*` APIs unless you add every required internal header — they often fail to compile in `load_inline` extensions. Do **not** put `PYBIND11_MODULE`, `m.def(`, or `TORCH_EXTENSION_NAME` in `<cuda_source>` — the harness registers bindings via `load_inline`; duplicate module glue breaks the build.
+
+**Custom CUDA only — HARD CONSTRAINT (violations cause immediate build rejection):**
+You MUST implement real GPU work with at least one `__global__` kernel launched with `<<<...>>>`.
+The following C++ calls are **FORBIDDEN** inside `<cuda_source>` and will be **automatically rejected**:
+- Matrix ops: `torch::mm`, `torch::bmm`, `torch::matmul`, `torch::addmm`, `torch::addmv`, `torch::baddbmm`, `at::mm`, `at::matmul`
+- Convolutions: `torch::conv1d`, `torch::conv2d`, `torch::conv3d`, `torch::conv_transpose1d`, `torch::conv_transpose2d`, `torch::conv_transpose3d`
+- High-level: `torch::einsum`, `torch::linalg::*`, `torch::nn::functional::*`
+
+If the reference model uses Conv2d, ConvTranspose3d, GroupNorm, BatchNorm, matmul, etc. — you **must write the CUDA kernel that performs those computations manually**. There is no shortcut. Use shared memory tiling, loop over spatial/channel dimensions, compute normalization statistics with a reduction kernel, etc.
+
+6. Respond with exactly two tagged blocks (and nothing else besides the leading `# Hypothesis:` comment):
+   - `<cuda_source>...</cuda_source>`: Raw CUDA/C++ — include `__device__` / `__global__` code and host wrappers
+     `torch::Tensor my_op(...)` that **launch** your kernels (not one-line `torch::mm` / matmul / conv to ATen).
+     Do **NOT** write `PYBIND11_MODULE`. Do **NOT** call `load_inline` yourself.
+     Include all necessary `#include` headers (e.g. `<torch/extension.h>`, `<cuda_runtime.h>`).
+   - `<forward_body>...</forward_body>`: Only the **statements** that go inside `forward` (no `def`, no extra indent for a nested function).
+     The runtime wraps them as `def forward(self, *args, **kwargs):` + your lines.
+     Inputs from `get_inputs()` arrive as `args[0]`, `args[1]`, … — use those (e.g. `x = args[0]` then `return self._ext.my_op(x, self.weight)`). A bare name like `x` is **not** defined unless you assign it from `args`. Model weights and submodule tensors are available as `self.weight`, `self.conv.weight`, etc. — pass them as arguments to your CUDA kernel bindings.
+7. The Python wrapper (imports, `load_inline` call, `ModelNew` class skeleton) is generated
+   automatically from your two blocks — do **not** write it yourself.
+8. Make code agnostic to device number, allocate output on the same GPU as the input (e.g. using `input.options()`).
+9. Start code with # Hypothesis: ... comment.
+10. **Class name:** The wrapped module defines a class named exactly `ModelNew` — your `<forward_body>` must match that contract.
+11. **Inheritance:** `ModelNew` inherits from `Model` (the reference class). `super().__init__(*args, **kwargs)` is called automatically, so **all reference model attributes are already available**: weights (`self.weight`, `self.bias`), submodules (`self.conv`, `self.norm`, `self.linear`, etc.), and hyperparameters (`self.kernel_size`, `self.stride`, etc.). You do **not** need to re-create or unpack them — use them directly in `<forward_body>`.
+12. **Initialization:** Do **not** unpack `self._init_args` — it no longer exists. Do **not** re-declare `self.conv`, `self.weight`, or any other attribute that the reference `Model.__init__` already creates. Your CUDA kernel receives the model's existing tensors as arguments (e.g. `self.weight`, `self.conv.weight`).
+13. **Forward:** Behavior must match `get_inputs()` tensor order. The wrapper always uses `forward(self, *args, **kwargs)`; map `args[0]` to the first tensor, `args[1]` to the second, etc.
+14. **Output:** The return value of `forward` must have the exact same shape and dtype as the reference output.
+
+{% if diagnosis_text %}
+**Automated diagnosis of the previous failure (read carefully before writing new code):**
+{{ diagnosis_text }}
+
+{% endif %}
+{% include '_kernel_feedback_blocks.md.jinja' %}
+
+Start the file with a single comment line: `# Hypothesis: <your plan>` — briefly describe which specific optimization technique you are applying and why you expect it to improve{% if last_code %} (fix compilation, fix correctness, or reduce measured kernel time){% else %} performance{% endif %}.
+
+{% if example_pre and example_after and not last_code %}
+Refer to the following example to see the expected response format.
+The reference model (`example_pre`) is shown for context; your response must follow the tagged-block format shown in `example_after`.
+
+<example_pre>
+{{ example_pre }}
+</example_pre>
+
+<example_after>
+# Hypothesis: ...
+<cuda_source>
+// Your CUDA kernel and C++ binding here.
+// Example:
+#include <torch/extension.h>
+#include <cuda_runtime.h>
+
+__global__ void my_kernel(const float* __restrict__ x, float* __restrict__ y, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) y[i] = x[i] * 2.0f;
+}
+
+torch::Tensor my_op(torch::Tensor x) {
+    auto y = torch::empty_like(x);
+    int n = x.numel();
+    my_kernel<<<(n + 255) / 256, 256>>>(x.data_ptr<float>(), y.data_ptr<float>(), n);
+    return y;
+}
+</cuda_source>
+<forward_body>
+    x = args[0]
+    return self._ext.my_op(x)
+</forward_body>
+</example_after>
+{% endif %}
+
+Now write the new version of the kernel.
+
+**IMPORTANT:** Begin your response with `# Hypothesis: <your plan>`, then provide exactly two tagged blocks: `<cuda_source>...</cuda_source>` and `<forward_body>...</forward_body>`. Do not write any Python outside these blocks.

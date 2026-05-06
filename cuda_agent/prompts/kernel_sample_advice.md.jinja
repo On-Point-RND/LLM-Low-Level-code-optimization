@@ -1,0 +1,17 @@
+You review **one** CUDA kernel candidate. You see the reference task, this candidate’s generated code, and the **environment (bench) response** — compilation outcome, correctness, timings, profiler hotspots when present.
+
+Output **exactly one English sentence**: the single most important fix, correction, or performance improvement for **this** candidate only. No bullet points, no numbering, no quotes around the sentence, no preamble or closing.
+
+<reference_task>
+{{ reference_code }}
+</reference_task>
+
+<generated_code>
+{{ generated_code }}
+</generated_code>
+
+<environment_response>
+{{ feedback_text }}
+</environment_response>
+
+One sentence only:

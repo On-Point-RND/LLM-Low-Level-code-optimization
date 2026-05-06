@@ -1,0 +1,56 @@
+Generate **candidate #6** from a single bundled prompt. It contains exactly:
+
+- **Five** generated kernel attempts (code only),
+- **Five** matching **environment responses** (bench: compile errors, correctness, timings, CUDA profiler lines when available),
+- **Five** matching **LLM advices** (one independent sentence per slot — each advice was produced only from that slot’s code + environment text + reference),
+- The **reference** task.
+
+Use the reference and all five (code, environment, advice) triples together; synthesize one new implementation that avoids known failures and combines useful ideas.
+
+{% if hardware_info %}
+**Target hardware:** {{ hardware_info }}{% if compute_capability %} (Compute Capability: {{ compute_capability }}){% endif %}
+{% endif %}
+
+{% for s in samples %}
+---
+
+### Slot {{ s.index }} / 5
+
+**Generated code**
+<candidate_code>
+{{ s.code }}
+</candidate_code>
+
+**Environment (bench) response**
+{{ s.feedback_text }}
+
+**LLM advice (this slot only)**
+{{ s.advice_sentence }}
+
+{% endfor %}
+
+---
+
+## Reference task (match behavior and outputs)
+
+<reference>
+{{ reference_code }}
+</reference>
+
+---
+
+**Output contract:** Reply with only `# Hypothesis:` then `<cuda_source>` and `<forward_body>` — real `__global__` CUDA, no forbidden ATen shortcuts in `<cuda_source>`, only `forward` body statements in `<forward_body>`, default stream.
+
+{% if example_pre and example_after %}
+**Format example** (structure only; your code must implement the reference above, not this toy):
+
+<example_pre>
+{{ example_pre }}
+</example_pre>
+
+<example_after>
+{{ example_after }}
+</example_after>
+{% endif %}
+
+Now write candidate #6.

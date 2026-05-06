@@ -1,0 +1,59 @@
+[qwen3-coder-next]
+model_name  = "Qwen/Qwen3-Coder-Next"
+base_url    = "http://localhost:8000/v1"
+api_key     = "EMPTY"
+
+[gpt-oss-120b]
+model_name  = "openai/gpt-oss-120b"
+base_url    = "http://localhost:8000/v1"
+api_key     = "EMPTY"
+
+[deepseek]
+model_name  = "deepseek/deepseek-v3.2"
+base_url    = "http://localhost:8000/v1"
+api_key     = "..."
+
+[minimax]
+model_name  = "MiniMaxAI/MiniMax-M2.5"
+base_url    = "http://localhost:8000/v1"
+api_key     = "EMPTY"
+
+# Per-stage generation settings (shared across all search methods).
+# diagnoser: low temperature — deterministic bug analysis, short output.
+# advisor:   medium temperature — focused optimization plan, short output.
+# coder:     uses the search-method temperature below — creative CUDA writing.
+[stage]
+diagnoser_temperature = 0.1
+advisor_temperature   = 0.4
+diagnoser_max_tokens  = 400    # ~200 words; diagnoser must be concise
+advisor_max_tokens    = 512    # 4 sentences + optional short snippet
+coder_max_tokens      = 16384  # full CUDA implementation
+
+[iterative]
+width       = 1
+height      = 5
+temperature = 0.7
+top_p       = 0.95
+beam_size   = 1
+two_stage   = true
+
+[sampling]
+width       = 5
+height      = 1
+temperature = 0.7
+top_p       = 0.95
+beam_size   = 1
+# First 5 coders always run without advisor/diagnoser (two-stage is not used for that batch).
+two_stage   = true
+# After 5× bench: one-sentence LLM advice per candidate, then candidate #6 (up to `sixth_max_attempts` tries until valid+correct).
+sixth_max_attempts = 3
+advice_temperature = 0.25
+advice_max_tokens  = 160
+
+[tree-search]
+width       = 5
+height      = 5
+temperature = 0.7
+top_p       = 0.95
+beam_size   = 1
+two_stage   = true
